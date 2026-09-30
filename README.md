@@ -38,7 +38,8 @@ The pages are plain static HTML. `assets/styles.css` is committed, so any static
 - **GitHub Pages:** go to repo Settings → Pages → Deploy from branch → pick the branch and `/ (root)`.
   The site goes live at `https://lakshkhakhria2-svg.github.io/claude/` (`.nojekyll` makes Pages serve the files as-is).
 - **Netlify:** import the repo. `netlify.toml` already publishes only the website files (to `dist/`), so no settings are needed.
-- **Vercel / Cloudflare Pages:** import the repo. Leave the build command empty and set the output directory to `/`.
+- **Vercel:** import the repo. `vercel.json` already publishes only the website files, so no settings are needed.
+- **Cloudflare Pages:** import the repo. Leave the build command empty and set the output directory to `/`.
 
 ## Brand
 
