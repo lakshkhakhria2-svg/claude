@@ -1,0 +1,23 @@
+{
+  "name": "laksh-studio",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "tailwindcss -i src/input.css -o assets/styles.css --minify",
+    "dev": "tailwindcss -i src/input.css -o assets/styles.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lakshkhakhria2-svg/claude.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lakshkhakhria2-svg/claude/issues"
+  },
+  "homepage": "https://github.com/lakshkhakhria2-svg/claude#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  },
+  "private": true
+}

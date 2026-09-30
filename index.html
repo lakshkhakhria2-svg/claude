@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laksh Khakhria — Websites for early-stage startups</title>
+  <meta name="description" content="I design and build fast, conversion-ready websites for startups: landing pages, marketing sites and product launches.">
+  <meta property="og:title" content="Laksh Khakhria — Websites for early-stage startups">
+  <meta property="og:description" content="Fast, conversion-ready websites for startups. Fixed prices, launched in weeks.">
+  <meta property="og:image" content="assets/work/cadence.jpg">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23EC4899'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<!--
+  Design system: UI UX Pro Max → design-system/laksh-khakhria-studio/MASTER.md
+  (+ contrast overrides in design-system/laksh-khakhria-studio/pages/home.md)
+  TODO(Laksh): replace CONTACT_EMAIL and the Contra/Clutch profile links below with your real ones.
+-->
+<body class="bg-studio-bg font-grotesk text-studio-text">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
+
+  <!-- Floating navbar -->
+  <header class="fixed left-4 right-4 top-4 z-40">
+    <nav class="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-studio-line bg-white/85 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6" aria-label="Main">
+      <a href="#" class="font-archivo text-lg font-extrabold tracking-tight">Laksh<span class="text-studio-primary">.</span>studio</a>
+      <div class="hidden items-center gap-8 text-sm font-medium md:flex">
+        <a href="#work" class="transition-colors duration-200 hover:text-studio-deep">Work</a>
+        <a href="#services" class="transition-colors duration-200 hover:text-studio-deep">Services</a>
+        <a href="#process" class="transition-colors duration-200 hover:text-studio-deep">Process</a>
+        <a href="#about" class="transition-colors duration-200 hover:text-studio-deep">About</a>
+      </div>
+      <a href="#contact" class="hidden min-h-[44px] items-center rounded-xl bg-studio-cta px-5 text-sm font-bold text-studio-ctaink transition duration-200 hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep focus-visible:ring-offset-2 motion-reduce:transform-none md:inline-flex">Start a project</a>
+      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
+        <span class="sr-only">Open menu</span>
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </nav>
+    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl border border-studio-line bg-white p-4 shadow-lg md:hidden">
+      <a href="#work" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">Work</a>
+      <a href="#services" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">Services</a>
+      <a href="#process" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">Process</a>
+      <a href="#about" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">About</a>
+      <a href="#contact" class="mt-2 block rounded-lg bg-studio-cta px-3 py-3 text-center font-bold text-studio-ctaink">Start a project</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 1. Hero (Name / Role) -->
+    <section class="relative overflow-hidden px-4 pb-20 pt-36 sm:px-6 lg:px-8 lg:pt-44">
+      <!-- Parallax layers (motion-driven style); disabled for reduced motion -->
+      <div class="pointer-events-none absolute -right-24 top-16 h-80 w-80 rounded-full bg-studio-secondary/30 blur-3xl" data-parallax="0.15" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -left-24 top-72 h-72 w-72 rounded-full bg-studio-cta/20 blur-3xl" data-parallax="0.3" aria-hidden="true"></div>
+
+      <div class="relative mx-auto max-w-6xl">
+        <p class="inline-flex items-center gap-2 rounded-full border border-studio-line bg-white px-4 py-1.5 text-sm font-medium">
+          <span class="relative flex h-2.5 w-2.5" aria-hidden="true"><span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span></span>
+          Taking on 2 new startup projects this month
+        </p>
+        <h1 class="mt-8 max-w-4xl font-archivo text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+          Websites that make early-stage startups look <span class="relative whitespace-nowrap text-studio-primary">funded<svg class="absolute -bottom-2 left-0 h-3 w-full text-studio-cta" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 9C50 3 150 3 198 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>.
+        </h1>
+        <p class="mt-8 max-w-2xl text-lg leading-relaxed sm:text-xl">
+          I'm Laksh Khakhria, a web designer and developer. I help founders launch fast, conversion-ready sites for their product, their raise or their first 1,000 customers, usually in 2–4 weeks.
+        </p>
+        <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+          <a href="#work" class="group inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-studio-text px-7 font-bold text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep focus-visible:ring-offset-2 motion-reduce:transform-none">
+            See my work
+            <svg class="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transform-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#contact" class="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-studio-cta px-7 font-bold text-studio-ctaink transition duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep focus-visible:ring-offset-2 motion-reduce:transform-none">Book a free 20-min call</a>
+        </div>
+        <ul class="mt-14 grid max-w-3xl gap-4 text-sm font-medium sm:grid-cols-3">
+          <li class="flex items-center gap-2"><svg class="h-5 w-5 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>90+ Lighthouse performance</li>
+          <li class="flex items-center gap-2"><svg class="h-5 w-5 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>Mobile-first, accessible (WCAG AA)</li>
+          <li class="flex items-center gap-2"><svg class="h-5 w-5 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Fixed price, fixed timeline</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2. Project grid (visuals first, hover overlay info) -->
+    <section id="work" class="scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-6xl">
+        <div class="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">Selected work</p>
+            <h2 class="mt-2 font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Built for three kinds of startup.</h2>
+          </div>
+          <div class="flex flex-wrap gap-2" role="group" aria-label="Filter projects">
+            <button type="button" data-filter="all" aria-pressed="true" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">All</button>
+            <button type="button" data-filter="saas" aria-pressed="false" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">SaaS</button>
+            <button type="button" data-filter="fintech" aria-pressed="false" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">Fintech</button>
+            <button type="button" data-filter="local" aria-pressed="false" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">Local service</button>
+          </div>
+        </div>
+
+        <div class="mt-12 grid gap-8 lg:grid-cols-2">
+          <!-- Cadence -->
+          <article class="project reveal lg:col-span-2" data-cat="saas">
+            <a href="work/cadence/" class="group block cursor-pointer overflow-hidden rounded-3xl border border-studio-line bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-studio-deep">
+              <div class="relative aspect-[16/10] overflow-hidden bg-cadence-bg">
+                <img src="assets/work/cadence.jpg" alt="Cadence homepage: a teal and orange SaaS landing page with a team check-in dashboard" width="1440" height="900" class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" loading="lazy" decoding="async">
+                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-studio-text/85 via-studio-text/10 to-transparent p-6 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                  <span class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-studio-text">View live site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+                </div>
+              </div>
+              <div class="grid gap-4 p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-start">
+                <div>
+                  <p class="text-sm font-semibold text-studio-deep">SaaS · Landing page · Concept</p>
+                  <h3 class="mt-1 font-archivo text-2xl font-bold">Cadence: async standups for remote teams</h3>
+                  <p class="mt-2 max-w-2xl leading-relaxed">A personalised hero that rewrites the headline, features and testimonial for Engineering, Product or Ops visitors, plus a live product mock and 3-tier pricing.</p>
+                </div>
+                <ul class="flex flex-wrap gap-2 text-xs font-semibold md:max-w-[220px] md:justify-end">
+                  <li class="rounded-full bg-studio-bg px-3 py-1">Personalisation</li><li class="rounded-full bg-studio-bg px-3 py-1">Pricing</li><li class="rounded-full bg-studio-bg px-3 py-1">Micro-interactions</li>
+                </ul>
+              </div>
+            </a>
+          </article>
+
+          <!-- Northvault -->
+          <article class="project reveal" data-cat="fintech">
+            <a href="work/northvault/" class="group block h-full cursor-pointer overflow-hidden rounded-3xl border border-studio-line bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-studio-deep">
+              <div class="relative aspect-[16/10] overflow-hidden bg-vault-bg">
+                <img src="assets/work/northvault.jpg" alt="Northvault homepage: a dark fintech site with gold accents and a runway dashboard" width="1440" height="900" class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" loading="lazy" decoding="async">
+                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-studio-text/85 via-studio-text/10 to-transparent p-6 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                  <span class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-studio-text">View live site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+                </div>
+              </div>
+              <div class="p-6 sm:p-8">
+                <p class="text-sm font-semibold text-studio-deep">Fintech · Marketing site · Concept</p>
+                <h3 class="mt-1 font-archivo text-2xl font-bold">Northvault: banking for startups</h3>
+                <p class="mt-2 leading-relaxed">A dark, high-trust design with security badges above the fold, an accessible burn chart and a scroll-snap testimonial carousel.</p>
+              </div>
+            </a>
+          </article>
+
+          <!-- Brightwater -->
+          <article class="project reveal" data-cat="local">
+            <a href="work/brightwater/" class="group block h-full cursor-pointer overflow-hidden rounded-3xl border border-studio-line bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-studio-deep">
+              <div class="relative aspect-[16/10] overflow-hidden bg-bright-bg">
+                <img src="assets/work/brightwater.jpg" alt="Brightwater homepage: a light cyan cleaning-service site with an instant price calculator" width="1440" height="900" class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" loading="lazy" decoding="async">
+                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-studio-text/85 via-studio-text/10 to-transparent p-6 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                  <span class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-studio-text">View live site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+                </div>
+              </div>
+              <div class="p-6 sm:p-8">
+                <p class="text-sm font-semibold text-studio-deep">Local service · Booking site · Concept</p>
+                <h3 class="mt-1 font-archivo text-2xl font-bold">Brightwater: home cleaning</h3>
+                <p class="mt-2 leading-relaxed">An instant-quote form with validation and loading states, an open pricing table and click-to-call, all built to turn local searches into bookings.</p>
+              </div>
+            </a>
+          </article>
+        </div>
+        <p class="mt-6 text-sm">These are concept projects I designed and built to show my range. The companies are fictional.</p>
+      </div>
+    </section>
+
+    <!-- Services & pricing -->
+    <section id="services" class="scroll-mt-24 bg-white px-4 py-24 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-6xl">
+        <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">Services</p>
+        <h2 class="mt-2 max-w-3xl font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Clear packages. No agency overhead.</h2>
+        <div class="mt-14 grid gap-6 lg:grid-cols-3">
+          <div class="reveal flex flex-col rounded-3xl border border-studio-line p-8 transition duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none">
+            <h3 class="font-archivo text-xl font-bold">Launch Page</h3>
+            <p class="mt-2 leading-relaxed">One high-converting page for a launch, waitlist or fundraise.</p>
+            <p class="mt-6 font-archivo text-4xl font-extrabold">from $600</p>
+            <p class="text-sm">Delivered in about 1 week</p>
+            <ul class="mt-6 flex-1 space-y-3 text-sm">
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Copy structure &amp; design</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Email capture / waitlist</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Analytics &amp; SEO basics</li>
+            </ul>
+          </div>
+          <div class="reveal relative flex flex-col rounded-3xl bg-studio-text p-8 text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:shadow-2xl motion-reduce:transform-none">
+            <span class="absolute -top-3 left-8 rounded-full bg-studio-cta px-3 py-1 text-xs font-bold text-studio-ctaink">Most requested</span>
+            <h3 class="font-archivo text-xl font-bold">Startup Site</h3>
+            <p class="mt-2 leading-relaxed text-studio-line">A complete marketing site: home, product, pricing, about and blog.</p>
+            <p class="mt-6 font-archivo text-4xl font-extrabold">from $1,500</p>
+            <p class="text-sm text-studio-line">Delivered in 2–3 weeks</p>
+            <ul class="mt-6 flex-1 space-y-3 text-sm">
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Up to 6 pages, fully responsive</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Design system you can reuse</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>CMS so you can edit it yourself</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>2 rounds of revisions</li>
+            </ul>
+          </div>
+          <div class="reveal flex flex-col rounded-3xl border border-studio-line p-8 transition duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none">
+            <h3 class="font-archivo text-xl font-bold">Care Plan</h3>
+            <p class="mt-2 leading-relaxed">Ongoing updates, new pages and A/B tests after launch.</p>
+            <p class="mt-6 font-archivo text-4xl font-extrabold">$200<span class="text-lg font-semibold"> / mo</span></p>
+            <p class="text-sm">Cancel any time</p>
+            <ul class="mt-6 flex-1 space-y-3 text-sm">
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Up to 5 hours of changes</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Speed &amp; uptime monitoring</li>
+              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Monthly conversion report</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process -->
+    <section id="process" class="scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-6xl">
+        <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">Process</p>
+        <h2 class="mt-2 font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">From first call to live site.</h2>
+        <ol class="mt-14 grid gap-px overflow-hidden rounded-3xl border border-studio-line bg-studio-line md:grid-cols-4">
+          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Week 0</span><h3 class="mt-2 font-archivo text-xl font-bold">Discovery call</h3><p class="mt-2 text-sm leading-relaxed">20 minutes on your users, your goal and your deadline. You get a fixed quote within 24 hours.</p></li>
+          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Week 1</span><h3 class="mt-2 font-archivo text-xl font-bold">Design direction</h3><p class="mt-2 text-sm leading-relaxed">A design system (colours, type, components) and your homepage design, for you to review.</p></li>
+          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Weeks 2–3</span><h3 class="mt-2 font-archivo text-xl font-bold">Build</h3><p class="mt-2 text-sm leading-relaxed">Hand-built, responsive, accessible code. You get a private preview link to follow progress.</p></li>
+          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Launch</span><h3 class="mt-2 font-archivo text-xl font-bold">Go live</h3><p class="mt-2 text-sm leading-relaxed">Domain, analytics, SEO and a walkthrough video so your team can edit it without me.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. About / philosophy -->
+    <section id="about" class="scroll-mt-24 bg-white px-4 py-24 sm:px-6 lg:px-8">
+      <div class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_1.2fr]">
+        <div class="reveal">
+          <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">About</p>
+          <h2 class="mt-2 font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Startup speed. Obsessive craft.</h2>
+        </div>
+        <div class="reveal space-y-5 text-lg leading-relaxed">
+          <p>Early-stage founders don't need a 12-person agency and a 3-month timeline. You need someone who gets what you're building, moves at startup speed and ships something you're proud to send to investors.</p>
+          <p>That's me. You work directly with the person designing and coding your site, with no account managers and no handoffs.</p>
+          <ul class="grid gap-4 pt-4 sm:grid-cols-2">
+            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Conversion first</p><p class="mt-1 text-base">Every section has a job: clarify, build trust or convert.</p></li>
+            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Fast by default</p><p class="mt-1 text-base">Lightweight code, optimised images, no bloated page builders.</p></li>
+            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Accessible</p><p class="mt-1 text-base">Contrast, keyboard navigation and screen-reader support are built in.</p></li>
+            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Yours to own</p><p class="mt-1 text-base">Clean code and a CMS, so you're never locked in.</p></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Contact -->
+    <section id="contact" class="scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
+      <div class="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-studio-text px-6 py-16 text-center text-white sm:px-12 lg:py-20">
+        <div class="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-studio-primary/30 blur-3xl" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute -bottom-20 -right-10 h-64 w-64 rounded-full bg-studio-cta/25 blur-3xl" aria-hidden="true"></div>
+        <h2 class="relative font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Got a launch coming up?</h2>
+        <p class="relative mx-auto mt-4 max-w-xl text-lg text-studio-line">Tell me what you're building. I'll reply within one business day with ideas and a fixed quote.</p>
+        <div class="relative mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          <!-- TODO(Laksh): replace with your real email -->
+          <a href="mailto:CONTACT_EMAIL?subject=New%20website%20project" class="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-studio-cta px-8 font-bold text-studio-ctaink transition duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-studio-text motion-reduce:transform-none">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+            Email me about your project
+          </a>
+          <!-- TODO(Laksh): replace with your Contra profile URL -->
+          <a href="https://contra.com/" class="inline-flex min-h-[52px] items-center justify-center rounded-xl border-2 border-white/60 px-8 font-bold text-white transition-colors duration-300 hover:bg-white hover:text-studio-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Hire me on Contra</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="px-4 pb-10 sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 border-t border-studio-line pt-8 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <p>© 2026 Laksh Khakhria. Designed &amp; built by me.</p>
+      <ul class="flex gap-6 font-semibold">
+        <!-- TODO(Laksh): add your real profile links -->
+        <li><a href="https://contra.com/" class="transition-colors duration-200 hover:text-studio-deep">Contra</a></li>
+        <li><a href="https://clutch.co/" class="transition-colors duration-200 hover:text-studio-deep">Clutch</a></li>
+        <li><a href="https://github.com/lakshkhakhria2-svg" class="transition-colors duration-200 hover:text-studio-deep">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    // Project filter (skill pattern: "Filter by category")
+    const btns = document.querySelectorAll('.filter-btn');
+    function setFilter(f) {
+      btns.forEach((b) => {
+        const on = b.dataset.filter === f;
+        b.setAttribute('aria-pressed', on);
+        b.classList.toggle('bg-studio-text', on); b.classList.toggle('text-white', on);
+        b.classList.toggle('hover:bg-white', !on);
+      });
+      document.querySelectorAll('.project').forEach((p) => {
+        const show = f === 'all' || p.dataset.cat === f;
+        p.hidden = !show;
+        p.classList.toggle('lg:col-span-2', show && (f !== 'all' || p.dataset.cat === 'saas'));
+      });
+    }
+    btns.forEach((b) => b.addEventListener('click', () => setFilter(b.dataset.filter)));
+    setFilter('all');
+
+    // Gentle parallax on hero blobs (skipped for reduced motion)
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const layers = document.querySelectorAll('[data-parallax]');
+      let ticking = false;
+      addEventListener('scroll', () => {
+        if (ticking) return; ticking = true;
+        requestAnimationFrame(() => {
+          layers.forEach((l) => { l.style.transform = `translate3d(0, ${scrollY * l.dataset.parallax}px, 0)`; });
+          ticking = false;
+        });
+      }, { passive: true });
+    }
+  </script>
+  <script src="assets/site.js" defer></script>
+</body>
+</html>
