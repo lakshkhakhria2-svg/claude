@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** SVK Media
+**Project:** LK Media
 **Generated:** 2026-09-30 10:36:27
 **Category:** Marketing Agency
 

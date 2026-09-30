@@ -1,11 +1,11 @@
-# SVK Media: startup web design portfolio
+# LK Media: startup web design portfolio
 
-The SVK Media agency site plus three concept startup sites to use as portfolio pieces on Contra and Clutch.
+The LK Media agency site plus three concept startup sites to use as portfolio pieces on Contra and Clutch.
 Every design system comes from the **UI UX Pro Max** skill (`.claude/skills/ui-ux-pro-max/`).
 
 | Page | Path | Skill design system |
 |---|---|---|
-| Agency / portfolio | `index.html` | `design-system/svk-media/` (Motion-Driven · Portfolio Grid · Archivo + Space Grotesk) |
+| Agency / portfolio | `index.html` | `design-system/lk-media/` (Motion-Driven · Portfolio Grid · Archivo + Space Grotesk) |
 | Cadence (SaaS) | `work/cadence/` | `design-system/cadence/` (Micro-interactions · Personalised landing · Plus Jakarta Sans) |
 | Northvault (fintech) | `work/northvault/` | `design-system/northvault/` (Dark Mode OLED · Hero + Testimonials + CTA · IBM Plex Sans) |
 | Brightwater (local service) | `work/brightwater/` | `design-system/brightwater/` (Soft UI Evolution · Hero + Testimonials + CTA · Lexend + Source Sans 3) |
@@ -43,7 +43,7 @@ The pages are plain static HTML. `assets/styles.css` is committed, so any static
 
 ## Brand
 
-`brand/svk-media-logo-{a,b,c}.png` are 1024×1024 logo / profile-picture options (A is used on the site).
+`brand/lk-media-logo-{a,b,c}.png` are 1024×1024 logo / profile-picture options (A is used on the site).
 Source: `brand/logos.html`.
 
 ## Using the samples on Contra and Clutch

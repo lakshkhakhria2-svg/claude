@@ -4,7 +4,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = sys.argv[1]
 urls = json.load(open(sys.argv[2])) if len(sys.argv) > 2 and os.path.exists(sys.argv[2]) else {}
 AGENCY = urls.get('agency', '#')
-TITLES = {'agency': 'SVK Media', 'cadence': 'Cadence', 'northvault': 'Northvault', 'brightwater': 'Brightwater Cleaning'}
+TITLES = {'agency': 'LK Media', 'cadence': 'Cadence', 'northvault': 'Northvault', 'brightwater': 'Brightwater Cleaning'}
 # All content visible at rest (artifact rule): reveal only fades, never hides.
 RESTING = '<style>.js .reveal{opacity:1!important;transform:none!important}</style>\n'
 
@@ -48,7 +48,7 @@ def build(name, src, rel_prefix):
         os.makedirs(os.path.join(d, 'assets/work'), exist_ok=True); os.makedirs(os.path.join(d, 'brand'), exist_ok=True)
         for s in ('cadence', 'northvault', 'brightwater'):
             shutil.copy(os.path.join(ROOT, f'assets/work/{s}.jpg'), os.path.join(d, f'assets/work/{s}.jpg'))
-        shutil.copy(os.path.join(ROOT, 'brand/svk-media-logo-a.png'), os.path.join(d, 'brand/svk-media-logo-a.png'))
+        shutil.copy(os.path.join(ROOT, 'brand/lk-media-logo-a.png'), os.path.join(d, 'brand/lk-media-logo-a.png'))
 
 build('agency', 'index.html', '')
 for s in ('cadence', 'northvault', 'brightwater'):

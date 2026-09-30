@@ -1,4 +1,4 @@
-# Home page overrides (SVK Media)
+# Home page overrides (LK Media)
 
 Rules here override `../MASTER.md`. Each one fixes a failure of the Master's own "4.5:1 minimum contrast" rule.
 
