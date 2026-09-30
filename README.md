@@ -1,5 +1,7 @@
 # LK Media: startup web design portfolio
 
+**Live:** https://lk-media.netlify.app/ (Netlify Drop; redeploy by dragging a fresh build folder onto the site's Deploys tab)
+
 The LK Media agency site plus three concept startup sites to use as portfolio pieces on Contra and Clutch.
 Every design system comes from the **UI UX Pro Max** skill (`.claude/skills/ui-ux-pro-max/`).
 
@@ -49,6 +51,6 @@ Source: `brand/logos.html`.
 ## Using the samples on Contra and Clutch
 
 - `assets/work/*.jpg` are 1440×900 desktop and 390×844 mobile screenshots, ready to upload as project covers.
-- Link each project to its live URL once deployed (e.g. `…/work/cadence/`).
+- Live project links: https://lk-media.netlify.app/work/cadence/, …/work/northvault/, …/work/brightwater/
 - Always label them **concept projects**. The pages already say so in a banner and footer, and every
   quote, figure and phone number on them is illustrative. Replace them with real client work as it comes in.
