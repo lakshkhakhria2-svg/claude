@@ -1,11 +1,11 @@
-# Laksh Khakhria: startup web design portfolio
+# SVK Media: startup web design portfolio
 
-My agency site plus three concept startup sites to use as portfolio pieces on Contra and Clutch.
+The SVK Media agency site plus three concept startup sites to use as portfolio pieces on Contra and Clutch.
 Every design system comes from the **UI UX Pro Max** skill (`.claude/skills/ui-ux-pro-max/`).
 
 | Page | Path | Skill design system |
 |---|---|---|
-| Agency / portfolio | `index.html` | `design-system/laksh-khakhria-studio/` (Motion-Driven · Portfolio Grid · Archivo + Space Grotesk) |
+| Agency / portfolio | `index.html` | `design-system/svk-media/` (Motion-Driven · Portfolio Grid · Archivo + Space Grotesk) |
 | Cadence (SaaS) | `work/cadence/` | `design-system/cadence/` (Micro-interactions · Personalised landing · Plus Jakarta Sans) |
 | Northvault (fintech) | `work/northvault/` | `design-system/northvault/` (Dark Mode OLED · Hero + Testimonials + CTA · IBM Plex Sans) |
 | Brightwater (local service) | `work/brightwater/` | `design-system/brightwater/` (Soft UI Evolution · Hero + Testimonials + CTA · Lexend + Source Sans 3) |
@@ -37,6 +37,11 @@ The pages are plain static HTML. `assets/styles.css` is committed, so any static
 
 - **GitHub Pages:** go to repo Settings → Pages → Deploy from branch → pick the branch and `/ (root)`.
 - **Netlify / Vercel / Cloudflare Pages:** import the repo. Leave the build command empty and set the output directory to `/`.
+
+## Brand
+
+`brand/svk-media-logo-{a,b,c}.png` are 1024×1024 logo / profile-picture options (A is used on the site).
+Source: `brand/logos.html`.
 
 ## Using the samples on Contra and Clutch
 

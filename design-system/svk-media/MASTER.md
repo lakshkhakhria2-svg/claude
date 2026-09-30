@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** Laksh Khakhria Studio
+**Project:** SVK Media
 **Generated:** 2026-09-30 10:36:27
 **Category:** Marketing Agency
 
