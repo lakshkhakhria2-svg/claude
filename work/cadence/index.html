@@ -5,322 +5,546 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cadence — Async standups for remote teams</title>
   <meta name="description" content="Cadence replaces daily standup meetings with a 2-minute async check-in. Concept project by LK Media.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230D9488'/></svg>">
+  <meta name="theme-color" content="#134E4A">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230D9488'/><path d='M6 16h4l3-8 6 16 3-8h4' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <script>(function(r){r.classList.add('js');var m=matchMedia('(prefers-reduced-motion: reduce)').matches,o=null;try{o=localStorage.getItem('lk-motion')}catch(e){}if(!m&&o!=='off')r.classList.add('mo')})(document.documentElement)</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap"></noscript>
   <link rel="stylesheet" href="../../assets/styles.css">
+  <style>
+    .dots { background-image: radial-gradient(rgb(13 148 136 / .22) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(ellipse at 60% 40%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse at 60% 40%, #000 20%, transparent 70%); }
+    .seg { position: relative; }
+    .seg__pill { position: absolute; top: 4px; left: 0; height: calc(100% - 8px); border-radius: .6rem; background: #134E4A; transform-origin: 0 50%; }
+    .seg button { position: relative; z-index: 1; transition: color .3s; }
+    .seg button[aria-pressed="true"] { color: #fff; }
+    .checkin { transform-origin: 50% 0; }
+    .caret::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: -2px; background: currentColor; }
+    .mo .caret::after { animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .switch { position: relative; width: 3.5rem; height: 2rem; border-radius: 99px; background: #CCFBF1; transition: background-color .3s; }
+    .switch::after { content: ''; position: absolute; top: .25rem; left: .25rem; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgb(0 0 0 / .2); transition: transform .45s cubic-bezier(.2,1.3,.3,1); }
+    [aria-checked="true"] .switch { background: #0F766E; }
+    [aria-checked="true"] .switch::after { transform: translateX(1.5rem); }
+    .tile { position: relative; overflow: hidden; isolation: isolate; }
+    .tile > *:not(.tilt-spot) { position: relative; z-index: 1; }
+    .tile .ico { transition: transform .6s cubic-bezier(.2,1.4,.3,1); }
+    @media (hover: hover) { .tile:hover .ico { transform: rotate(-10deg) scale(1.12); } .tile:hover .hand { transform: rotate(300deg); } .tile:hover .bar-g { transform: scaleY(1.15); } }
+    .hand { transform-origin: 12px 12px; transition: transform 1.2s cubic-bezier(.2,.8,.2,1); }
+    .bar-g { transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.2,1.4,.3,1); }
+    .toggle-chip { transition: background-color .4s, color .4s; }
+  </style>
 </head>
-<body class="bg-cadence-bg font-jakarta text-cadence-text">
-  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
+<body class="theme-cadence bg-cadence-bg font-jakarta text-cadence-text">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
 
-  <div class="bg-cadence-text px-4 py-2 text-center text-sm text-white">
-    Concept project designed by <a href="../../index.html" class="font-semibold underline underline-offset-2 hover:text-cadence-line">LK Media</a>. Cadence is not a real company.
+  <div class="curtain" data-curtain aria-hidden="true">
+    <div class="curtain__word items-center gap-3 text-5xl font-extrabold tracking-tight">
+      <svg class="h-12 w-12 text-cadence-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg><span>Cadence</span>
+    </div>
+  </div>
+  <div class="scroll-progress" data-progress aria-hidden="true"></div>
+
+  <div class="relative z-[51] bg-cadence-text px-4 py-2 text-center text-sm text-white">
+    Concept project designed by <a href="../../" class="font-semibold underline underline-offset-2 hover:text-cadence-line">LK Media</a>. Cadence is not a real company.
   </div>
 
-  <!-- Floating navbar -->
-  <header class="sticky top-4 z-40 mx-4 mt-4">
-    <nav class="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-cadence-line bg-white/90 px-4 py-3 shadow-sm backdrop-blur sm:px-6" aria-label="Main">
-      <a href="#" class="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-        <svg class="h-7 w-7 text-cadence-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg>
+  <header class="nav-shell sticky top-3 z-50 mx-3 mt-3 sm:mx-5" data-nav>
+    <nav class="nav-glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-cadence-line px-4 py-2.5 shadow-sm sm:px-6" aria-label="Main">
+      <a href="#top" class="nav-logo flex items-center gap-2 text-lg font-extrabold tracking-tight" aria-label="Cadence, back to top">
+        <svg class="h-7 w-7 text-cadence-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>
         Cadence
       </a>
-      <div class="hidden items-center gap-8 text-sm font-medium md:flex">
-        <a href="#features" class="transition-colors duration-150 hover:text-cadence-deep">Features</a>
-        <a href="#stories" class="transition-colors duration-150 hover:text-cadence-deep">Customers</a>
-        <a href="#pricing" class="transition-colors duration-150 hover:text-cadence-deep">Pricing</a>
+      <div class="hidden items-center gap-8 text-sm font-semibold md:flex">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#how" class="nav-link">How it works</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#faq" class="nav-link">FAQ</a>
       </div>
-      <div class="hidden items-center gap-3 md:flex">
-        <a href="#" class="rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-150 hover:bg-cadence-bg">Log in</a>
-        <a href="#start" class="rounded-lg bg-cadence-cta px-4 py-2 text-sm font-bold text-cadence-ctaink shadow-sm transition duration-100 hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep focus-visible:ring-offset-2 motion-reduce:transform-none">Start free</a>
+      <div class="hidden items-center gap-2 md:flex">
+        <a href="#start" class="inline-flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold hover:bg-cadence-bg">Log in</a>
+        <a href="#start" data-magnetic="0.25" class="inline-flex min-h-[44px] items-center rounded-xl bg-cadence-cta px-4 text-sm font-bold text-cadence-ctaink shadow-sm"><span data-magnetic-inner>Start free</span></a>
       </div>
-      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
+      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg md:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
         <span class="sr-only">Open menu</span>
-        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
       </button>
     </nav>
-    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl border border-cadence-line bg-white p-4 shadow-lg md:hidden">
-      <a href="#features" class="block rounded-lg px-3 py-3 font-medium hover:bg-cadence-bg">Features</a>
-      <a href="#stories" class="block rounded-lg px-3 py-3 font-medium hover:bg-cadence-bg">Customers</a>
-      <a href="#pricing" class="block rounded-lg px-3 py-3 font-medium hover:bg-cadence-bg">Pricing</a>
-      <a href="#start" class="mt-2 block rounded-lg bg-cadence-cta px-3 py-3 text-center font-bold text-cadence-ctaink">Start free</a>
+    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl border border-cadence-line bg-white p-3 shadow-xl md:hidden">
+      <a href="#features" class="block rounded-xl px-4 py-3 font-semibold hover:bg-cadence-bg">Features</a>
+      <a href="#how" class="block rounded-xl px-4 py-3 font-semibold hover:bg-cadence-bg">How it works</a>
+      <a href="#pricing" class="block rounded-xl px-4 py-3 font-semibold hover:bg-cadence-bg">Pricing</a>
+      <a href="#faq" class="block rounded-xl px-4 py-3 font-semibold hover:bg-cadence-bg">FAQ</a>
+      <a href="#start" class="mt-2 block rounded-xl bg-cadence-cta px-4 py-3 text-center font-bold text-cadence-ctaink">Start free</a>
     </div>
   </header>
 
   <main id="main">
-    <!-- 1. Personalised hero -->
-    <section class="mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 lg:px-8 lg:pt-20">
-      <div class="grid items-center gap-12 lg:grid-cols-2">
-        <div>
-          <p class="text-sm font-semibold text-cadence-deep">I lead a team in…</p>
-          <div class="mt-3 inline-flex flex-wrap gap-1 rounded-xl border border-cadence-line bg-white p-1" role="tablist" aria-label="Choose your team">
-            <button type="button" role="tab" data-role="eng" aria-selected="true" class="role-tab min-h-[44px] cursor-pointer rounded-lg px-4 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep">Engineering</button>
-            <button type="button" role="tab" data-role="product" aria-selected="false" class="role-tab min-h-[44px] cursor-pointer rounded-lg px-4 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep">Product</button>
-            <button type="button" role="tab" data-role="ops" aria-selected="false" class="role-tab min-h-[44px] cursor-pointer rounded-lg px-4 text-sm font-semibold transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep">Operations</button>
-          </div>
-          <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl" aria-live="polite">
-            <span data-copy="headline">Ship more. Meet less.</span>
-          </h1>
-          <p class="mt-5 max-w-xl text-lg leading-relaxed text-cadence-text/90" data-copy="sub">
-            Cadence swaps the 15-minute daily standup for a 2-minute async check-in that pulls straight from GitHub and Linear.
-          </p>
-          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href="#start" class="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-cadence-cta px-6 font-bold text-cadence-ctaink shadow-md transition duration-100 hover:-translate-y-px hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep focus-visible:ring-offset-2 motion-reduce:transform-none">
-              Start free, no card
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-            <a href="#features" class="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-cadence-deep px-6 font-bold text-cadence-deep transition-colors duration-150 hover:bg-cadence-deep hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cadence-deep focus-visible:ring-offset-2">See how it works</a>
-          </div>
-          <p class="mt-4 text-sm text-cadence-text/80">Set up in 3 minutes. Works in Slack and Teams.</p>
-        </div>
-
-        <!-- Product mock -->
-        <div class="relative">
-          <div class="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-cadence-secondary/30 to-cadence-cta/20 blur-2xl" aria-hidden="true"></div>
-          <div class="rounded-2xl border border-cadence-line bg-white p-5 shadow-xl">
-            <div class="flex items-center justify-between border-b border-cadence-line pb-4">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-cadence-deep">Today's check-in</p>
-                <p class="mt-1 font-bold" data-copy="team">Platform team · 6 of 7 in</p>
-              </div>
-              <span class="inline-flex items-center gap-1.5 rounded-full bg-cadence-bg px-3 py-1 text-xs font-semibold text-cadence-deep">
-                <span class="h-2 w-2 rounded-full bg-cadence-primary motion-safe:animate-pulse" aria-hidden="true"></span> Live
-              </span>
-            </div>
-            <ul class="mt-4 space-y-3" data-copy="updates">
-              <li class="rounded-xl border border-cadence-line p-3">
-                <div class="flex items-center gap-3"><span class="grid h-8 w-8 place-items-center rounded-full bg-cadence-deep text-xs font-bold text-white">MA</span><p class="text-sm font-semibold">Maya A.</p><span class="ml-auto text-xs text-cadence-text">9:02</span></div>
-                <p class="mt-2 text-sm text-cadence-text/90">Merged auth refactor (#482). Today: rate-limit tests.</p>
-              </li>
-              <li class="rounded-xl border border-cadence-line p-3">
-                <div class="flex items-center gap-3"><span class="grid h-8 w-8 place-items-center rounded-full bg-cadence-text text-xs font-bold text-white">JO</span><p class="text-sm font-semibold">Jonah O.</p><span class="ml-auto text-xs text-cadence-text">9:14</span></div>
-                <p class="mt-2 text-sm text-cadence-text/90">Blocked on staging DB access. Needs someone with admin rights.</p>
-                <span class="mt-2 inline-flex items-center gap-1 rounded-md bg-orange-100 px-2 py-0.5 text-xs font-semibold text-cadence-ctaink">Blocker flagged</span>
-              </li>
-            </ul>
-            <div class="mt-4 flex items-center gap-3 rounded-xl bg-cadence-bg p-3 text-sm">
-              <svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
-              <span>Summary posted to <strong>#platform</strong>. 1 blocker routed to Sam.</span>
-            </div>
-          </div>
-        </div>
+    <!-- 1. Personalised hero with a live product demo -->
+    <section id="top" class="relative isolate -mt-20 overflow-hidden pt-28 lg:pt-32" data-hero>
+      <div class="aurora" aria-hidden="true">
+        <div class="dots absolute inset-0"></div>
+        <div class="blob" data-follow="0.04" style="--c:#14B8A6;--o:.35;width:46rem;height:46rem;right:-12rem;top:-10rem"></div>
+        <div class="blob" data-follow="-0.03" style="--c:#F97316;--o:.18;--t:22s;width:32rem;height:32rem;right:18rem;top:18rem"></div>
       </div>
+      <div class="mx-auto grid max-w-6xl items-center gap-14 px-4 pb-16 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:px-8 lg:pb-24">
+        <div>
+          <p class="text-sm font-semibold text-cadence-deep" id="team-label" data-hero-item>I lead a team in…</p>
+          <div class="seg mt-3 inline-flex flex-wrap gap-1 rounded-xl border border-cadence-line bg-white p-1 shadow-sm" role="group" aria-labelledby="team-label" data-hero-item>
+            <span class="seg__pill" aria-hidden="true"></span>
+            <button type="button" data-role="eng" aria-pressed="true" class="min-h-[44px] cursor-pointer rounded-lg px-4 text-sm font-bold">Engineering</button>
+            <button type="button" data-role="product" aria-pressed="false" class="min-h-[44px] cursor-pointer rounded-lg px-4 text-sm font-bold">Product</button>
+            <button type="button" data-role="ops" aria-pressed="false" class="min-h-[44px] cursor-pointer rounded-lg px-4 text-sm font-bold">Operations</button>
+          </div>
+          <p class="sr-only" role="status" data-role-status></p>
+          <h1 class="mt-7 text-[clamp(2.5rem,5.6vw,4.4rem)] font-extrabold leading-[1.02] tracking-tight" data-copy="headline">Ship more. Meet less.</h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-cadence-text/90" data-copy="sub" data-hero-item>Cadence swaps the 15-minute daily standup for a 2-minute async check-in that pulls straight from GitHub and Linear.</p>
+          <div class="mt-9 flex flex-col gap-3 sm:flex-row" data-hero-item>
+            <a href="#start" data-magnetic class="btn-glow inline-flex min-h-[52px] items-center justify-center rounded-xl px-6 font-bold text-cadence-ctaink [--btn-bg:#F97316]">
+              <span class="shine" aria-hidden="true"></span>
+              <span class="btn-label" data-magnetic-inner>Start free, no card <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+            </a>
+            <a href="#how" class="inline-flex min-h-[52px] items-center justify-center rounded-xl border-2 border-cadence-deep px-6 font-bold text-cadence-deep transition-colors duration-200 hover:bg-cadence-deep hover:text-white">See how it works</a>
+          </div>
+          <p class="mt-4 text-sm text-cadence-text/80" data-hero-item>Set up in 3 minutes. Works in Slack and Teams.</p>
+        </div>
 
-      <div class="mt-16 border-t border-cadence-line pt-8">
-        <p class="text-center text-sm font-semibold text-cadence-text/80">Plugs into the tools your team already uses</p>
-        <ul class="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-lg font-bold text-cadence-text/80">
-          <li>Slack</li><li>Microsoft Teams</li><li>GitHub</li><li>Linear</li><li>Jira</li><li>Google Calendar</li>
-        </ul>
+        <!-- Product demo (animated). Decorative copy of the UI; summarised for screen readers. -->
+        <div class="relative" data-hero-item>
+          <div class="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-cadence-secondary/30 via-white/0 to-cadence-cta/25 blur-2xl" aria-hidden="true"></div>
+          <figure class="overflow-hidden rounded-2xl border border-cadence-line bg-white shadow-[0_40px_80px_-30px_rgba(19,78,74,.45)]" data-tilt="4">
+            <figcaption class="sr-only">Product preview: today's async check-ins arriving for the selected team, with one blocker flagged and a summary posted to the team channel.</figcaption>
+            <div class="flex items-center gap-2 border-b border-cadence-line bg-cadence-bg/60 px-4 py-2.5" aria-hidden="true">
+              <span class="h-2.5 w-2.5 rounded-full bg-[#F87171]"></span><span class="h-2.5 w-2.5 rounded-full bg-[#FBBF24]"></span><span class="h-2.5 w-2.5 rounded-full bg-[#34D399]"></span>
+              <span class="ml-3 truncate rounded-md bg-white px-3 py-1 text-xs text-cadence-text/80">lk-media.netlify.app/work/cadence/app</span>
+            </div>
+            <div class="p-5" aria-hidden="true">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-cadence-deep">Today's check-in</p>
+                  <p class="mt-1 font-bold"><span data-copy="team">Platform team</span> · <span data-demo-count>6</span> of <span data-demo-total>7</span> in</p>
+                </div>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-cadence-bg px-3 py-1 text-xs font-bold text-cadence-deep"><span class="h-2 w-2 rounded-full bg-cadence-primary motion-safe:animate-pulse"></span> Live</span>
+              </div>
+              <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-cadence-line"><div class="h-full origin-left rounded-full bg-gradient-to-r from-cadence-primary to-cadence-secondary" style="transform:scaleX(.86)" data-demo-bar></div></div>
+              <ul class="mt-4 space-y-3" data-demo-list></ul>
+              <div class="mt-4 flex items-center gap-3 rounded-xl bg-cadence-text p-3 text-sm text-white" data-demo-summary>
+                <svg class="h-5 w-5 shrink-0 text-cadence-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+                <span>Summary posted to <strong data-copy="channel">#platform</strong>. 1 blocker routed.</span>
+              </div>
+            </div>
+          </figure>
+        </div>
       </div>
     </section>
 
-    <!-- 2. Relevant features -->
-    <section id="features" class="bg-white py-20">
+    <!-- 2. Integrations: rotating word + velocity marquee -->
+    <section class="border-y border-cadence-line bg-white py-10" aria-labelledby="int-title">
+      <h2 id="int-title" class="px-4 text-center text-lg font-bold sm:text-xl">Plugs into
+        <span class="rotator text-cadence-deep" data-rotator aria-hidden="true"><span class="rotator__word">Slack.</span><span class="rotator__word">Teams.</span><span class="rotator__word">GitHub.</span><span class="rotator__word">Linear.</span><span class="rotator__word">Jira.</span></span><span class="sr-only">Slack, Microsoft Teams, GitHub, Linear and Jira.</span>
+      </h2>
+      <div class="marquee mt-7 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]" data-marquee="30">
+        <div class="marquee__track">
+          <ul class="marquee__group gap-4 pr-4 text-lg font-bold text-cadence-text/85">
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Slack</li>
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Microsoft Teams</li>
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v12M18 15V9a3 3 0 0 0-3-3h-3"/></svg>GitHub</li>
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12 12 3l9 9-9 9z"/></svg>Linear</li>
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg>Jira</li>
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Google Calendar</li>
+            <li class="flex items-center gap-2.5 rounded-full border border-cadence-line px-5 py-2.5"><svg class="h-5 w-5 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Notion</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Bento features (top row is personalised) -->
+    <section id="features" class="py-24 lg:py-32">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div class="max-w-2xl">
-          <p class="text-sm font-semibold uppercase tracking-wider text-cadence-deep">Features</p>
-          <h2 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl" data-copy="featuresTitle">Built for how engineers actually work</h2>
+          <p class="text-sm font-bold uppercase tracking-wider text-cadence-deep">Features</p>
+          <h2 class="mt-3 text-[clamp(2rem,4vw,3rem)] font-extrabold leading-tight tracking-tight" data-copy="featuresTitle">Built for how engineers actually work</h2>
         </div>
-        <div class="mt-12 grid gap-6 md:grid-cols-3" data-copy="features">
-          <!-- filled by script; the markup below is the no-JS default -->
-          <article class="reveal rounded-2xl border border-cadence-line bg-cadence-bg p-6 transition duration-100 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-white text-cadence-deep shadow-sm"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></span>
-            <h3 class="mt-5 text-lg font-bold">Auto-drafted from commits</h3>
-            <p class="mt-2 leading-relaxed text-cadence-text/90">Cadence reads yesterday's PRs and tickets and writes the first draft. You just confirm it.</p>
+        <div class="mt-12 grid gap-4 md:grid-cols-6" data-reveal-group>
+          <article class="tile flex min-h-[18rem] flex-col rounded-3xl bg-cadence-text p-7 text-white md:col-span-3 md:row-span-2" data-tilt="4" data-feature="0">
+            <span class="tilt-spot" style="--spot:rgba(20,184,166,.35)" aria-hidden="true"></span>
+            <span class="ico grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-cadence-secondary"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></span>
+            <h3 class="mt-6 text-2xl font-extrabold" data-f="h">Auto-drafted from commits</h3>
+            <p class="mt-2 max-w-md leading-relaxed text-cadence-line" data-f="p">Cadence reads yesterday's PRs and tickets and writes the first draft. You just confirm it.</p>
+            <div class="mt-auto pt-8" aria-hidden="true">
+              <div class="rounded-2xl bg-white/10 p-4 text-sm">
+                <p class="text-xs font-bold uppercase tracking-wider text-cadence-secondary">Draft · 8:58</p>
+                <p class="mt-2"><span data-type-target>Yesterday: shipped onboarding emails. Today: pairing on billing.</span></p>
+                <div class="mt-3 flex gap-2"><span class="rounded-lg bg-cadence-cta px-3 py-1.5 text-xs font-bold text-cadence-ctaink">Post</span><span class="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold">Edit</span></div>
+              </div>
+            </div>
           </article>
-          <article class="reveal rounded-2xl border border-cadence-line bg-cadence-bg p-6 transition duration-100 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-white text-cadence-deep shadow-sm"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span>
-            <h3 class="mt-5 text-lg font-bold">Blockers routed in minutes</h3>
-            <p class="mt-2 leading-relaxed text-cadence-text/90">Flag a blocker and Cadence pings the one person who can unblock it, not the whole channel.</p>
+          <article class="tile flex min-h-[14rem] flex-col rounded-3xl border border-cadence-line bg-white p-7 md:col-span-3" data-tilt="5" data-feature="1">
+            <span class="tilt-spot" style="--spot:rgba(13,148,136,.15)" aria-hidden="true"></span>
+            <span class="ico grid h-12 w-12 place-items-center rounded-2xl bg-cadence-bg text-cadence-deep"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg></span>
+            <h3 class="mt-6 text-xl font-extrabold" data-f="h">Blockers routed in minutes</h3>
+            <p class="mt-2 leading-relaxed text-cadence-text/90" data-f="p">Flag a blocker and Cadence pings the one person who can unblock it, not the whole channel.</p>
           </article>
-          <article class="reveal rounded-2xl border border-cadence-line bg-cadence-bg p-6 transition duration-100 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-white text-cadence-deep shadow-sm"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-            <h3 class="mt-5 text-lg font-bold">Any time zone</h3>
-            <p class="mt-2 leading-relaxed text-cadence-text/90">Everyone checks in during their own morning. Nobody joins a call at 11pm.</p>
+          <article class="tile flex min-h-[14rem] flex-col rounded-3xl border border-cadence-line bg-white p-7 md:col-span-3" data-tilt="5" data-feature="2">
+            <span class="tilt-spot" style="--spot:rgba(249,115,22,.15)" aria-hidden="true"></span>
+            <span class="ico grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-cadence-ctaink"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+            <h3 class="mt-6 text-xl font-extrabold" data-f="h">Any time zone</h3>
+            <p class="mt-2 leading-relaxed text-cadence-text/90" data-f="p">Everyone checks in during their own morning. Nobody joins a call at 11pm.</p>
+          </article>
+          <article class="tile flex min-h-[14rem] flex-col rounded-3xl border border-cadence-line bg-white p-7 md:col-span-2" data-tilt="6">
+            <span class="tilt-spot" style="--spot:rgba(13,148,136,.15)" aria-hidden="true"></span>
+            <svg class="h-14 w-14 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path class="hand" d="M12 12V6.5"/><path class="hand" style="transition-duration:1.8s" d="M12 12h3.5"/></svg>
+            <h3 class="mt-5 text-lg font-extrabold">Nudges at your hour</h3>
+            <p class="mt-2 text-sm leading-relaxed text-cadence-text/90">Each person picks when their reminder arrives.</p>
+          </article>
+          <article class="tile flex min-h-[14rem] flex-col rounded-3xl border border-cadence-line bg-white p-7 md:col-span-2" data-tilt="6">
+            <span class="tilt-spot" style="--spot:rgba(13,148,136,.15)" aria-hidden="true"></span>
+            <div class="flex h-14 items-end gap-1.5" aria-hidden="true"><span class="bar-g h-6 w-4 rounded bg-cadence-line"></span><span class="bar-g h-9 w-4 rounded bg-cadence-line" style="transition-delay:.05s"></span><span class="bar-g h-7 w-4 rounded bg-cadence-line" style="transition-delay:.1s"></span><span class="bar-g h-11 w-4 rounded bg-cadence-secondary" style="transition-delay:.15s"></span><span class="bar-g h-14 w-4 rounded bg-cadence-primary" style="transition-delay:.2s"></span></div>
+            <h3 class="mt-5 text-lg font-extrabold">Weekly trends</h3>
+            <p class="mt-2 text-sm leading-relaxed text-cadence-text/90">See check-in rates and repeat blockers over time.</p>
+          </article>
+          <article class="tile flex min-h-[14rem] flex-col rounded-3xl bg-cadence-cta p-7 text-cadence-ctaink md:col-span-2" data-tilt="6">
+            <span class="tilt-spot" style="--spot:rgba(255,255,255,.4)" aria-hidden="true"></span>
+            <p class="text-5xl font-extrabold"><span data-count="2">2</span> min</p>
+            <h3 class="mt-auto pt-5 text-lg font-extrabold">Per check-in</h3>
+            <p class="mt-2 text-sm font-medium leading-relaxed">Instead of a 15-minute meeting for everyone.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- How it works -->
-    <section class="py-20">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Three steps. Two minutes.</h2>
-        <ol class="mt-10 grid gap-8 md:grid-cols-3">
-          <li class="reveal"><span class="text-5xl font-extrabold text-cadence-primary">01</span><h3 class="mt-3 text-lg font-bold">Connect your tools</h3><p class="mt-2 leading-relaxed text-cadence-text/90">One-click install for Slack or Teams, plus your code and ticket tracker.</p></li>
-          <li class="reveal"><span class="text-5xl font-extrabold text-cadence-primary">02</span><h3 class="mt-3 text-lg font-bold">Pick a rhythm</h3><p class="mt-2 leading-relaxed text-cadence-text/90">Daily, twice a week or Mondays only. Each person gets a nudge at a time that suits them.</p></li>
-          <li class="reveal"><span class="text-5xl font-extrabold text-cadence-primary">03</span><h3 class="mt-3 text-lg font-bold">Read one summary</h3><p class="mt-2 leading-relaxed text-cadence-text/90">One digest per team with the blockers at the top, and no 15-minute meeting.</p></li>
-        </ol>
+    <!-- 4. How it works: pinned scroll story -->
+    <section id="how" class="bg-white" data-steps aria-labelledby="how-title">
+      <div class="px-4 sm:px-6 lg:px-8" data-steps-pin>
+        <div class="mx-auto w-full max-w-6xl py-24 md:py-0">
+          <div class="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-wider text-cadence-deep">How it works</p>
+              <h2 id="how-title" class="mt-3 text-[clamp(2rem,4vw,3rem)] font-extrabold tracking-tight">Three steps. Two minutes.</h2>
+            </div>
+            <ol class="hidden gap-2 md:flex" aria-hidden="true">
+              <li class="rounded-full border border-cadence-line px-4 py-2 text-sm font-bold [&.is-active]:border-cadence-text [&.is-active]:bg-cadence-text [&.is-active]:text-white" data-step-dot>1 · Connect</li>
+              <li class="rounded-full border border-cadence-line px-4 py-2 text-sm font-bold [&.is-active]:border-cadence-text [&.is-active]:bg-cadence-text [&.is-active]:text-white" data-step-dot>2 · Rhythm</li>
+              <li class="rounded-full border border-cadence-line px-4 py-2 text-sm font-bold [&.is-active]:border-cadence-text [&.is-active]:bg-cadence-text [&.is-active]:text-white" data-step-dot>3 · Read</li>
+            </ol>
+          </div>
+          <ol class="steps-list mt-12">
+            <li class="grid items-center gap-10 md:grid-cols-2" data-step>
+              <div>
+                <span class="text-7xl font-extrabold text-cadence-primary">01</span>
+                <h3 class="mt-3 text-3xl font-extrabold">Connect your tools</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed text-cadence-text/90">One-click install for Slack or Teams, plus your code and ticket tracker.</p>
+              </div>
+              <div class="rounded-3xl bg-cadence-bg p-6 sm:p-8" data-step-visual aria-hidden="true">
+                <ul class="space-y-3">
+                  <li class="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"><span class="font-bold">Slack</span><span class="toggle-chip rounded-full bg-cadence-deep px-3 py-1 text-xs font-bold text-white">Connected</span></li>
+                  <li class="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"><span class="font-bold">GitHub</span><span class="toggle-chip rounded-full bg-cadence-deep px-3 py-1 text-xs font-bold text-white">Connected</span></li>
+                  <li class="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"><span class="font-bold">Linear</span><span class="toggle-chip rounded-full border border-cadence-line px-3 py-1 text-xs font-bold">Connect</span></li>
+                </ul>
+              </div>
+            </li>
+            <li class="grid items-center gap-10 md:grid-cols-2" data-step>
+              <div>
+                <span class="text-7xl font-extrabold text-cadence-primary">02</span>
+                <h3 class="mt-3 text-3xl font-extrabold">Pick a rhythm</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed text-cadence-text/90">Daily, twice a week or Mondays only. Each person gets a nudge at a time that suits them.</p>
+              </div>
+              <div class="rounded-3xl bg-cadence-bg p-6 sm:p-8" data-step-visual aria-hidden="true">
+                <div class="rounded-2xl bg-white p-5 shadow-sm">
+                  <p class="text-sm font-bold">Check-in days</p>
+                  <div class="mt-3 grid grid-cols-5 gap-2 text-center text-sm font-bold"><span class="rounded-lg bg-cadence-text py-2.5 text-white">Mon</span><span class="rounded-lg border border-cadence-line py-2.5">Tue</span><span class="rounded-lg bg-cadence-text py-2.5 text-white">Wed</span><span class="rounded-lg border border-cadence-line py-2.5">Thu</span><span class="rounded-lg bg-cadence-text py-2.5 text-white">Fri</span></div>
+                  <p class="mt-5 text-sm font-bold">Nudge me at</p>
+                  <div class="mt-2 flex items-center justify-between rounded-xl border border-cadence-line px-4 py-3"><span class="text-2xl font-extrabold tabular-nums">09:00</span><span class="text-sm text-cadence-text/80">Your local time</span></div>
+                </div>
+              </div>
+            </li>
+            <li class="grid items-center gap-10 md:grid-cols-2" data-step>
+              <div>
+                <span class="text-7xl font-extrabold text-cadence-primary">03</span>
+                <h3 class="mt-3 text-3xl font-extrabold">Read one summary</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed text-cadence-text/90">One digest per team with the blockers at the top, and no 15-minute meeting.</p>
+              </div>
+              <div class="rounded-3xl bg-cadence-bg p-6 sm:p-8" data-step-visual aria-hidden="true">
+                <div class="rounded-2xl bg-white p-5 shadow-sm">
+                  <p class="text-xs font-bold uppercase tracking-wider text-cadence-deep">Daily digest · #platform</p>
+                  <p class="mt-3 rounded-xl bg-orange-50 p-3 text-sm font-semibold text-cadence-ctaink">1 blocker: staging DB access → routed to Sam</p>
+                  <ul class="mt-3 space-y-2 text-sm"><li>✓ Auth refactor merged</li><li>✓ Rate-limit tests in progress</li><li>✓ 6 of 7 checked in</li></ul>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </div>
       </div>
     </section>
 
-    <!-- 3. Tailored testimonial -->
-    <section id="stories" class="bg-cadence-text py-20 text-white">
+    <!-- 5. Tailored testimonial + illustrative numbers -->
+    <section id="stories" class="relative isolate overflow-hidden bg-cadence-night py-24 text-white lg:py-32">
+      <div class="aurora" aria-hidden="true"><div class="blob" data-parallax="80" style="--c:#0D9488;--o:.5;width:40rem;height:40rem;left:-12rem;top:-12rem"></div></div>
       <div class="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
         <svg class="mx-auto h-10 w-10 text-cadence-secondary" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.6 6C6.5 7.4 4.5 10.2 4.5 13.6c0 2.6 1.6 4.4 3.7 4.4 1.9 0 3.3-1.4 3.3-3.3 0-1.8-1.3-3.1-3-3.2.3-1.6 1.6-3.1 3.3-4L9.6 6zm9 0c-3.1 1.4-5.1 4.2-5.1 7.6 0 2.6 1.6 4.4 3.7 4.4 1.9 0 3.3-1.4 3.3-3.3 0-1.8-1.3-3.1-3-3.2.3-1.6 1.6-3.1 3.3-4L18.6 6z"/></svg>
-        <blockquote class="mt-6 text-2xl font-semibold leading-snug sm:text-3xl" data-copy="quote">
-          “We dropped our daily standup in week one. Blockers now get cleared before lunch, not the next day.”
-        </blockquote>
-        <p class="mt-6 font-semibold" data-copy="author">Priya Raman</p>
+        <blockquote class="mt-6 text-[clamp(1.5rem,3.2vw,2.4rem)] font-bold leading-snug" data-copy="quote">“We dropped our daily standup in week one. Blockers now get cleared before lunch, not the next day.”</blockquote>
+        <p class="mt-6 font-bold" data-copy="author">Priya Raman</p>
         <p class="text-sm text-cadence-line" data-copy="authorRole">Engineering Manager, a 40-person dev-tools startup</p>
-        <dl class="mx-auto mt-12 grid max-w-2xl grid-cols-3 gap-6 border-t border-white/20 pt-8">
-          <div><dt class="text-sm text-cadence-line">Meeting hours saved / week</dt><dd class="mt-1 text-3xl font-extrabold">6.5</dd></div>
-          <div><dt class="text-sm text-cadence-line">Faster blocker resolution</dt><dd class="mt-1 text-3xl font-extrabold">3×</dd></div>
-          <div><dt class="text-sm text-cadence-line">Check-in completion</dt><dd class="mt-1 text-3xl font-extrabold">94%</dd></div>
+        <dl class="mx-auto mt-14 grid max-w-3xl gap-8 border-t border-white/15 pt-10 sm:grid-cols-3">
+          <div class="flex flex-col"><dt class="text-sm text-cadence-line">Meeting hours saved / week</dt><dd class="order-first text-5xl font-extrabold"><span data-count="6.5" data-decimals="1">6.5</span></dd></div>
+          <div class="flex flex-col"><dt class="text-sm text-cadence-line">Faster blocker resolution</dt><dd class="order-first text-5xl font-extrabold"><span data-count="3">3</span>×</dd></div>
+          <div class="flex flex-col"><dt class="text-sm text-cadence-line">Check-in completion</dt><dd class="order-first text-5xl font-extrabold"><span data-count="94">94</span>%</dd></div>
         </dl>
+        <p class="mt-6 text-xs text-cadence-line">Illustrative figures for a concept product.</p>
       </div>
     </section>
 
-    <!-- Pricing -->
-    <section id="pricing" class="py-20">
+    <!-- 6. Pricing with a monthly / yearly toggle -->
+    <section id="pricing" class="py-24 lg:py-32">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-          <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Simple pricing that grows with your team</h2>
+          <h2 class="text-[clamp(2rem,4vw,3rem)] font-extrabold tracking-tight" data-split="words">Simple pricing that grows with your team</h2>
           <p class="mt-3 text-lg text-cadence-text/90">Free for up to 5 people. No credit card to start.</p>
+          <button type="button" role="switch" aria-checked="true" data-billing class="mx-auto mt-8 inline-flex min-h-[48px] cursor-pointer items-center gap-3 rounded-full border border-cadence-line bg-white py-2 pl-5 pr-2 font-bold shadow-sm">
+            <span>Monthly</span><span class="switch" aria-hidden="true"></span><span>Yearly</span>
+            <span class="rounded-full bg-cadence-cta px-3 py-1 text-xs font-bold text-cadence-ctaink" data-save>Save 25%</span>
+          </button>
         </div>
-        <div class="mt-12 grid gap-6 lg:grid-cols-3">
-          <div class="reveal flex flex-col rounded-2xl border border-cadence-line bg-white p-8">
-            <h3 class="text-lg font-bold">Starter</h3>
-            <p class="mt-4"><span class="text-4xl font-extrabold">$0</span></p>
-            <p class="mt-1 text-sm text-cadence-text/80">Up to 5 teammates</p>
-            <ul class="mt-6 space-y-3 text-sm">
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Daily async check-ins</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Slack or Teams</li>
-            </ul>
-            <a href="#start" class="mt-8 inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-cadence-deep font-bold text-cadence-deep transition-colors duration-150 hover:bg-cadence-deep hover:text-white">Start free</a>
+        <div class="mt-12 grid gap-6 lg:grid-cols-3" data-reveal-group>
+          <div class="flex flex-col rounded-3xl border border-cadence-line bg-white p-8">
+            <h3 class="text-lg font-extrabold">Starter</h3>
+            <p class="mt-4 text-5xl font-extrabold">$0</p>
+            <p class="mt-2 text-sm text-cadence-text/80">Up to 5 teammates</p>
+            <ul class="mb-8 mt-6 space-y-3 text-sm"><li>✓ Daily async check-ins</li><li>✓ Slack or Teams</li></ul>
+            <a href="#start" class="mt-auto inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-cadence-deep font-bold text-cadence-deep transition-colors duration-200 hover:bg-cadence-deep hover:text-white">Start free</a>
           </div>
-          <div class="reveal relative flex flex-col rounded-2xl border-2 border-cadence-primary bg-white p-8 shadow-xl">
-            <span class="absolute -top-3 left-8 rounded-full bg-cadence-primary px-3 py-1 text-xs font-bold text-white">Most popular</span>
-            <h3 class="text-lg font-bold">Team</h3>
-            <p class="mt-4"><span class="text-4xl font-extrabold">$6</span><span class="text-cadence-text/80"> / user / month</span></p>
-            <p class="mt-1 text-sm text-cadence-text/80">Billed annually</p>
-            <ul class="mt-6 space-y-3 text-sm">
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Everything in Starter</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>GitHub, Linear &amp; Jira drafts</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Blocker routing</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Weekly trend reports</li>
-            </ul>
-            <a href="#start" class="mt-8 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-cadence-cta font-bold text-cadence-ctaink shadow-md transition duration-100 hover:-translate-y-px hover:shadow-lg motion-reduce:transform-none">Try Team free for 14 days</a>
+          <div class="relative flex flex-col rounded-3xl bg-cadence-text p-8 text-white shadow-[0_40px_80px_-30px_rgba(19,78,74,.6)] lg:-my-4 lg:py-12">
+            <span class="absolute -top-3 left-8 rounded-full bg-cadence-cta px-3 py-1 text-xs font-bold text-cadence-ctaink">Most popular</span>
+            <h3 class="text-lg font-extrabold">Team</h3>
+            <p class="mt-4 flex items-baseline gap-2"><span class="text-5xl font-extrabold tabular-nums" data-price data-monthly="8" data-yearly="6" data-prefix="$" data-value="6">$6</span><span class="text-cadence-line">/ user / month</span></p>
+            <p class="mt-2 text-sm text-cadence-line" data-billing-note>Billed yearly</p>
+            <ul class="mt-6 space-y-3 text-sm"><li>✓ Everything in Starter</li><li>✓ GitHub, Linear &amp; Jira drafts</li><li>✓ Blocker routing</li><li>✓ Weekly trend reports</li></ul>
+            <a href="#start" class="btn-glow mt-8 inline-flex min-h-[48px] items-center justify-center rounded-xl font-bold text-cadence-ctaink [--btn-bg:#F97316]"><span class="shine" aria-hidden="true"></span><span class="btn-label">Try Team free for 14 days</span></a>
           </div>
-          <div class="reveal flex flex-col rounded-2xl border border-cadence-line bg-white p-8">
-            <h3 class="text-lg font-bold">Scale</h3>
-            <p class="mt-4"><span class="text-4xl font-extrabold">Custom</span></p>
-            <p class="mt-1 text-sm text-cadence-text/80">100+ teammates</p>
-            <ul class="mt-6 space-y-3 text-sm">
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>SSO &amp; SCIM</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Audit log</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Dedicated success manager</li>
-            </ul>
-            <a href="#start" class="mt-8 inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-cadence-deep font-bold text-cadence-deep transition-colors duration-150 hover:bg-cadence-deep hover:text-white">Talk to sales</a>
+          <div class="flex flex-col rounded-3xl border border-cadence-line bg-white p-8">
+            <h3 class="text-lg font-extrabold">Scale</h3>
+            <p class="mt-4 text-5xl font-extrabold">Custom</p>
+            <p class="mt-2 text-sm text-cadence-text/80">100+ teammates</p>
+            <ul class="mb-8 mt-6 space-y-3 text-sm"><li>✓ SSO &amp; SCIM</li><li>✓ Audit log</li><li>✓ Dedicated success manager</li></ul>
+            <a href="#start" class="mt-auto inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-cadence-deep font-bold text-cadence-deep transition-colors duration-200 hover:bg-cadence-deep hover:text-white">Talk to sales</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 4. Smart CTA -->
-    <section id="start" class="px-4 pb-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-6xl rounded-3xl bg-gradient-to-br from-cadence-deep to-cadence-text px-6 py-14 text-center text-white sm:px-12">
-        <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl" data-copy="ctaTitle">Cancel tomorrow's standup.</h2>
-        <p class="mx-auto mt-3 max-w-xl text-lg text-cadence-line">Try Cadence with your team for 14 days. If nobody misses the meeting, keep it.</p>
-        <form class="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row" onsubmit="event.preventDefault(); this.nextElementSibling.textContent='Thanks! Check your inbox for a setup link.';">
+    <!-- 7. FAQ -->
+    <section id="faq" class="bg-white py-24">
+      <div class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:px-8">
+        <h2 class="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-tight tracking-tight" data-split="words">Questions, answered.</h2>
+        <div class="border-t border-cadence-line">
+          <details class="acc border-b border-cadence-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">Does it replace our standup completely?<svg class="acc__icon h-6 w-6 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-cadence-text/90">For most teams, yes. Some keep one short call a week for planning and use Cadence for the daily updates.</div></details>
+          <details class="acc border-b border-cadence-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">Where do check-ins happen?<svg class="acc__icon h-6 w-6 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-cadence-text/90">In Slack or Microsoft Teams. Nobody needs to open another app.</div></details>
+          <details class="acc border-b border-cadence-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">Can managers see who skipped?<svg class="acc__icon h-6 w-6 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-cadence-text/90">Completion is shown per team, not per person, unless your workspace turns individual tracking on.</div></details>
+          <details class="acc border-b border-cadence-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">What happens after the trial?<svg class="acc__icon h-6 w-6 shrink-0 text-cadence-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-cadence-text/90">You drop back to the free Starter plan unless you choose to upgrade. Nothing is deleted.</div></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. CTA -->
+    <section id="start" class="px-4 py-24 sm:px-6 lg:px-8">
+      <div class="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-cadence-deep to-cadence-night px-6 py-16 text-center text-white sm:px-12">
+        <div class="aurora" aria-hidden="true"><div class="blob" data-follow="0.06" style="--c:#F97316;--o:.28;width:30rem;height:30rem;right:-8rem;top:-10rem"></div><div class="blob" data-follow="-0.05" style="--c:#14B8A6;--o:.4;width:30rem;height:30rem;left:-10rem;bottom:-12rem"></div></div>
+        <h2 class="relative text-[clamp(2rem,4.5vw,3.5rem)] font-extrabold tracking-tight" data-copy="ctaTitle">Cancel tomorrow's standup.</h2>
+        <p class="relative mx-auto mt-3 max-w-xl text-lg text-cadence-line">Try Cadence with your team for 14 days. If nobody misses the meeting, keep it.</p>
+        <form class="relative mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row" data-demo-form novalidate>
           <label for="cta-email" class="sr-only">Work email</label>
-          <input id="cta-email" type="email" required autocomplete="email" placeholder="you@company.com" class="min-h-[48px] flex-1 rounded-xl border-0 px-4 text-base text-cadence-text placeholder:text-cadence-text/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-cadence-cta">
-          <button type="submit" class="min-h-[48px] cursor-pointer rounded-xl bg-cadence-cta px-6 font-bold text-cadence-ctaink transition duration-100 hover:-translate-y-px hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white motion-reduce:transform-none">Start free</button>
+          <input id="cta-email" type="email" required autocomplete="email" placeholder="you@company.com" class="min-h-[52px] flex-1 rounded-xl border-0 px-4 text-base text-cadence-text placeholder:text-cadence-text/60 focus:outline-none focus-visible:ring-4 focus-visible:ring-cadence-cta" aria-describedby="cta-err">
+          <button type="submit" data-magnetic="0.2" class="min-h-[52px] cursor-pointer rounded-xl bg-cadence-cta px-6 font-bold text-cadence-ctaink"><span data-magnetic-inner>Start free</span></button>
         </form>
-        <p data-status class="mt-4 min-h-[1.5rem] font-semibold" role="status"></p>
+        <p id="cta-err" class="relative mt-3 min-h-[1.5rem] text-sm font-semibold text-orange-200" aria-live="polite"></p>
       </div>
     </section>
   </main>
 
   <footer class="border-t border-cadence-line bg-white">
-    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-cadence-text/80 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-      <p>© 2026 Cadence (concept). All names, quotes and figures are illustrative.</p>
-      <p>Design &amp; build: <a href="../../index.html" class="font-semibold text-cadence-deep underline underline-offset-2">LK Media</a></p>
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-cadence-text/90 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <p>© 2026 Cadence (concept project). All names, quotes and figures are illustrative.</p>
+      <div class="flex items-center gap-4">
+        <button type="button" data-motion-toggle class="min-h-[44px] rounded-full border border-cadence-line px-4 font-semibold disabled:opacity-60">Motion: <span data-motion-state>on</span></button>
+        <p>Design &amp; build: <a href="../../" class="font-bold text-cadence-deep underline underline-offset-2">LK Media</a></p>
+      </div>
     </div>
   </footer>
 
-  <script>
-    // Personalisation (skill pattern: "AI Personalization Landing", with Engineering as the fallback).
+  <script src="../../assets/vendor/gsap-bundle.min.js" defer></script>
+  <script src="../../assets/vendor/lenis.min.js" defer></script>
+  <script src="../../assets/motion.js" defer></script>
+  <script type="module">
+    const LK = window.LK || { mo: false };
+    const { gsap, mo } = LK;
+    const $ = (s, c = document) => c.querySelector(s), $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+
+    // ---------- Personalisation (Engineering is the default) ----------
     const COPY = {
       eng: {
-        headline: 'Ship more. Meet less.',
-        sub: "Cadence swaps the 15-minute daily standup for a 2-minute async check-in that pulls straight from GitHub and Linear.",
-        team: 'Platform team · 6 of 7 in',
+        label: 'Engineering', headline: 'Ship more. Meet less.',
+        sub: 'Cadence swaps the 15-minute daily standup for a 2-minute async check-in that pulls straight from GitHub and Linear.',
+        team: 'Platform team', total: 7, done: 6, channel: '#platform',
+        updates: [['MA', 'Maya A.', '9:02', 'Merged auth refactor (#482). Today: rate-limit tests.'], ['JO', 'Jonah O.', '9:14', 'Blocked on staging DB access. Needs someone with admin rights.', 'blocker'], ['SK', 'Sam K.', '9:21', 'Reviewing #490, then pairing with Jonah on staging.']],
         featuresTitle: 'Built for how engineers actually work',
-        features: [
-          ['Auto-drafted from commits', "Cadence reads yesterday's PRs and tickets and writes the first draft. You just confirm it."],
-          ['Blockers routed in minutes', 'Flag a blocker and Cadence pings the one person who can unblock it, not the whole channel.'],
-          ['Any time zone', 'Everyone checks in during their own morning. Nobody joins a call at 11pm.'],
-        ],
+        features: [['Auto-drafted from commits', "Cadence reads yesterday's PRs and tickets and writes the first draft. You just confirm it."], ['Blockers routed in minutes', 'Flag a blocker and Cadence pings the one person who can unblock it, not the whole channel.'], ['Any time zone', 'Everyone checks in during their own morning. Nobody joins a call at 11pm.']],
         quote: '“We dropped our daily standup in week one. Blockers now get cleared before lunch, not the next day.”',
-        author: 'Priya Raman', authorRole: 'Engineering Manager, a 40-person dev-tools startup',
-        ctaTitle: "Cancel tomorrow's standup.",
+        author: 'Priya Raman', authorRole: 'Engineering Manager, a 40-person dev-tools startup', ctaTitle: "Cancel tomorrow's standup.",
       },
       product: {
-        headline: 'Know what shipped, without asking.',
+        label: 'Product', headline: 'Know what shipped, without asking.',
         sub: 'Cadence gathers progress from design, engineering and QA into one daily digest, so roadmap updates take minutes, not meetings.',
-        team: 'Checkout squad · 5 of 5 in',
+        team: 'Checkout squad', total: 5, done: 5, channel: '#checkout',
+        updates: [['LM', 'Leo M.', '8:47', 'Checkout v2 at 80%. Copy review with design at 2pm.'], ['RA', 'Rina A.', '9:05', 'Payment errors spec signed off. Handing to eng today.'], ['TB', 'Tom B.', '9:30', 'QA found a currency bug on mobile Safari.', 'blocker']],
         featuresTitle: 'One view of every squad',
-        features: [
-          ['Roadmap roll-ups', 'Check-ins link to epics, so you see progress against the plan and not just a list of tasks.'],
-          ['Risk radar', 'Slipping items and repeat blockers surface on their own before a launch date is at risk.'],
-          ['Stakeholder digest', 'A weekly summary written for execs and sent automatically, so you stop rewriting status decks.'],
-        ],
+        features: [['Roadmap roll-ups', 'Check-ins link to epics, so you see progress against the plan and not just a list of tasks.'], ['Risk radar', 'Slipping items and repeat blockers surface on their own before a launch date is at risk.'], ['Stakeholder digest', 'A weekly summary written for execs and sent automatically, so you stop rewriting status decks.']],
         quote: '“My Friday status deck used to take two hours. Now I forward the Cadence digest and add one line.”',
-        author: 'Leo Martins', authorRole: 'Head of Product, a Series A fintech',
-        ctaTitle: 'Get your Fridays back.',
+        author: 'Leo Martins', authorRole: 'Head of Product, a Series A fintech', ctaTitle: 'Get your Fridays back.',
       },
       ops: {
-        headline: 'Keep every shift in sync.',
+        label: 'Operations', headline: 'Keep every shift in sync.',
         sub: 'Handovers, incidents and to-dos in one quick check-in, so the next shift starts with context instead of a scavenger hunt.',
-        team: 'Support ops · 11 of 12 in',
+        team: 'Support ops', total: 12, done: 11, channel: '#support-ops',
+        updates: [['AO', 'Ama O.', '6:58', 'Night shift: 42 tickets closed, 3 escalated to billing.'], ['KD', 'Kofi D.', '7:10', 'Incident #19 still open. Waiting on the payments vendor.', 'blocker'], ['EL', 'Eva L.', '7:25', 'Morning shift picked up the escalations. Queue is under 20.']],
         featuresTitle: 'Handovers that actually hand over',
-        features: [
-          ['Shift handover notes', 'A structured end-of-shift check-in, pinned for whoever picks up next.'],
-          ['Incident timeline', 'Every update about an open incident is threaded in one place, ready for the post-mortem.'],
-          ['Workload balance', 'See who is overloaded before they burn out, and rebalance with one click.'],
-        ],
+        features: [['Shift handover notes', 'A structured end-of-shift check-in, pinned for whoever picks up next.'], ['Incident timeline', 'Every update about an open incident is threaded in one place, ready for the post-mortem.'], ['Workload balance', 'See who is overloaded before they burn out, and rebalance with one click.']],
         quote: '“Night shift used to start with 20 minutes of catching up. Now it starts with the first ticket.”',
-        author: 'Ama Owusu', authorRole: 'Support Operations Lead, a 120-person marketplace',
-        ctaTitle: 'Make every handover count.',
+        author: 'Ama Owusu', authorRole: 'Support Operations Lead, a 120-person marketplace', ctaTitle: 'Make every handover count.',
       },
     };
-    const ICONS = [
-      '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
-      '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/>',
-      '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
-    ];
-    const tabs = document.querySelectorAll('.role-tab');
-    function setRole(role) {
+
+    const list = $('[data-demo-list]'), countEl = $('[data-demo-count]'), totalEl = $('[data-demo-total]'), bar = $('[data-demo-bar]'), summary = $('[data-demo-summary]');
+    const item = ([ini, name, time, text, flag], i) => `
+      <li class="checkin rounded-xl border border-cadence-line p-3">
+        <div class="flex items-center gap-3"><span class="grid h-8 w-8 place-items-center rounded-full ${['bg-cadence-deep', 'bg-cadence-text', 'bg-cadence-primary'][i % 3]} text-xs font-bold text-white">${ini}</span><p class="text-sm font-bold">${name}</p><span class="ml-auto text-xs text-cadence-text/80">${time}</span></div>
+        <p class="mt-2 text-sm text-cadence-text/90" data-text>${text}</p>
+        ${flag ? '<span class="flag mt-2 inline-flex items-center gap-1 rounded-md bg-orange-100 px-2 py-0.5 text-xs font-bold text-cadence-ctaink">Blocker flagged</span>' : ''}
+      </li>`;
+
+    // Live demo loop: check-ins pop in, the last one types itself, the counter ticks up, the summary lands.
+    let demo;
+    function playDemo(c) {
+      list.innerHTML = c.updates.map(item).join('');
+      totalEl.textContent = c.total;
+      if (!mo) { countEl.textContent = c.done; bar.style.transform = `scaleX(${c.done / c.total})`; return; }
+      demo?.kill();
+      const rows = $$('.checkin', list), last = rows[rows.length - 1], lastText = $('[data-text]', last), full = lastText.textContent;
+      const start = c.done - rows.length;
+      const n = { v: start };
+      demo = gsap.timeline({ repeat: -1, repeatDelay: 3.5, defaults: { ease: 'back.out(1.6)' } });
+      demo.set(rows, { opacity: 0, y: 16, scale: 0.96 }).set(summary, { opacity: 0, y: 12 })
+        .add(() => { n.v = start; countEl.textContent = start; lastText.textContent = ''; lastText.classList.remove('caret'); })
+        .set(bar, { scaleX: start / c.total })
+        .set($$('.flag', list), { scale: 0, opacity: 0 });
+      rows.forEach((r, i) => {
+        demo.to(r, { opacity: 1, y: 0, scale: 1, duration: 0.55 }, 0.3 + i * 0.75)
+          .to(n, { v: start + i + 1, duration: 0.4, ease: 'none', onUpdate: () => (countEl.textContent = Math.round(n.v)) }, '<')
+          .to(bar, { scaleX: (start + i + 1) / c.total, duration: 0.5, ease: 'power2.out' }, '<');
+        const f = $('.flag', r);
+        if (f) demo.to(f, { scale: 1, opacity: 1, duration: 0.45 }, '>-0.1');
+      });
+      // typing effect on the newest check-in
+      const typeAt = 0.3 + (rows.length - 1) * 0.75 + 0.2;
+      demo.add(() => lastText.classList.add('caret'), typeAt);
+      const t = { i: 0 };
+      demo.to(t, { i: full.length, duration: full.length * 0.028, ease: 'none', onUpdate: () => (lastText.textContent = full.slice(0, Math.round(t.i))) }, typeAt);
+      demo.add(() => lastText.classList.remove('caret'));
+      demo.to(summary, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, '+=0.3');
+      demo.paused(true);
+      ScrollTrigger.create({ trigger: list, start: 'top bottom', end: 'bottom top', onToggle: (s) => (s.isActive ? demo.play() : demo.pause()) });
+    }
+
+    const pill = $('.seg__pill');
+    const tabs = $$('[data-role]');
+    function movePill(btn, instant) {
+      if (!pill) return;
+      const r = btn.getBoundingClientRect(), p = btn.parentElement.getBoundingClientRect();
+      const x = r.left - p.left;
+      if (!mo || instant) { pill.style.width = r.width + 'px'; pill.style.transform = `translate(${x}px, 0)`; return; }
+      // FLIP: set the final width once, then animate transform from the old box
+      const old = pill.getBoundingClientRect();
+      pill.style.width = r.width + 'px';
+      gsap.fromTo(pill, { x: old.left - p.left, scaleX: old.width / r.width }, { x, scaleX: 1, duration: 0.55, ease: 'expo.out' });
+    }
+
+    function apply(c) {
+      $$('[data-copy]').forEach((el) => { const k = el.dataset.copy; if (typeof c[k] === 'string') el.textContent = c[k]; });
+      $$('[data-feature]').forEach((card) => { const [h, p] = c.features[+card.dataset.feature]; $('[data-f="h"]', card).textContent = h; $('[data-f="p"]', card).textContent = p; });
+    }
+
+    let current = null;
+    function setRole(role, first) {
       const c = COPY[role] || COPY.eng;
-      tabs.forEach((t) => {
-        const on = t.dataset.role === role;
-        t.setAttribute('aria-selected', on);
-        t.classList.toggle('bg-cadence-text', on); t.classList.toggle('text-white', on);
-        t.classList.toggle('hover:bg-cadence-bg', !on);
-      });
-      document.querySelectorAll('[data-copy]').forEach((el) => {
-        const key = el.dataset.copy;
-        if (key === 'features') {
-          el.innerHTML = c.features.map(([h, p], i) => `
-            <article class="rounded-2xl border border-cadence-line bg-cadence-bg p-6 transition duration-100 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
-              <span class="grid h-11 w-11 place-items-center rounded-xl bg-white text-cadence-deep shadow-sm"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[i]}</svg></span>
-              <h3 class="mt-5 text-lg font-bold">${h}</h3>
-              <p class="mt-2 leading-relaxed text-cadence-text/90">${p}</p>
-            </article>`).join('');
-        } else if (typeof c[key] === 'string') {
-          el.textContent = c[key];
-        }
-      });
+      role = COPY[role] ? role : 'eng';
+      if (role === current) return;
+      current = role;
+      tabs.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.role === role)));
+      movePill(tabs.find((t) => t.dataset.role === role), first);
+      $('[data-role-status]').textContent = first ? '' : `Showing Cadence for ${c.label} teams.`;
       try { localStorage.setItem('cadence-role', role); } catch (e) {}
+      if (first || !mo) { apply(c); playDemo(c); return; }
+      // Morph: old copy slides up and out, new copy rises in with a stagger
+      const h1 = $('h1[data-copy]');
+      const morphTargets = $$('[data-copy="sub"], [data-copy="featuresTitle"], [data-feature] [data-f], [data-copy="quote"], [data-copy="author"], [data-copy="authorRole"], [data-copy="ctaTitle"]');
+      gsap.timeline()
+        .to(h1, { yPercent: -30, opacity: 0, duration: 0.3, ease: 'power2.in' })
+        .to(morphTargets, { y: -12, opacity: 0, duration: 0.25, stagger: 0.015, ease: 'power2.in' }, 0)
+        .add(() => {
+          apply(c);
+          playDemo(c);
+          if (window.SplitText) {
+            const s = SplitText.create(h1, { type: 'words', mask: 'words', aria: 'auto' });
+            gsap.set(h1, { yPercent: 0, opacity: 1 });
+            gsap.from(s.words, { yPercent: 110, duration: 0.8, stagger: 0.06, ease: 'expo.out', onComplete: () => s.revert() });
+          } else gsap.set(h1, { yPercent: 0, opacity: 1 });
+          gsap.fromTo(morphTargets, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.03, ease: 'power3.out' });
+          gsap.fromTo($$('.checkin', list), { scale: 0.96 }, { scale: 1, duration: 0.4 });
+        });
     }
     tabs.forEach((t) => t.addEventListener('click', () => setRole(t.dataset.role)));
+    // Hero entrance for the personalised headline (split here, not by the kit, because the text changes)
+    if (mo && window.SplitText) LK.onHero((tl) => {
+      const h1 = $('h1[data-copy]');
+      const s = SplitText.create(h1, { type: 'words', mask: 'words', aria: 'auto' });
+      tl.from(s.words, { yPercent: 110, duration: 1, stagger: 0.07, ease: 'expo.out', onComplete: () => s.revert() }, 'hero');
+    });
     let saved = 'eng';
     try { saved = new URLSearchParams(location.search).get('team') || localStorage.getItem('cadence-role') || 'eng'; } catch (e) {}
-    setRole(saved);
+    setRole(saved, true);
+    addEventListener('resize', () => movePill(tabs.find((t) => t.dataset.role === current), true));
+    document.fonts?.ready.then(() => movePill(tabs.find((t) => t.dataset.role === current), true));
+
+    // ---------- Monthly / yearly toggle with animated prices ----------
+    const billing = $('[data-billing]');
+    billing.addEventListener('click', () => {
+      const yearly = billing.getAttribute('aria-checked') !== 'true';
+      billing.setAttribute('aria-checked', String(yearly));
+      $$('[data-price]').forEach((el) => LK.tweenNumber ? LK.tweenNumber(el, +(yearly ? el.dataset.yearly : el.dataset.monthly), { duration: 0.6 }) : (el.textContent = '$' + (yearly ? el.dataset.yearly : el.dataset.monthly)));
+      $('[data-billing-note]').textContent = yearly ? 'Billed yearly' : 'Billed monthly';
+      const save = $('[data-save]');
+      if (mo) gsap.to(save, { scale: yearly ? 1 : 0.85, opacity: yearly ? 1 : 0.45, duration: 0.4, ease: 'back.out(2)' });
+      else save.style.opacity = yearly ? 1 : 0.45;
+    });
+
+    // ---------- Demo form with toast feedback ----------
+    const form = $('[data-demo-form]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = $('#cta-email', form), err = $('#cta-err');
+      if (!input.checkValidity()) {
+        err.textContent = 'Please enter a valid work email.';
+        input.setAttribute('aria-invalid', 'true');
+        if (mo) gsap.fromTo(form, { x: -8 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+        input.focus();
+        return;
+      }
+      input.removeAttribute('aria-invalid');
+      err.textContent = '';
+      LK.toast?.('This is a concept demo, so no account was created.', { title: 'Check your inbox for a setup link' });
+      form.reset();
+    });
   </script>
-  <script src="../../assets/site.js" defer></script>
 </body>
 </html>

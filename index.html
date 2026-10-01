@@ -4,308 +4,729 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LK Media — Websites for early-stage startups</title>
-  <meta name="description" content="I design and build fast, conversion-ready websites for startups: landing pages, marketing sites and product launches.">
+  <meta name="description" content="LK Media designs and builds fast, animated, conversion-ready websites for early-stage startups: launch pages, marketing sites and product launches, usually in 2–4 weeks.">
+  <meta name="theme-color" content="#2A0716">
   <meta property="og:site_name" content="LK Media">
   <meta property="og:title" content="LK Media — Websites for early-stage startups">
-  <meta property="og:description" content="Fast, conversion-ready websites for startups. Fixed prices, launched in weeks.">
-  <meta property="og:image" content="assets/work/cadence.jpg">
+  <meta property="og:description" content="Fast, animated, conversion-ready websites for startups. Fixed prices, launched in weeks.">
+  <meta property="og:image" content="assets/work/lk-media-og.jpg">
   <link rel="icon" type="image/png" href="brand/lk-media-logo-a.png">
   <link rel="apple-touch-icon" href="brand/lk-media-logo-a.png">
+  <script>(function(r){r.classList.add('js');var m=matchMedia('(prefers-reduced-motion: reduce)').matches,o=null;try{o=localStorage.getItem('lk-motion')}catch(e){}if(!m&&o!=='off')r.classList.add('mo')})(document.documentElement)</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Space+Grotesk:wght@400..700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Space+Grotesk:wght@400..700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Space+Grotesk:wght@400..700&display=swap"></noscript>
   <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .display { font-family: Archivo, system-ui, sans-serif; font-stretch: 118%; letter-spacing: -0.035em; }
+    .eyebrow { font-family: 'Space Grotesk', system-ui, sans-serif; font-size: .8rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
+    /* Project index rows */
+    .p-row { position: relative; isolation: isolate; }
+    .p-row::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--night); transform: scaleY(0); transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.2,.8,.2,1); }
+    .p-row .p-name { transition: transform .6s cubic-bezier(.2,.8,.2,1), color .4s; }
+    .p-row .p-arrow { transition: transform .6s cubic-bezier(.2,.8,.2,1); }
+    .p-row .p-meta { transition: color .4s; }
+    @media (hover: hover) {
+      .p-row:hover::before, .p-row:focus-visible::before { transform: scaleY(1); }
+      .p-row:hover .p-name, .p-row:focus-visible .p-name { transform: translateX(1.5rem); color: #FDF2F8; }
+      .p-row:hover .p-meta, .p-row:focus-visible .p-meta { color: #FBCFE8; }
+      .p-row:hover .p-arrow, .p-row:focus-visible .p-arrow { transform: rotate(45deg); color: #06B6D4; }
+      .p-thumb { display: none; }
+    }
+    .preview { position: fixed; top: 0; left: 0; z-index: 60; width: 22rem; aspect-ratio: 16 / 10; margin: -7rem 0 0 -11rem; border-radius: 1rem; overflow: hidden; pointer-events: none; opacity: 0; transform: scale(.6); box-shadow: 0 30px 80px -20px rgb(42 7 22 / .6); }
+    .preview__track { display: flex; flex-direction: column; height: 300%; }
+    .preview__track img { width: 100%; height: 33.3333%; object-fit: cover; object-position: top; }
+    /* Bento micro-animations */
+    .tile { position: relative; overflow: hidden; isolation: isolate; }
+    .tile > *:not(.tilt-spot) { position: relative; z-index: 1; }
+    .tile .tilt-spot { z-index: 0; }
+    .wire span { display: block; height: .55rem; border-radius: 99px; background: currentColor; opacity: .18; transform-origin: 0 50%; transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .4s; }
+    @media (hover: hover) {
+      .tile:hover .wire span:nth-child(odd) { transform: scaleX(.6); opacity: .35; }
+      .tile:hover .wire span:nth-child(even) { transform: scaleX(1.08); }
+      .tile:hover .swatch { transform: translateX(calc(var(--k) * 1.1rem)) rotate(calc(var(--k) * 6deg)); }
+      .tile:hover .orbit { transform: rotate(140deg); }
+      .tile:hover .focus-demo { outline-offset: 6px; outline-color: #06B6D4; }
+    }
+    .swatch { transition: transform .6s cubic-bezier(.2,.8,.2,1); }
+    .orbit { transition: transform 1.2s cubic-bezier(.2,.8,.2,1); }
+    .focus-demo { outline: 3px solid transparent; outline-offset: 0; transition: outline-offset .5s cubic-bezier(.2,.8,.2,1), outline-color .4s; }
+    .hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease; }
+    .hero-canvas.is-on { opacity: 1; }
+    .tape { width: 112%; margin-left: -6%; }
+    .scroll-cue span { transform-origin: 50% 0; }
+    .mo .scroll-cue span { animation: cue 2s cubic-bezier(.6,0,.2,1) infinite; }
+    @keyframes cue { 0% { transform: scaleY(0); } 45% { transform: scaleY(1); transform-origin: 50% 0; } 55% { transform: scaleY(1); transform-origin: 50% 100%; } 100% { transform: scaleY(0); transform-origin: 50% 100%; } }
+  </style>
 </head>
 <!--
   Design system: UI UX Pro Max → design-system/lk-media/MASTER.md
   (+ contrast overrides in design-system/lk-media/pages/home.md)
-  TODO(Laksh): replace CONTACT_EMAIL and the Contra/Clutch profile links below with your real ones.
+  TODO(Laksh): add your real Contra and Clutch profile links in the footer.
 -->
-<body class="bg-studio-bg font-grotesk text-studio-text">
-  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
+<body class="theme-studio bg-studio-bg font-grotesk text-studio-text">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-studio-text">Skip to content</a>
 
-  <!-- Floating navbar -->
-  <header class="fixed left-4 right-4 top-4 z-40">
-    <nav class="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-studio-line bg-white/85 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6" aria-label="Main">
-      <a href="#" class="flex items-center gap-2.5 font-archivo text-xl font-black tracking-tight" aria-label="LK Media, home">
+  <!-- Page-load intro / transition curtain (CSS fail-safe lifts it if JS never runs) -->
+  <div class="curtain" data-curtain data-intro aria-hidden="true">
+    <div class="flex items-end gap-4">
+      <p class="curtain__word display text-[clamp(3rem,12vw,9rem)] font-black leading-none" data-intro-word><span>L</span><span>K</span><span class="text-studio-primary">.</span><span>&nbsp;</span><span>M</span><span>e</span><span>d</span><span>i</span><span>a</span></p>
+    </div>
+    <div class="intro-only absolute bottom-8 left-6 right-6 flex items-end justify-between text-sm sm:left-10 sm:right-10">
+      <p class="eyebrow text-studio-line">Websites for early-stage startups</p>
+      <p class="display text-5xl font-black tabular-nums sm:text-7xl"><span data-intro-count>0</span><span class="text-studio-primary">%</span></p>
+    </div>
+    <button type="button" class="intro-only absolute right-4 top-4 min-h-[44px] rounded-full border border-white/30 px-4 text-sm font-semibold text-studio-bg" data-intro-skip tabindex="-1">Skip intro</button>
+  </div>
+
+  <div class="scroll-progress" data-progress aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Glass nav: shrinks on scroll, hides on scroll-down, returns on scroll-up -->
+  <header class="nav-shell fixed left-3 right-3 top-3 z-50 sm:left-5 sm:right-5 sm:top-5" data-nav>
+    <nav class="nav-glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-white/40 px-3 py-2.5 shadow-sm sm:px-5" aria-label="Main">
+      <a href="#top" class="nav-logo flex items-center gap-2.5 font-archivo text-xl font-black tracking-tight" aria-label="LK Media, back to top">
         <img src="brand/lk-media-logo-a.png" alt="" width="36" height="36" class="h-9 w-9 rounded-full">
-        <span aria-hidden="true">LK<span class="text-studio-cta">.</span><span class="ml-1 font-grotesk text-xs font-bold uppercase tracking-[0.25em] text-studio-deep">media</span></span>
+        <span aria-hidden="true">LK<span class="text-studio-deep">.</span><span class="ml-1 font-grotesk text-xs font-bold uppercase tracking-[0.25em] text-studio-deep">media</span></span>
       </a>
-      <div class="hidden items-center gap-8 text-sm font-medium md:flex">
-        <a href="#work" class="transition-colors duration-200 hover:text-studio-deep">Work</a>
-        <a href="#services" class="transition-colors duration-200 hover:text-studio-deep">Services</a>
-        <a href="#process" class="transition-colors duration-200 hover:text-studio-deep">Process</a>
-        <a href="#about" class="transition-colors duration-200 hover:text-studio-deep">About</a>
+      <div class="hidden items-center gap-8 text-sm font-semibold md:flex">
+        <a href="#work" class="nav-link">Work</a>
+        <a href="#services" class="nav-link">Services</a>
+        <a href="#process" class="nav-link">Process</a>
+        <a href="#about" class="nav-link">About</a>
       </div>
-      <a href="#contact" class="hidden min-h-[44px] items-center rounded-xl bg-studio-cta px-5 text-sm font-bold text-studio-ctaink transition duration-200 hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep focus-visible:ring-offset-2 motion-reduce:transform-none md:inline-flex">Start a project</a>
-      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
+      <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" data-magnetic="0.3" data-cursor="Book" class="btn-glow hidden min-h-[44px] items-center rounded-xl px-5 text-sm font-bold text-studio-bg [--btn-bg:#831843] md:inline-flex">
+        <span class="btn-label" data-magnetic-inner>Book a call</span>
+      </a>
+      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg md:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
         <span class="sr-only">Open menu</span>
-        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
       </button>
     </nav>
-    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl border border-studio-line bg-white p-4 shadow-lg md:hidden">
-      <a href="#work" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">Work</a>
-      <a href="#services" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">Services</a>
-      <a href="#process" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">Process</a>
-      <a href="#about" class="block rounded-lg px-3 py-3 font-medium hover:bg-studio-bg">About</a>
-      <a href="#contact" class="mt-2 block rounded-lg bg-studio-cta px-3 py-3 text-center font-bold text-studio-ctaink">Start a project</a>
+    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl border border-studio-line bg-white p-3 shadow-xl md:hidden">
+      <a href="#work" class="block rounded-xl px-4 py-3 font-semibold hover:bg-studio-bg">Work</a>
+      <a href="#services" class="block rounded-xl px-4 py-3 font-semibold hover:bg-studio-bg">Services</a>
+      <a href="#process" class="block rounded-xl px-4 py-3 font-semibold hover:bg-studio-bg">Process</a>
+      <a href="#about" class="block rounded-xl px-4 py-3 font-semibold hover:bg-studio-bg">About</a>
+      <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" class="mt-2 block rounded-xl bg-studio-text px-4 py-3 text-center font-bold text-white">Book a free 20-min call</a>
     </div>
   </header>
 
   <main id="main">
-    <!-- 1. Hero (Name / Role) -->
-    <section class="relative overflow-hidden px-4 pb-20 pt-36 sm:px-6 lg:px-8 lg:pt-44">
-      <!-- Parallax layers (motion-driven style); disabled for reduced motion -->
-      <div class="pointer-events-none absolute -right-24 top-16 h-80 w-80 rounded-full bg-studio-secondary/30 blur-3xl" data-parallax="0.15" aria-hidden="true"></div>
-      <div class="pointer-events-none absolute -left-24 top-72 h-72 w-72 rounded-full bg-studio-cta/20 blur-3xl" data-parallax="0.3" aria-hidden="true"></div>
+    <!-- 1. Hero -->
+    <section id="top" class="relative isolate overflow-hidden bg-studio-night text-studio-bg" data-hero>
+      <div class="aurora" aria-hidden="true">
+        <div data-parallax="120"><div class="blob" data-follow="0.05" style="--c:#EC4899;--o:.55;--t:16s;width:58vw;height:58vw;right:-14vw;top:-18vw"></div></div>
+        <div data-parallax="60"><div class="blob" data-follow="-0.04" style="--c:#06B6D4;--o:.35;--t:21s;--dx:-8%;width:40vw;height:40vw;right:16vw;top:22vh"></div></div>
+        <div class="blob" style="--c:#BE185D;--o:.5;--t:19s;width:46vw;height:46vw;left:-18vw;bottom:-24vw"></div>
+      </div>
+      <canvas class="hero-canvas" aria-hidden="true" data-hero-canvas></canvas>
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(42,7,22,.85),transparent_60%)]" aria-hidden="true"></div>
 
-      <div class="relative mx-auto max-w-6xl">
-        <p class="inline-flex items-center gap-2 rounded-full border border-studio-line bg-white px-4 py-1.5 text-sm font-medium">
-          <span class="relative flex h-2.5 w-2.5" aria-hidden="true"><span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span></span>
-          Taking on 2 new startup projects this month
-        </p>
-        <h1 class="mt-8 max-w-4xl font-archivo text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-          Websites that make early-stage startups look <span class="relative whitespace-nowrap text-studio-primary">funded<svg class="absolute -bottom-2 left-0 h-3 w-full text-studio-cta" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 9C50 3 150 3 198 9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>.
-        </h1>
-        <p class="mt-8 max-w-2xl text-lg leading-relaxed sm:text-xl">
-          I'm Laksh Khakhria, founder of LK Media. I help founders launch fast, conversion-ready sites for their product, their raise or their first 1,000 customers, usually in 2–4 weeks.
-        </p>
-        <div class="mt-10 flex flex-col gap-3 sm:flex-row">
-          <a href="#work" class="group inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-studio-text px-7 font-bold text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep focus-visible:ring-offset-2 motion-reduce:transform-none">
-            See my work
-            <svg class="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transform-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-          <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" class="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-studio-cta px-7 font-bold text-studio-ctaink transition duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep focus-visible:ring-offset-2 motion-reduce:transform-none">Book a free 20-min call</a>
+      <div class="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col px-4 pb-10 pt-28 sm:px-8 lg:pt-36">
+        <div class="flex flex-wrap items-center justify-between gap-3" data-hero-item>
+          <p class="eyebrow text-studio-line">LK Media — web design &amp; development studio</p>
+          <p class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-sm font-medium backdrop-blur">
+            <span class="relative flex h-2.5 w-2.5" aria-hidden="true"><span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span></span>
+            Taking on 2 new startup projects this month
+          </p>
         </div>
-        <ul class="mt-14 grid max-w-3xl gap-4 text-sm font-medium sm:grid-cols-3">
-          <li class="flex items-center gap-2"><svg class="h-5 w-5 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>90+ Lighthouse performance</li>
-          <li class="flex items-center gap-2"><svg class="h-5 w-5 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>Mobile-first, accessible (WCAG AA)</li>
-          <li class="flex items-center gap-2"><svg class="h-5 w-5 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Fixed price, fixed timeline</li>
-        </ul>
+
+        <h1 class="display mt-10 max-w-[15ch] text-[clamp(2.6rem,7.4vw,7.5rem)] font-extrabold leading-[.95] sm:mt-14" data-split="chars">
+          Websites that make startups look
+          <span class="relative inline-block whitespace-nowrap text-studio-primary" data-scramble="!<>-_\/[]{}—=+*^?#"><span data-scramble-text>funded</span><svg class="pointer-events-none absolute -bottom-[.12em] left-0 h-[.22em] w-full text-studio-cta" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path data-hero-underline pathLength="1" stroke-dasharray="1" d="M3 15C70 4 220 3 297 12" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg></span>.
+        </h1>
+
+        <div class="mt-auto grid items-end gap-10 pt-12 lg:grid-cols-[1fr_auto]">
+          <div class="max-w-xl">
+            <p class="text-lg leading-relaxed text-studio-line sm:text-xl" data-hero-item>
+              I'm Laksh Khakhria, founder of LK Media. I design and build fast, animated, conversion-ready sites for your product, your raise or your first 1,000 customers, usually in 2–4 weeks.
+            </p>
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-hero-item>
+              <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" data-magnetic data-cursor="Book" class="btn-glow inline-flex min-h-[56px] items-center justify-center rounded-2xl px-7 font-bold text-studio-night [--btn-bg:#FDF2F8]">
+                <span class="shine" aria-hidden="true"></span>
+                <span class="btn-label" data-magnetic-inner>Book a free 20-min call
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+              </a>
+              <a href="#work" data-magnetic="0.2" class="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-2xl border border-white/25 px-7 font-bold transition-colors duration-300 hover:bg-white/10">
+                <span data-magnetic-inner>See the work</span>
+              </a>
+            </div>
+          </div>
+          <!-- Parallax depth: the three concept builds floating at different speeds -->
+          <div class="relative hidden h-64 w-[26rem] lg:block" aria-hidden="true" data-hero-item>
+            <div class="absolute right-0 top-0 w-60" data-parallax="-140"><img src="assets/work/northvault-thumb.webp" alt="" width="480" height="300" class="rotate-[6deg] rounded-xl shadow-2xl ring-1 ring-white/10" decoding="async"></div>
+            <div class="absolute left-0 top-10 w-56" data-parallax="-60"><img src="assets/work/cadence-thumb.webp" alt="" width="480" height="300" class="-rotate-[7deg] rounded-xl shadow-2xl ring-1 ring-white/10" decoding="async"></div>
+            <div class="absolute bottom-0 left-28 w-52" data-parallax="-220"><img src="assets/work/brightwater-thumb.webp" alt="" width="480" height="300" class="rotate-[2deg] rounded-xl shadow-2xl ring-1 ring-white/10" decoding="async"></div>
+          </div>
+        </div>
+
+        <div class="mt-10 flex items-center justify-between border-t border-white/10 pt-5 text-sm text-studio-line" data-hero-item>
+          <a href="#work" class="scroll-cue inline-flex min-h-[44px] items-center gap-3 font-semibold">
+            <span class="inline-block h-8 w-px bg-studio-cta" aria-hidden="true"></span> Scroll to explore
+          </a>
+          <p class="hidden sm:block">Sevenoaks, UK · working with founders anywhere</p>
+        </div>
       </div>
     </section>
 
-    <!-- 2. Project grid (visuals first, hover overlay info) -->
-    <section id="work" class="scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-6xl">
+    <!-- Crossed tape marquees (velocity reactive) -->
+    <div class="relative z-10 -mt-6 overflow-hidden py-10" aria-label="What LK Media does">
+      <div class="tape absolute left-0 top-1/2 -translate-y-1/2 rotate-[2.5deg] bg-studio-cta py-3 text-studio-night" aria-hidden="true">
+        <div class="marquee" data-marquee="48" data-direction="right">
+          <div class="marquee__track"><div class="marquee__group gap-8 pr-8 text-lg font-bold uppercase tracking-widest">
+            <span>Fast</span><span>·</span><span>Accessible</span><span>·</span><span>Animated</span><span>·</span><span>Conversion-ready</span><span>·</span><span>Fixed price</span><span>·</span><span>Yours to own</span><span>·</span>
+          </div></div>
+        </div>
+      </div>
+      <div class="tape relative -rotate-[2deg] bg-studio-primary py-4 text-studio-night shadow-xl">
+        <div class="marquee" data-marquee="34" data-skew>
+          <div class="marquee__track">
+            <ul class="marquee__group display gap-10 pr-10 text-[clamp(1.75rem,4vw,3.25rem)] font-black uppercase">
+              <li>Web design</li><li aria-hidden="true"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></li>
+              <li>Development</li><li aria-hidden="true"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></li>
+              <li>Launch pages</li><li aria-hidden="true"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></li>
+              <li>Marketing sites</li><li aria-hidden="true"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></li>
+              <li>Design systems</li><li aria-hidden="true"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></li>
+              <li>Motion &amp; interaction</li><li aria-hidden="true"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Selected work: index with cursor-following previews -->
+    <section id="work" class="px-4 pb-24 pt-20 sm:px-8 lg:pt-28">
+      <div class="mx-auto max-w-7xl">
         <div class="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">Selected work</p>
-            <h2 class="mt-2 font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Built for three kinds of startup.</h2>
+            <p class="eyebrow text-studio-deep">Selected work <span class="text-studio-text">(03)</span></p>
+            <h2 class="display mt-4 max-w-3xl text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[.98]" data-split="words">Three concept builds. Three kinds of startup.</h2>
           </div>
-          <div class="flex flex-wrap gap-2" role="group" aria-label="Filter projects">
-            <button type="button" data-filter="all" aria-pressed="true" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">All</button>
-            <button type="button" data-filter="saas" aria-pressed="false" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">SaaS</button>
-            <button type="button" data-filter="fintech" aria-pressed="false" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">Fintech</button>
-            <button type="button" data-filter="local" aria-pressed="false" class="filter-btn min-h-[44px] cursor-pointer rounded-full border border-studio-text px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-deep">Local service</button>
-          </div>
+          <p class="max-w-sm text-lg leading-relaxed" data-reveal>Each one has its own brand, design system and motion language, built to the same performance and accessibility bar as client work.</p>
         </div>
 
-        <div class="mt-12 grid gap-8 lg:grid-cols-2">
-          <!-- Cadence -->
-          <article class="project reveal lg:col-span-2" data-cat="saas">
-            <a href="work/cadence/" class="group block cursor-pointer overflow-hidden rounded-3xl border border-studio-line bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-studio-deep">
-              <div class="relative aspect-[16/10] overflow-hidden bg-cadence-bg">
-                <img src="assets/work/cadence.jpg" alt="Cadence homepage: a teal and orange SaaS landing page with a team check-in dashboard" width="1440" height="900" class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" loading="lazy" decoding="async">
-                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-studio-text/85 via-studio-text/10 to-transparent p-6 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
-                  <span class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-studio-text">View live site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
-                </div>
-              </div>
-              <div class="grid gap-4 p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-start">
-                <div>
-                  <p class="text-sm font-semibold text-studio-deep">SaaS · Landing page · Concept</p>
-                  <h3 class="mt-1 font-archivo text-2xl font-bold">Cadence: async standups for remote teams</h3>
-                  <p class="mt-2 max-w-2xl leading-relaxed">A personalised hero that rewrites the headline, features and testimonial for Engineering, Product or Ops visitors, plus a live product mock and 3-tier pricing.</p>
-                </div>
-                <ul class="flex flex-wrap gap-2 text-xs font-semibold md:max-w-[220px] md:justify-end">
-                  <li class="rounded-full bg-studio-bg px-3 py-1">Personalisation</li><li class="rounded-full bg-studio-bg px-3 py-1">Pricing</li><li class="rounded-full bg-studio-bg px-3 py-1">Micro-interactions</li>
-                </ul>
-              </div>
+        <ul class="mt-14 border-t border-studio-text/20" data-project-list>
+          <li>
+            <a href="work/cadence/" class="p-row group grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-4 border-b border-studio-text/20 px-2 py-7 sm:gap-x-8 sm:px-4 md:py-9" data-cursor="View" data-preview="0">
+              <span class="p-meta eyebrow text-studio-deep">01</span>
+              <span class="min-w-0">
+                <span class="p-name display block text-[clamp(2rem,6vw,5.25rem)] font-black leading-none">Cadence</span>
+                <span class="p-meta mt-2 block text-sm font-semibold sm:text-base">SaaS · Async standups · Product-led motion</span>
+              </span>
+              <svg class="p-arrow h-8 w-8 sm:h-12 sm:w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+              <img class="p-thumb col-span-3 aspect-[16/10] w-full rounded-2xl object-cover object-top shadow-lg" src="assets/work/cadence-thumb.webp" alt="" width="480" height="300" loading="lazy" decoding="async">
             </a>
-          </article>
-
-          <!-- Northvault -->
-          <article class="project reveal" data-cat="fintech">
-            <a href="work/northvault/" class="group block h-full cursor-pointer overflow-hidden rounded-3xl border border-studio-line bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-studio-deep">
-              <div class="relative aspect-[16/10] overflow-hidden bg-vault-bg">
-                <img src="assets/work/northvault.jpg" alt="Northvault homepage: a dark fintech site with gold accents and a runway dashboard" width="1440" height="900" class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" loading="lazy" decoding="async">
-                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-studio-text/85 via-studio-text/10 to-transparent p-6 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
-                  <span class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-studio-text">View live site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
-                </div>
-              </div>
-              <div class="p-6 sm:p-8">
-                <p class="text-sm font-semibold text-studio-deep">Fintech · Marketing site · Concept</p>
-                <h3 class="mt-1 font-archivo text-2xl font-bold">Northvault: banking for startups</h3>
-                <p class="mt-2 leading-relaxed">A dark, high-trust design with security badges above the fold, an accessible burn chart and a scroll-snap testimonial carousel.</p>
-              </div>
+          </li>
+          <li>
+            <a href="work/northvault/" class="p-row group grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-4 border-b border-studio-text/20 px-2 py-7 sm:gap-x-8 sm:px-4 md:py-9" data-cursor="View" data-preview="1">
+              <span class="p-meta eyebrow text-studio-deep">02</span>
+              <span class="min-w-0">
+                <span class="p-name display block text-[clamp(2rem,6vw,5.25rem)] font-black leading-none">Northvault</span>
+                <span class="p-meta mt-2 block text-sm font-semibold sm:text-base">Fintech · Startup banking · Premium dark</span>
+              </span>
+              <svg class="p-arrow h-8 w-8 sm:h-12 sm:w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+              <img class="p-thumb col-span-3 aspect-[16/10] w-full rounded-2xl object-cover object-top shadow-lg" src="assets/work/northvault-thumb.webp" alt="" width="480" height="300" loading="lazy" decoding="async">
             </a>
-          </article>
-
-          <!-- Brightwater -->
-          <article class="project reveal" data-cat="local">
-            <a href="work/brightwater/" class="group block h-full cursor-pointer overflow-hidden rounded-3xl border border-studio-line bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-studio-deep">
-              <div class="relative aspect-[16/10] overflow-hidden bg-bright-bg">
-                <img src="assets/work/brightwater.jpg" alt="Brightwater homepage: a light cyan cleaning-service site with an instant price calculator" width="1440" height="900" class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transform-none" loading="lazy" decoding="async">
-                <div class="absolute inset-0 flex items-end bg-gradient-to-t from-studio-text/85 via-studio-text/10 to-transparent p-6 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
-                  <span class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-studio-text">View live site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
-                </div>
-              </div>
-              <div class="p-6 sm:p-8">
-                <p class="text-sm font-semibold text-studio-deep">Local service · Booking site · Concept</p>
-                <h3 class="mt-1 font-archivo text-2xl font-bold">Brightwater: home cleaning</h3>
-                <p class="mt-2 leading-relaxed">An instant-quote form with validation and loading states, an open pricing table and click-to-call, all built to turn local searches into bookings.</p>
-              </div>
+          </li>
+          <li>
+            <a href="work/brightwater/" class="p-row group grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-4 border-b border-studio-text/20 px-2 py-7 sm:gap-x-8 sm:px-4 md:py-9" data-cursor="View" data-preview="2">
+              <span class="p-meta eyebrow text-studio-deep">03</span>
+              <span class="min-w-0">
+                <span class="p-name display block text-[clamp(2rem,6vw,5.25rem)] font-black leading-none">Brightwater</span>
+                <span class="p-meta mt-2 block text-sm font-semibold sm:text-base">Local service · Home cleaning · Friendly &amp; clear</span>
+              </span>
+              <svg class="p-arrow h-8 w-8 sm:h-12 sm:w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+              <img class="p-thumb col-span-3 aspect-[16/10] w-full rounded-2xl object-cover object-top shadow-lg" src="assets/work/brightwater-thumb.webp" alt="" width="480" height="300" loading="lazy" decoding="async">
             </a>
-          </article>
-        </div>
+          </li>
+        </ul>
         <p class="mt-6 text-sm">These are concept projects I designed and built to show my range. The companies are fictional.</p>
       </div>
+      <div class="preview" aria-hidden="true" data-preview-box><div class="preview__track">
+        <img alt="" width="720" height="450" data-src="assets/work/cadence-thumb.webp">
+        <img alt="" width="720" height="450" data-src="assets/work/northvault-thumb.webp">
+        <img alt="" width="720" height="450" data-src="assets/work/brightwater-thumb.webp">
+      </div></div>
     </section>
 
-    <!-- Services & pricing -->
-    <section id="services" class="scroll-mt-24 bg-white px-4 py-24 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-6xl">
-        <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">Services</p>
-        <h2 class="mt-2 max-w-3xl font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Clear packages. No agency overhead.</h2>
-        <div class="mt-14 grid gap-6 lg:grid-cols-3">
-          <div class="reveal flex flex-col rounded-3xl border border-studio-line p-8 transition duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none">
-            <h3 class="font-archivo text-xl font-bold">Launch Page</h3>
-            <p class="mt-2 leading-relaxed">One high-converting page for a launch, waitlist or fundraise.</p>
-            <p class="mt-6 font-archivo text-4xl font-extrabold">from $600</p>
-            <p class="text-sm">Delivered in about 1 week</p>
-            <ul class="mt-6 flex-1 space-y-3 text-sm">
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Copy structure &amp; design</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Email capture / waitlist</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Analytics &amp; SEO basics</li>
-            </ul>
+    <!-- 3. Horizontal showcase driven by vertical scroll -->
+    <section class="hscroll relative bg-studio-night py-20 text-studio-bg md:py-0" data-hscroll aria-labelledby="builds-title" data-cursor="Scroll">
+      <div class="mx-auto w-full max-w-7xl px-4 sm:px-8">
+        <div class="flex items-end justify-between gap-6">
+          <div>
+            <p class="eyebrow text-studio-cta">Inside the builds</p>
+            <h2 id="builds-title" class="display mt-3 text-[clamp(2rem,4.2vw,3.75rem)] font-extrabold leading-none">Same bar. Different brands.</h2>
           </div>
-          <div class="reveal relative flex flex-col rounded-3xl bg-studio-text p-8 text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:shadow-2xl motion-reduce:transform-none">
-            <span class="absolute -top-3 left-8 rounded-full bg-studio-cta px-3 py-1 text-xs font-bold text-studio-ctaink">Most requested</span>
-            <h3 class="font-archivo text-xl font-bold">Startup Site</h3>
-            <p class="mt-2 leading-relaxed text-studio-line">A complete marketing site: home, product, pricing, about and blog.</p>
-            <p class="mt-6 font-archivo text-4xl font-extrabold">from $1,500</p>
-            <p class="text-sm text-studio-line">Delivered in 2–3 weeks</p>
-            <ul class="mt-6 flex-1 space-y-3 text-sm">
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Up to 6 pages, fully responsive</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Design system you can reuse</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>CMS so you can edit it yourself</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-cta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>2 rounds of revisions</li>
-            </ul>
+          <p class="hidden max-w-xs text-sm text-studio-line md:block">Keep scrolling: the gallery moves sideways. Every site keeps its own design system and motion.</p>
+        </div>
+      </div>
+      <div class="hscroll__track mt-10 md:mt-12" data-hscroll-track>
+        <article class="overflow-hidden rounded-3xl bg-[#F0FDFA] text-[#134E4A]" data-hscroll-card>
+          <div class="grid h-full md:grid-cols-[1.35fr_1fr]">
+            <div class="relative aspect-[16/10] overflow-hidden md:aspect-auto"><img src="assets/work/cadence.webp" alt="Cadence homepage: teal and orange SaaS landing page with an animated check-in app" width="1440" height="900" loading="lazy" decoding="async" class="h-full w-full scale-110 object-cover object-left-top" data-hscroll-img></div>
+            <div class="flex flex-col gap-5 p-6 md:p-8">
+              <p class="text-sm font-bold uppercase tracking-widest text-[#0F766E]">01 · SaaS</p>
+              <h3 class="font-jakarta text-3xl font-extrabold">Cadence</h3>
+              <p class="leading-relaxed">Async standups. A live product demo in the hero, an audience switcher that rewrites the page, and a pinned “how it works” story.</p>
+              <ul class="flex gap-2" aria-label="Palette"><li class="h-8 w-8 rounded-full bg-[#0D9488]" title="#0D9488"></li><li class="h-8 w-8 rounded-full bg-[#14B8A6]"></li><li class="h-8 w-8 rounded-full bg-[#F97316]"></li><li class="h-8 w-8 rounded-full bg-[#134E4A]"></li><li class="h-8 w-8 rounded-full border border-[#CCFBF1] bg-[#F0FDFA]"></li></ul>
+              <p class="font-jakarta text-sm font-semibold">Type: Plus Jakarta Sans</p>
+              <a href="work/cadence/" class="mt-auto inline-flex min-h-[48px] items-center gap-2 self-start rounded-xl bg-[#134E4A] px-5 font-bold text-white" data-cursor="Open">Open the site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            </div>
           </div>
-          <div class="reveal flex flex-col rounded-3xl border border-studio-line p-8 transition duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none">
-            <h3 class="font-archivo text-xl font-bold">Care Plan</h3>
-            <p class="mt-2 leading-relaxed">Ongoing updates, new pages and A/B tests after launch.</p>
-            <p class="mt-6 font-archivo text-4xl font-extrabold">$200<span class="text-lg font-semibold"> / mo</span></p>
-            <p class="text-sm">Cancel any time</p>
-            <ul class="mt-6 flex-1 space-y-3 text-sm">
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Up to 5 hours of changes</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Speed &amp; uptime monitoring</li>
-              <li class="flex gap-2"><svg class="h-5 w-5 shrink-0 text-studio-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Monthly conversion report</li>
-            </ul>
+        </article>
+        <article class="overflow-hidden rounded-3xl bg-[#0F172A] text-[#F8FAFC] ring-1 ring-[#334155]" data-hscroll-card>
+          <div class="grid h-full md:grid-cols-[1.35fr_1fr]">
+            <div class="relative aspect-[16/10] overflow-hidden md:aspect-auto"><img src="assets/work/northvault.webp" alt="Northvault homepage: dark fintech site with gold accents, a 3D corporate card and a live runway dashboard" width="1440" height="900" loading="lazy" decoding="async" class="h-full w-full scale-110 object-cover object-left-top" data-hscroll-img></div>
+            <div class="flex flex-col gap-5 p-6 md:p-8">
+              <p class="text-sm font-bold uppercase tracking-widest text-[#FBBF24]">02 · Fintech</p>
+              <h3 class="font-plex text-3xl font-semibold">Northvault</h3>
+              <p class="leading-relaxed text-[#CBD5E1]">Startup banking. Rolling balance tickers, a tilting gold card, charts that draw as you scroll and security icons that sketch themselves in.</p>
+              <ul class="flex gap-2" aria-label="Palette"><li class="h-8 w-8 rounded-full bg-[#F59E0B]"></li><li class="h-8 w-8 rounded-full bg-[#FBBF24]"></li><li class="h-8 w-8 rounded-full bg-[#8B5CF6]"></li><li class="h-8 w-8 rounded-full bg-[#1E293B] ring-1 ring-[#334155]"></li><li class="h-8 w-8 rounded-full bg-[#F8FAFC]"></li></ul>
+              <p class="font-plex text-sm font-semibold">Type: IBM Plex Sans + Mono</p>
+              <a href="work/northvault/" class="mt-auto inline-flex min-h-[48px] items-center gap-2 self-start rounded-xl bg-[#7C3AED] px-5 font-bold text-white" data-cursor="Open">Open the site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            </div>
           </div>
+        </article>
+        <article class="overflow-hidden rounded-3xl bg-[#ECFEFF] text-[#164E63]" data-hscroll-card>
+          <div class="grid h-full md:grid-cols-[1.35fr_1fr]">
+            <div class="relative aspect-[16/10] overflow-hidden md:aspect-auto"><img src="assets/work/brightwater.webp" alt="Brightwater homepage: bright cyan cleaning-service site with an instant price calculator and before-and-after slider" width="1440" height="900" loading="lazy" decoding="async" class="h-full w-full scale-110 object-cover object-left-top" data-hscroll-img></div>
+            <div class="flex flex-col gap-5 p-6 md:p-8">
+              <p class="text-sm font-bold uppercase tracking-widest text-[#0E7490]">03 · Local service</p>
+              <h3 class="font-lexend text-3xl font-semibold">Brightwater</h3>
+              <p class="font-source text-lg leading-relaxed">Home cleaning. A drag-to-compare before/after, an instant price that animates as you choose, and a coverage map that drops its pins in.</p>
+              <ul class="flex gap-2" aria-label="Palette"><li class="h-8 w-8 rounded-full bg-[#0891B2]"></li><li class="h-8 w-8 rounded-full bg-[#22D3EE]"></li><li class="h-8 w-8 rounded-full bg-[#22C55E]"></li><li class="h-8 w-8 rounded-full bg-[#164E63]"></li><li class="h-8 w-8 rounded-full border border-[#CFFAFE] bg-white"></li></ul>
+              <p class="font-lexend text-sm font-semibold">Type: Lexend + Source Sans 3</p>
+              <a href="work/brightwater/" class="mt-auto inline-flex min-h-[48px] items-center gap-2 self-start rounded-xl bg-[#164E63] px-5 font-bold text-white" data-cursor="Open">Open the site <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            </div>
+          </div>
+        </article>
+        <article class="relative flex flex-col justify-between overflow-hidden rounded-3xl bg-studio-primary p-8 text-studio-night md:p-12" data-hscroll-card>
+          <div class="blob" style="--c:#06B6D4;--o:.6;width:28rem;height:28rem;right:-8rem;top:-8rem" aria-hidden="true"></div>
+          <p class="relative eyebrow">04 · Next</p>
+          <div class="relative">
+            <h3 class="display text-[clamp(2.25rem,5vw,4.75rem)] font-black leading-[.95]">Your startup could be next.</h3>
+            <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" data-cursor="Book" class="mt-8 inline-flex min-h-[52px] items-center gap-2 rounded-2xl bg-studio-night px-6 font-bold text-studio-bg">Book a free 20-min call <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+          </div>
+        </article>
+      </div>
+      <div class="mx-auto mt-10 hidden w-full max-w-7xl px-8 md:block" aria-hidden="true"><div class="h-0.5 rounded bg-white/10"><div class="h-full origin-left scale-x-0 rounded bg-studio-cta" data-hscroll-progress></div></div></div>
+    </section>
+
+    <!-- 4. Services bento -->
+    <section id="services" class="px-4 py-24 sm:px-8 lg:py-32">
+      <div class="mx-auto max-w-7xl">
+        <div class="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <p class="eyebrow text-studio-deep">Services &amp; pricing</p>
+            <h2 class="display mt-4 max-w-3xl text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[.98]" data-split="words">Clear packages. No agency overhead.</h2>
+          </div>
+          <p class="max-w-sm text-lg leading-relaxed" data-reveal>Fixed prices, fixed timelines. You work directly with the person designing and coding your site.</p>
+        </div>
+
+        <div class="mt-14 grid auto-rows-[minmax(14rem,auto)] gap-4 md:grid-cols-6" data-reveal-group>
+          <article class="tile flex flex-col rounded-3xl border border-studio-line bg-white p-7 md:col-span-3 md:row-span-2" data-tilt="5">
+            <span class="tilt-spot" style="--spot:rgba(236,72,153,.18)" aria-hidden="true"></span>
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="display text-2xl font-extrabold">Launch Page</h3>
+              <span class="rounded-full bg-studio-bg px-3 py-1 text-sm font-semibold">about 1 week</span>
+            </div>
+            <p class="mt-2 max-w-sm leading-relaxed">One high-converting page for a launch, waitlist or fundraise.</p>
+            <div class="wire my-8 grid gap-2.5 rounded-2xl border border-studio-line p-5 text-studio-text" aria-hidden="true">
+              <span class="w-1/3"></span><span class="h-6 w-4/5 !opacity-30"></span><span class="w-3/5"></span><span class="w-2/3"></span>
+              <div class="mt-2 flex gap-2"><span class="h-8 w-24 !bg-studio-cta !opacity-90"></span><span class="h-8 w-20"></span></div>
+            </div>
+            <p class="mt-auto display text-4xl font-black">from $600</p>
+            <ul class="mt-4 grid gap-2 text-sm sm:grid-cols-3">
+              <li>Copy structure &amp; design</li><li>Email capture / waitlist</li><li>Analytics &amp; SEO basics</li>
+            </ul>
+          </article>
+
+          <article class="tile flex flex-col rounded-3xl bg-studio-text p-7 text-studio-bg md:col-span-3 md:row-span-2" data-tilt="5">
+            <span class="tilt-spot" style="--spot:rgba(6,182,212,.28)" aria-hidden="true"></span>
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="display text-2xl font-extrabold">Startup Site</h3>
+              <span class="rounded-full bg-studio-cta px-3 py-1 text-sm font-bold text-studio-ctaink">Most requested</span>
+            </div>
+            <p class="mt-2 max-w-sm leading-relaxed text-studio-line">A complete marketing site: home, product, pricing, about and blog. Delivered in 2–3 weeks.</p>
+            <div class="my-8 grid grid-cols-3 gap-2" aria-hidden="true">
+              <div class="aspect-[3/4] rounded-xl bg-white/10 p-2"><div class="h-2 w-2/3 rounded bg-white/40"></div><div class="mt-2 h-10 rounded bg-studio-primary/60"></div></div>
+              <div class="aspect-[3/4] translate-y-4 rounded-xl bg-white/10 p-2"><div class="h-2 w-1/2 rounded bg-white/40"></div><div class="mt-2 grid grid-cols-2 gap-1"><div class="h-6 rounded bg-white/25"></div><div class="h-6 rounded bg-white/25"></div></div></div>
+              <div class="aspect-[3/4] rounded-xl bg-white/10 p-2"><div class="h-2 w-3/4 rounded bg-white/40"></div><div class="mt-2 h-10 rounded bg-studio-cta/60"></div></div>
+            </div>
+            <p class="mt-auto display text-4xl font-black">from $1,500</p>
+            <ul class="mt-4 grid gap-2 text-sm text-studio-line sm:grid-cols-2">
+              <li>Up to 6 pages, fully responsive</li><li>Design system you can reuse</li><li>CMS so you can edit it yourself</li><li>2 rounds of revisions</li>
+            </ul>
+          </article>
+
+          <article class="tile flex flex-col rounded-3xl border border-studio-line bg-white p-7 md:col-span-2" data-tilt="7">
+            <span class="tilt-spot" style="--spot:rgba(236,72,153,.18)" aria-hidden="true"></span>
+            <h3 class="display text-xl font-extrabold">Care Plan</h3>
+            <p class="mt-2 text-sm leading-relaxed">Updates, new pages and A/B tests after launch. Up to 5 hours a month, cancel any time.</p>
+            <p class="mt-auto pt-6 display text-3xl font-black">$200<span class="text-base font-semibold"> / mo</span></p>
+          </article>
+
+          <article class="tile flex flex-col rounded-3xl border border-studio-line bg-white p-7 md:col-span-2" data-tilt="7">
+            <span class="tilt-spot" style="--spot:rgba(6,182,212,.22)" aria-hidden="true"></span>
+            <div class="flex items-center justify-between">
+              <h3 class="display text-xl font-extrabold">Performance</h3>
+              <svg class="h-20 w-20 -rotate-90" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#FBCFE8" stroke-width="3"/><circle data-ring cx="18" cy="18" r="15.5" fill="none" stroke="#0E7490" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="8"/></svg>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed">Lean, hand-written code with a 90+ Lighthouse mobile score as the bar for every build.</p>
+            <p class="mt-auto pt-4 display text-3xl font-black"><span data-count="90">90</span>+</p>
+          </article>
+
+          <article class="tile flex flex-col rounded-3xl border border-studio-line bg-white p-7 md:col-span-2" data-tilt="7">
+            <span class="tilt-spot" style="--spot:rgba(236,72,153,.18)" aria-hidden="true"></span>
+            <div class="flex items-center justify-between">
+              <h3 class="display text-xl font-extrabold">Motion</h3>
+              <div class="orbit relative h-16 w-16" aria-hidden="true"><span class="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 rounded-full bg-studio-primary"></span><span class="absolute bottom-1 left-0 h-3 w-3 rounded-full bg-studio-cta"></span><span class="absolute bottom-1 right-0 h-5 w-5 rounded-full bg-studio-text"></span></div>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed">Scroll stories, kinetic type and micro-interactions that respect “reduce motion” settings.</p>
+            <p class="mt-auto pt-4 text-sm font-semibold text-studio-deep">GSAP · View Transitions · Lenis</p>
+          </article>
+
+          <article class="tile flex flex-col rounded-3xl border border-studio-line bg-white p-7 md:col-span-3" data-tilt="5">
+            <span class="tilt-spot" style="--spot:rgba(236,72,153,.18)" aria-hidden="true"></span>
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h3 class="display text-xl font-extrabold">Design systems</h3>
+                <p class="mt-2 max-w-xs text-sm leading-relaxed">Colours, type and components documented, so your next page looks like it belongs.</p>
+              </div>
+              <div class="relative mt-1 h-14 w-28 shrink-0" aria-hidden="true">
+                <span class="swatch absolute left-0 top-0 h-14 w-10 rounded-lg bg-studio-text shadow" style="--k:0"></span>
+                <span class="swatch absolute left-4 top-0 h-14 w-10 rounded-lg bg-studio-primary shadow" style="--k:1"></span>
+                <span class="swatch absolute left-8 top-0 h-14 w-10 rounded-lg bg-studio-cta shadow" style="--k:2"></span>
+                <span class="swatch absolute left-12 top-0 h-14 w-10 rounded-lg border border-studio-line bg-studio-bg shadow" style="--k:3"></span>
+              </div>
+            </div>
+            <p class="mt-auto pt-6 font-archivo text-5xl font-black leading-none" aria-hidden="true">Aa <span class="font-grotesk text-3xl font-medium">Aa</span></p>
+          </article>
+
+          <article class="tile flex flex-col rounded-3xl border border-studio-line bg-white p-7 md:col-span-3" data-tilt="5">
+            <span class="tilt-spot" style="--spot:rgba(6,182,212,.22)" aria-hidden="true"></span>
+            <h3 class="display text-xl font-extrabold">Accessibility built in</h3>
+            <p class="mt-2 max-w-md text-sm leading-relaxed">WCAG AA contrast, keyboard navigation, screen-reader labels and reduced-motion support are part of the build, not an add-on.</p>
+            <div class="mt-auto flex items-center gap-3 pt-6" aria-hidden="true">
+              <span class="focus-demo rounded-xl bg-studio-text px-4 py-2 text-sm font-bold text-white">Focusable</span>
+              <span class="rounded-xl border border-studio-line px-3 py-2 font-mono text-xs">Tab ↹</span>
+              <span class="rounded-xl border border-studio-line px-3 py-2 font-mono text-xs">AA 4.5:1</span>
+            </div>
+          </article>
         </div>
       </div>
     </section>
 
-    <!-- Process -->
-    <section id="process" class="scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-6xl">
-        <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">Process</p>
-        <h2 class="mt-2 font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">From first call to live site.</h2>
-        <ol class="mt-14 grid gap-px overflow-hidden rounded-3xl border border-studio-line bg-studio-line md:grid-cols-4">
-          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Week 0</span><h3 class="mt-2 font-archivo text-xl font-bold">Discovery call</h3><p class="mt-2 text-sm leading-relaxed">20 minutes on your users, your goal and your deadline. You get a fixed quote within 24 hours.</p></li>
-          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Week 1</span><h3 class="mt-2 font-archivo text-xl font-bold">Design direction</h3><p class="mt-2 text-sm leading-relaxed">A design system (colours, type, components) and your homepage design, for you to review.</p></li>
-          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Weeks 2–3</span><h3 class="mt-2 font-archivo text-xl font-bold">Build</h3><p class="mt-2 text-sm leading-relaxed">Hand-built, responsive, accessible code. You get a private preview link to follow progress.</p></li>
-          <li class="reveal bg-studio-bg p-7"><span class="font-archivo text-sm font-bold text-studio-deep">Launch</span><h3 class="mt-2 font-archivo text-xl font-bold">Go live</h3><p class="mt-2 text-sm leading-relaxed">Domain, analytics, SEO and a walkthrough video so your team can edit it without me.</p></li>
+    <!-- 5. Process: pinned scroll story -->
+    <section id="process" class="bg-white" data-steps aria-labelledby="process-title">
+      <div class="px-4 sm:px-8" data-steps-pin>
+        <div class="mx-auto grid w-full max-w-7xl gap-10 py-24 md:grid-cols-[14rem_1fr] md:py-0">
+          <div class="md:self-center">
+            <p class="eyebrow text-studio-deep">Process</p>
+            <h2 id="process-title" class="display mt-4 text-[clamp(2rem,3.6vw,3rem)] font-extrabold leading-none">From first call to live site.</h2>
+            <ol class="relative mt-8 hidden gap-1 md:grid" aria-hidden="true">
+              <span class="absolute bottom-3 left-[1.15rem] top-3 w-px bg-studio-line"><span class="block h-full w-full origin-top scale-y-0 bg-studio-deep" data-steps-progress></span></span>
+              <li class="relative flex items-center gap-3 py-2 text-sm font-semibold" data-step-dot><span class="grid h-9 w-9 place-items-center rounded-full border border-studio-line bg-white">01</span>Discovery</li>
+              <li class="relative flex items-center gap-3 py-2 text-sm font-semibold" data-step-dot><span class="grid h-9 w-9 place-items-center rounded-full border border-studio-line bg-white">02</span>Design</li>
+              <li class="relative flex items-center gap-3 py-2 text-sm font-semibold" data-step-dot><span class="grid h-9 w-9 place-items-center rounded-full border border-studio-line bg-white">03</span>Build</li>
+              <li class="relative flex items-center gap-3 py-2 text-sm font-semibold" data-step-dot><span class="grid h-9 w-9 place-items-center rounded-full border border-studio-line bg-white">04</span>Launch</li>
+            </ol>
+          </div>
+          <ol class="steps-list">
+            <li class="grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]" data-step>
+              <div>
+                <p class="display text-7xl font-black text-studio-primary sm:text-8xl">01</p>
+                <p class="mt-4 eyebrow text-studio-deep">Week 0</p>
+                <h3 class="display mt-2 text-3xl font-extrabold">Discovery call</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed">20 minutes on your users, your goal and your deadline. You get a fixed quote within 24 hours.</p>
+              </div>
+              <div class="rounded-3xl bg-studio-bg p-6 sm:p-8" data-step-visual aria-hidden="true">
+                <div class="rounded-2xl bg-white p-5 shadow-xl">
+                  <div class="flex items-center gap-3"><img src="brand/lk-media-logo-a.png" alt="" width="40" height="40" class="h-10 w-10 rounded-full" loading="lazy"><div><p class="font-bold">Discovery call with Laksh</p><p class="text-sm">20 min · Video call</p></div></div>
+                  <div class="mt-5 grid grid-cols-4 gap-2 text-center text-sm font-semibold">
+                    <span class="rounded-lg border border-studio-line py-2">Mon</span><span class="rounded-lg bg-studio-text py-2 text-white">Tue</span><span class="rounded-lg border border-studio-line py-2">Wed</span><span class="rounded-lg border border-studio-line py-2">Thu</span>
+                  </div>
+                  <div class="mt-3 grid grid-cols-3 gap-2 text-center text-sm"><span class="rounded-lg border border-studio-line py-2">10:00</span><span class="rounded-lg border-2 border-studio-cta py-2 font-bold">14:30</span><span class="rounded-lg border border-studio-line py-2">16:00</span></div>
+                </div>
+                <p class="ml-auto mt-4 w-fit rounded-full bg-studio-cta px-4 py-2 text-sm font-bold text-studio-ctaink shadow-lg">Fixed quote within 24h</p>
+              </div>
+            </li>
+            <li class="grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]" data-step>
+              <div>
+                <p class="display text-7xl font-black text-studio-primary sm:text-8xl">02</p>
+                <p class="mt-4 eyebrow text-studio-deep">Week 1</p>
+                <h3 class="display mt-2 text-3xl font-extrabold">Design direction</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed">A design system (colours, type, components) and your homepage design, for you to review.</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3 rounded-3xl bg-studio-bg p-6 sm:p-8" data-step-visual aria-hidden="true">
+                <div class="col-span-2 flex gap-2"><span class="h-16 flex-1 rounded-xl bg-studio-text"></span><span class="h-16 flex-1 rounded-xl bg-studio-primary"></span><span class="h-16 flex-1 rounded-xl bg-studio-cta"></span><span class="h-16 flex-1 rounded-xl border border-studio-line bg-white"></span></div>
+                <div class="rounded-xl bg-white p-4 shadow"><p class="font-archivo text-5xl font-black">Aa</p><p class="mt-1 text-xs">Archivo · Display</p></div>
+                <div class="flex flex-col justify-center gap-2 rounded-xl bg-white p-4 shadow"><span class="rounded-lg bg-studio-cta py-2 text-center text-sm font-bold text-studio-ctaink">Primary</span><span class="rounded-lg border-2 border-studio-deep py-1.5 text-center text-sm font-bold text-studio-deep">Secondary</span></div>
+              </div>
+            </li>
+            <li class="grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]" data-step>
+              <div>
+                <p class="display text-7xl font-black text-studio-primary sm:text-8xl">03</p>
+                <p class="mt-4 eyebrow text-studio-deep">Weeks 2–3</p>
+                <h3 class="display mt-2 text-3xl font-extrabold">Build</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed">Hand-built, responsive, accessible code. You get a private preview link to follow progress.</p>
+              </div>
+              <div class="rounded-3xl bg-studio-night p-5 font-mono text-sm text-studio-line shadow-xl sm:p-7" data-step-visual aria-hidden="true">
+                <div class="flex gap-1.5"><span class="h-3 w-3 rounded-full bg-studio-primary"></span><span class="h-3 w-3 rounded-full bg-studio-secondary"></span><span class="h-3 w-3 rounded-full bg-studio-cta"></span></div>
+                <pre class="mt-5 whitespace-pre-wrap leading-7"><span class="text-studio-secondary">&lt;section</span> <span class="text-studio-cta">class</span>="hero"<span class="text-studio-secondary">&gt;</span>
+  <span class="text-studio-secondary">&lt;h1&gt;</span>Your product, explained<span class="text-studio-secondary">&lt;/h1&gt;</span>
+  <span class="text-studio-secondary">&lt;a</span> <span class="text-studio-cta">href</span>="#start"<span class="text-studio-secondary">&gt;</span>Start free<span class="text-studio-secondary">&lt;/a&gt;</span>
+<span class="text-studio-secondary">&lt;/section&gt;</span></pre>
+                <p class="mt-5 inline-flex rounded-full bg-white/10 px-3 py-1.5 text-xs">Preview link updated · 2 min ago</p>
+              </div>
+            </li>
+            <li class="grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]" data-step>
+              <div>
+                <p class="display text-7xl font-black text-studio-primary sm:text-8xl">04</p>
+                <p class="mt-4 eyebrow text-studio-deep">Launch</p>
+                <h3 class="display mt-2 text-3xl font-extrabold">Go live</h3>
+                <p class="mt-3 max-w-md text-lg leading-relaxed">Domain, analytics, SEO and a walkthrough video so your team can edit it without me.</p>
+              </div>
+              <div class="rounded-3xl bg-studio-bg p-6 sm:p-8" data-step-visual aria-hidden="true">
+                <div class="rounded-2xl bg-white p-5 shadow-xl">
+                  <div class="flex items-center justify-between"><p class="font-mono text-sm">yourstartup.com</p><span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Live</span></div>
+                  <div class="mt-6 grid grid-cols-3 gap-3 text-center">
+                    <div><svg class="mx-auto h-16 w-16 -rotate-90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#FBCFE8" stroke-width="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="#0E7490" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="6"/></svg><p class="mt-1 text-xs font-semibold">Performance</p></div>
+                    <div><svg class="mx-auto h-16 w-16 -rotate-90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#FBCFE8" stroke-width="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="#0E7490" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg><p class="mt-1 text-xs font-semibold">Accessibility</p></div>
+                    <div><svg class="mx-auto h-16 w-16 -rotate-90" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#FBCFE8" stroke-width="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="#0E7490" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg><p class="mt-1 text-xs font-semibold">SEO</p></div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. What you can count on: counters -->
+    <section class="bg-studio-text px-4 py-24 text-studio-bg sm:px-8" aria-labelledby="count-title">
+      <div class="mx-auto max-w-7xl">
+        <h2 id="count-title" class="eyebrow text-studio-line">What you can count on</h2>
+        <dl class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="flex flex-col border-t border-white/20 pt-6" data-reveal><dt class="text-studio-line">From first call to launch, usually</dt><dd class="display order-first mb-2 text-6xl font-black sm:text-7xl"><span data-count="4" data-prefix="2–" data-from="2">2–4</span><span class="text-3xl"> wks</span></dd></div>
+          <div class="flex flex-col border-t border-white/20 pt-6" data-reveal><dt class="text-studio-line">Lighthouse mobile performance target</dt><dd class="display order-first mb-2 text-6xl font-black sm:text-7xl"><span data-count="90">90</span>+</dd></div>
+          <div class="flex flex-col border-t border-white/20 pt-6" data-reveal><dt class="text-studio-line">To get a fixed quote after your call</dt><dd class="display order-first mb-2 text-6xl font-black sm:text-7xl"><span data-count="24">24</span><span class="text-3xl">h</span></dd></div>
+          <div class="flex flex-col border-t border-white/20 pt-6" data-reveal><dt class="text-studio-line">Free discovery call, no obligation</dt><dd class="display order-first mb-2 text-6xl font-black sm:text-7xl"><span data-count="20">20</span><span class="text-3xl"> min</span></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- 7. Principles: stacked sticky cards -->
+    <section id="about" class="px-4 py-24 sm:px-8 lg:py-32" aria-labelledby="about-title">
+      <div class="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_1.3fr]">
+        <div class="lg:sticky lg:top-28 lg:self-start">
+          <p class="eyebrow text-studio-deep">About</p>
+          <h2 id="about-title" class="display mt-4 text-[clamp(2.25rem,5vw,4.5rem)] font-extrabold leading-[.98]" data-split="words">Startup speed. Obsessive craft.</h2>
+          <div class="mt-8 max-w-lg space-y-5 text-lg leading-relaxed">
+            <p data-split="lines">Early-stage founders don't need a 12-person agency and a 3-month timeline. You need someone who gets what you're building, moves at startup speed and ships something you're proud to send to investors.</p>
+            <p data-split="lines">That's me. You work directly with the person designing and coding your site, with no account managers and no handoffs.</p>
+          </div>
+          <p class="mt-8 flex items-center gap-3 font-semibold"><img src="brand/lk-media-logo-a.png" alt="" width="48" height="48" class="h-12 w-12 rounded-full" loading="lazy"> Laksh Khakhria, founder · Sevenoaks, UK</p>
+        </div>
+        <ol class="grid gap-6 pb-10" data-stack>
+          <li class="stack-card relative overflow-hidden rounded-3xl bg-white p-8 shadow-[0_30px_60px_-30px_rgba(131,24,67,.35)] sm:p-10" style="--i:0" data-stack-card>
+            <span class="stack-shade" aria-hidden="true"></span>
+            <p class="display text-6xl font-black text-studio-primary">01</p>
+            <h3 class="display mt-6 text-3xl font-extrabold">Conversion first</h3>
+            <p class="mt-3 max-w-md text-lg leading-relaxed">Every section has a job: clarify, build trust or convert. Motion is there to guide the eye, not to show off.</p>
+          </li>
+          <li class="stack-card relative overflow-hidden rounded-3xl bg-studio-cta p-8 text-studio-ctaink sm:p-10" style="--i:1" data-stack-card>
+            <span class="stack-shade" aria-hidden="true"></span>
+            <p class="display text-6xl font-black">02</p>
+            <h3 class="display mt-6 text-3xl font-extrabold">Fast by default</h3>
+            <p class="mt-3 max-w-md text-lg leading-relaxed">Lightweight code, optimised images, no bloated page builders. Animations use only transforms and opacity.</p>
+          </li>
+          <li class="stack-card relative overflow-hidden rounded-3xl bg-studio-text p-8 text-studio-bg sm:p-10" style="--i:2" data-stack-card>
+            <span class="stack-shade" aria-hidden="true"></span>
+            <p class="display text-6xl font-black text-studio-primary">03</p>
+            <h3 class="display mt-6 text-3xl font-extrabold">Accessible</h3>
+            <p class="mt-3 max-w-md text-lg leading-relaxed text-studio-line">Contrast, keyboard navigation and screen-reader support are built in, and every animation switches off for people who prefer less motion.</p>
+          </li>
+          <li class="stack-card relative overflow-hidden rounded-3xl bg-studio-primary p-8 text-studio-night sm:p-10" style="--i:3" data-stack-card>
+            <span class="stack-shade" aria-hidden="true"></span>
+            <p class="display text-6xl font-black">04</p>
+            <h3 class="display mt-6 text-3xl font-extrabold">Yours to own</h3>
+            <p class="mt-3 max-w-md text-lg leading-relaxed">Clean code and a CMS, so you're never locked in. You get the repo, the design system and a walkthrough.</p>
+          </li>
         </ol>
       </div>
     </section>
 
-    <!-- 3. About / philosophy -->
-    <section id="about" class="scroll-mt-24 bg-white px-4 py-24 sm:px-6 lg:px-8">
-      <div class="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_1.2fr]">
-        <div class="reveal">
-          <p class="text-sm font-semibold uppercase tracking-widest text-studio-deep">About</p>
-          <h2 class="mt-2 font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Startup speed. Obsessive craft.</h2>
+    <!-- 8. FAQ -->
+    <section class="px-4 pb-24 sm:px-8 lg:pb-32" aria-labelledby="faq-title">
+      <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1.3fr]">
+        <div>
+          <p class="eyebrow text-studio-deep">FAQ</p>
+          <h2 id="faq-title" class="display mt-4 text-[clamp(2rem,4vw,3.5rem)] font-extrabold leading-none" data-split="words">Questions founders ask.</h2>
         </div>
-        <div class="reveal space-y-5 text-lg leading-relaxed">
-          <p>Early-stage founders don't need a 12-person agency and a 3-month timeline. You need someone who gets what you're building, moves at startup speed and ships something you're proud to send to investors.</p>
-          <p>That's me. You work directly with the person designing and coding your site, with no account managers and no handoffs.</p>
-          <ul class="grid gap-4 pt-4 sm:grid-cols-2">
-            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Conversion first</p><p class="mt-1 text-base">Every section has a job: clarify, build trust or convert.</p></li>
-            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Fast by default</p><p class="mt-1 text-base">Lightweight code, optimised images, no bloated page builders.</p></li>
-            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Accessible</p><p class="mt-1 text-base">Contrast, keyboard navigation and screen-reader support are built in.</p></li>
-            <li class="rounded-2xl bg-studio-bg p-5"><p class="font-archivo font-bold">Yours to own</p><p class="mt-1 text-base">Clean code and a CMS, so you're never locked in.</p></li>
-          </ul>
+        <div class="border-t border-studio-text/20">
+          <details class="acc border-b border-studio-text/20">
+            <summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">What does a site cost?<svg class="acc__icon h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <div class="acc__body pb-6 text-lg leading-relaxed">Launch pages start at $600 and full startup sites at $1,500. After a 20-minute call you get a fixed quote within 24 hours, and that's the price you pay.</div>
+          </details>
+          <details class="acc border-b border-studio-text/20">
+            <summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">How fast can you launch?<svg class="acc__icon h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <div class="acc__body pb-6 text-lg leading-relaxed">A launch page takes about a week. A full marketing site usually takes 2–3 weeks, depending on how quickly copy and feedback come back.</div>
+          </details>
+          <details class="acc border-b border-studio-text/20">
+            <summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">Will all this animation slow my site down?<svg class="acc__icon h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <div class="acc__body pb-6 text-lg leading-relaxed">No. Motion is added on top of a fast, static page, animates only transforms and opacity, and turns off for visitors who ask their device for less motion. Every build is checked against a 90+ Lighthouse mobile score.</div>
+          </details>
+          <details class="acc border-b border-studio-text/20">
+            <summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">Do I own the code?<svg class="acc__icon h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <div class="acc__body pb-6 text-lg leading-relaxed">Yes. You get the full source, the design system and a walkthrough video. Host it anywhere.</div>
+          </details>
+          <details class="acc border-b border-studio-text/20">
+            <summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 text-lg font-bold">What do you need from me?<svg class="acc__icon h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <div class="acc__body pb-6 text-lg leading-relaxed">Your goal, your audience and any brand assets you already have. If you don't have copy yet, I'll structure it with you.</div>
+          </details>
         </div>
       </div>
     </section>
 
-    <!-- 4. Contact -->
-    <section id="contact" class="scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
-      <div class="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-studio-text px-6 py-16 text-center text-white sm:px-12 lg:py-20">
-        <div class="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-studio-primary/30 blur-3xl" aria-hidden="true"></div>
-        <div class="pointer-events-none absolute -bottom-20 -right-10 h-64 w-64 rounded-full bg-studio-cta/25 blur-3xl" aria-hidden="true"></div>
-        <h2 class="relative font-archivo text-4xl font-extrabold tracking-tight sm:text-5xl">Got a launch coming up?</h2>
-        <p class="relative mx-auto mt-4 max-w-xl text-lg text-studio-line">Tell me what you're building. I'll reply within one business day with ideas and a fixed quote.</p>
-        <div class="relative mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-          <!-- TODO(Laksh): replace with your real email -->
-          <a href="mailto:CONTACT_EMAIL?subject=New%20website%20project" class="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-studio-cta px-8 font-bold text-studio-ctaink transition duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-studio-text motion-reduce:transform-none">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
-            Email me about your project
+    <!-- 9. Contact -->
+    <section id="contact" class="relative isolate overflow-hidden bg-studio-night px-4 py-28 text-studio-bg sm:px-8 lg:py-40" aria-labelledby="contact-title">
+      <div class="aurora" aria-hidden="true">
+        <div class="blob" data-follow="0.08" style="--c:#EC4899;--o:.45;width:40rem;height:40rem;left:-12rem;top:-14rem"></div>
+        <div class="blob" data-follow="-0.06" style="--c:#06B6D4;--o:.3;--t:23s;width:30rem;height:30rem;right:-8rem;bottom:1rem"></div>
+      </div>
+      <div class="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <p class="text-xl font-semibold text-studio-line sm:text-2xl">Built for your next
+            <span class="rotator text-studio-cta" data-rotator aria-hidden="true"><span class="rotator__word">launch.</span><span class="rotator__word">raise.</span><span class="rotator__word">rebrand.</span><span class="rotator__word">waitlist.</span></span><span class="sr-only">launch, raise, rebrand or waitlist.</span>
+          </p>
+          <h2 id="contact-title" class="display mt-5 text-[clamp(2.75rem,7vw,6.5rem)] font-black leading-[.92]" data-split="chars">Got a launch coming up?</h2>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-studio-line">Tell me what you're building on a free 20-minute call. I'll reply with ideas and a fixed quote within one business day.</p>
+        </div>
+        <div class="flex justify-center lg:justify-end">
+          <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" data-magnetic="0.45" data-cursor="Book" class="btn-glow grid aspect-square w-60 place-items-center rounded-full text-center font-bold text-studio-night [--btn-bg:#FDF2F8] sm:w-72">
+            <span class="shine" aria-hidden="true"></span>
+            <span class="btn-label flex-col !gap-2 text-xl" data-magnetic-inner>
+              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              Book a free<br>20-min call
+            </span>
           </a>
-          <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" class="inline-flex min-h-[52px] items-center justify-center rounded-xl border-2 border-white/60 px-8 font-bold text-white transition-colors duration-300 hover:bg-white hover:text-studio-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Book a free 20-min call</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="px-4 pb-10 sm:px-6 lg:px-8">
-    <div class="mx-auto flex max-w-6xl flex-col gap-4 border-t border-studio-line pt-8 text-sm sm:flex-row sm:items-center sm:justify-between">
-      <p>© 2026 LK Media. Designed &amp; built in-house.</p>
-      <ul class="flex gap-6 font-semibold">
-        <!-- TODO(Laksh): add your real profile links -->
-        <li><a href="https://contra.com/" class="transition-colors duration-200 hover:text-studio-deep">Contra</a></li>
-        <li><a href="https://clutch.co/" class="transition-colors duration-200 hover:text-studio-deep">Clutch</a></li>
-        <li><a href="https://github.com/lakshkhakhria2-svg" class="transition-colors duration-200 hover:text-studio-deep">GitHub</a></li>
-      </ul>
+  <footer class="relative overflow-hidden bg-studio-night px-4 pb-8 text-studio-bg sm:px-8">
+    <div class="mx-auto max-w-7xl border-t border-white/10 pt-12">
+      <div class="grid gap-10 sm:grid-cols-3">
+        <div>
+          <p class="eyebrow text-studio-line">Studio</p>
+          <ul class="mt-4 space-y-1 font-semibold">
+            <li><a href="#work" class="nav-link inline-flex min-h-[40px] items-center">Work</a></li>
+            <li><a href="#services" class="nav-link inline-flex min-h-[40px] items-center">Services</a></li>
+            <li><a href="#process" class="nav-link inline-flex min-h-[40px] items-center">Process</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="eyebrow text-studio-line">Elsewhere</p>
+          <!-- TODO(Laksh): add your real profile links -->
+          <ul class="mt-4 space-y-1 font-semibold">
+            <li><a href="https://contra.com/" class="nav-link inline-flex min-h-[40px] items-center">Contra</a></li>
+            <li><a href="https://clutch.co/" class="nav-link inline-flex min-h-[40px] items-center">Clutch</a></li>
+            <li><a href="https://github.com/lakshkhakhria2-svg" class="nav-link inline-flex min-h-[40px] items-center">GitHub</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="eyebrow text-studio-line">Say hello</p>
+          <a href="https://calendly.com/laksh-lkmedia" target="_blank" rel="noopener" class="nav-link mt-4 inline-flex min-h-[40px] items-center font-semibold">Book a free 20-min call ↗</a>
+          <button type="button" data-motion-toggle class="mt-4 flex min-h-[44px] items-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold disabled:opacity-60">Motion: <span data-motion-state>on</span></button>
+        </div>
+      </div>
+      <p class="fill-text display mt-16 select-none whitespace-nowrap text-[15.5vw] font-black text-studio-primary [--stroke:1.5px] xl:text-[13.6rem]" data-fill>
+        <span class="fill-text__outline" aria-hidden="true">LK Media</span>
+        <span class="fill-text__mask"><span class="fill-text__solid">LK Media</span></span>
+      </p>
+      <div class="mt-6 flex flex-col justify-between gap-2 text-sm text-studio-line sm:flex-row">
+        <p>© 2026 LK Media. Designed &amp; built in-house in Sevenoaks, UK.</p>
+        <p>The three sample sites are concept projects.</p>
+      </div>
     </div>
   </footer>
 
-  <script>
-    // Project filter (skill pattern: "Filter by category")
-    const btns = document.querySelectorAll('.filter-btn');
-    function setFilter(f) {
-      btns.forEach((b) => {
-        const on = b.dataset.filter === f;
-        b.setAttribute('aria-pressed', on);
-        b.classList.toggle('bg-studio-text', on); b.classList.toggle('text-white', on);
-        b.classList.toggle('hover:bg-white', !on);
-      });
-      document.querySelectorAll('.project').forEach((p) => {
-        const show = f === 'all' || p.dataset.cat === f;
-        p.hidden = !show;
-        p.classList.toggle('lg:col-span-2', show && (f !== 'all' || p.dataset.cat === 'saas'));
-      });
-    }
-    btns.forEach((b) => b.addEventListener('click', () => setFilter(b.dataset.filter)));
-    setFilter('all');
+  <script src="assets/vendor/gsap-bundle.min.js" defer></script>
+  <script src="assets/vendor/lenis.min.js" defer></script>
+  <script src="assets/motion.js" defer></script>
+  <script type="module">
+    const { gsap, mo, fine } = window.LK || {};
+    if (mo) {
+      // Underline under “funded” draws in after the word decodes
+      const u = document.querySelector('[data-hero-underline]');
+      LK.onHero((tl) => tl.fromTo(u, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, 'hero+=1.4'));
 
-    // Gentle parallax on hero blobs (skipped for reduced motion)
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const layers = document.querySelectorAll('[data-parallax]');
-      let ticking = false;
-      addEventListener('scroll', () => {
-        if (ticking) return; ticking = true;
-        requestAnimationFrame(() => {
-          layers.forEach((l) => { l.style.transform = `translate3d(0, ${scrollY * l.dataset.parallax}px, 0)`; });
-          ticking = false;
+      // Cursor-following project previews (fine pointers only)
+      const box = document.querySelector('[data-preview-box]');
+      const list = document.querySelector('[data-project-list]');
+      if (fine && box) {
+        const track = box.firstElementChild;
+        const xTo = gsap.quickTo(box, 'x', { duration: 0.55, ease: 'power3' }), yTo = gsap.quickTo(box, 'y', { duration: 0.55, ease: 'power3' });
+        const rTo = gsap.quickTo(box, 'rotation', { duration: 0.8, ease: 'power3' });
+        let lastX = 0, loaded = false;
+        list.addEventListener('pointerenter', () => {
+          if (!loaded) { box.querySelectorAll('img').forEach((i) => (i.src = i.dataset.src)); loaded = true; }
+          gsap.to(box, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out', overwrite: 'auto' });
         });
-      }, { passive: true });
+        list.addEventListener('pointerleave', () => gsap.to(box, { opacity: 0, scale: 0.6, duration: 0.4, ease: 'power3.in', overwrite: 'auto' }));
+        list.addEventListener('pointermove', (e) => { xTo(e.clientX); yTo(e.clientY); rTo(gsap.utils.clamp(-12, 12, (e.clientX - lastX) * 0.6)); lastX = e.clientX; });
+        list.querySelectorAll('[data-preview]').forEach((row) => row.addEventListener('pointerenter', () => gsap.to(track, { yPercent: -33.3333 * +row.dataset.preview, duration: 0.7, ease: 'expo.out' })));
+      }
+
+      // Subtle WebGL aurora behind the hero (raw WebGL, ~1 KB; falls back to the CSS blobs)
+      const canvas = document.querySelector('[data-hero-canvas]');
+      const startGL = () => {
+        const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
+        if (!gl) return;
+        const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+        const fs = `precision mediump float;uniform vec2 r;uniform float t;uniform vec2 m;
+          float k;float b(vec2 p,vec2 c,float s){vec2 d=p-c;return exp(-dot(d,d)/(s*k));}
+          void main(){vec2 uv=gl_FragCoord.xy/r;float a=r.x/r.y;k=min(a*a,1.);vec2 p=vec2(uv.x*a,uv.y);
+            p+=.06*vec2(sin(p.y*3.1+t*.35),cos(p.x*2.3-t*.27));
+            vec3 c=vec3(.165,.027,.086);
+            c=mix(c,vec3(.925,.282,.6),.62*b(p,vec2(a*(.82+.08*sin(t*.21)),.82+.08*cos(t*.17)),.11));
+            c=mix(c,vec3(.024,.714,.831),.38*b(p,vec2(a*(.62+.1*cos(t*.19)),.42+.1*sin(t*.23)),.06));
+            c=mix(c,vec3(.745,.094,.365),.5*b(p,vec2(a*(.18+.1*sin(t*.13+1.)),.05+.08*sin(t*.29)),.09));
+            c=mix(c,vec3(.957,.447,.714),.3*b(p,vec2(m.x*a,m.y),.025));
+            c+=.012*sin(uv.y*900.);
+            gl_FragColor=vec4(c,1.);}`;
+        const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+        const pr = gl.createProgram();
+        gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr);
+        if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return;
+        gl.useProgram(pr);
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+        const uR = gl.getUniformLocation(pr, 'r'), uT = gl.getUniformLocation(pr, 't'), uM = gl.getUniformLocation(pr, 'm');
+        const scale = 0.5; // render at half resolution: it's a soft gradient anyway
+        const size = () => { canvas.width = Math.round(canvas.clientWidth * scale); canvas.height = Math.round(canvas.clientHeight * scale); gl.viewport(0, 0, canvas.width, canvas.height); };
+        size(); addEventListener('resize', size);
+        const mouse = { x: 0.7, y: 0.6 }, target = { x: 0.7, y: 0.6 };
+        addEventListener('pointermove', (e) => { const r = canvas.getBoundingClientRect(); target.x = (e.clientX - r.left) / r.width; target.y = 1 - (e.clientY - r.top) / r.height; }, { passive: true });
+        let visible = true;
+        new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
+        const t0 = performance.now();
+        gsap.ticker.add(() => {
+          if (!visible || document.hidden) return;
+          mouse.x += (target.x - mouse.x) * 0.04; mouse.y += (target.y - mouse.y) * 0.04;
+          gl.uniform2f(uR, canvas.width, canvas.height); gl.uniform1f(uT, (performance.now() - t0) / 1000); gl.uniform2f(uM, mouse.x, mouse.y);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        });
+        canvas.classList.add('is-on');
+      };
+      addEventListener('load', () => ('requestIdleCallback' in window ? requestIdleCallback(startGL, { timeout: 2500 }) : setTimeout(startGL, 1200)));
     }
   </script>
-  <script src="assets/site.js" defer></script>
 </body>
 </html>

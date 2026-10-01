@@ -5,291 +5,462 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Brightwater Cleaning — Home cleaning in West Kent</title>
   <meta name="description" content="Vetted, insured home cleaners with fixed prices and online booking. Concept project by LK Media.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230891B2'/></svg>">
+  <meta name="theme-color" content="#0E7490">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230891B2'/><path d='M16 6.5l6 6a8.5 8.5 0 1 1-12 0z' fill='white'/></svg>">
+  <script>(function(r){r.classList.add('js');var m=matchMedia('(prefers-reduced-motion: reduce)').matches,o=null;try{o=localStorage.getItem('lk-motion')}catch(e){}if(!m&&o!=='off')r.classList.add('mo')})(document.documentElement)</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400..700&family=Source+Sans+3:wght@400..700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400..700&family=Source+Sans+3:wght@400..700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400..700&family=Source+Sans+3:wght@400..700&display=swap"></noscript>
   <link rel="stylesheet" href="../../assets/styles.css">
+  <style>
+    body { --toast-offset: 0px; }
+    @media (max-width: 767px) { body { --toast-offset: 5rem; } }
+    .soft { box-shadow: 0 18px 50px -18px rgba(8,145,178,.28); }
+    .bubble { position: absolute; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.95) 0 7%, rgba(255,255,255,.18) 9% 46%, rgba(34,211,238,.22) 72%, rgba(8,145,178,.32) 100%);
+      box-shadow: inset -8px -10px 22px rgba(8,145,178,.22), inset 5px 5px 12px rgba(255,255,255,.7); }
+    .mo .bubble { animation: bob var(--t, 9s) ease-in-out infinite alternate; }
+    @keyframes bob { to { translate: var(--dx, 10px) -26px; } }
+    .svc { position: relative; overflow: hidden; isolation: isolate; }
+    .svc > *:not(.tilt-spot) { position: relative; z-index: 1; }
+    .svc .ico { transition: transform .6s cubic-bezier(.2,1.5,.3,1); }
+    @media (hover: hover) {
+      .svc:hover .ico-house { transform: translateY(-5px); }
+      .svc:hover .ico-star { transform: rotate(72deg) scale(1.15); }
+      .svc:hover .ico-cal { transform: rotateX(360deg); }
+      .town:hover { background: #ECFEFF; }
+    }
+    .pin { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .4s cubic-bezier(.2,1.5,.3,1); }
+    .pin.is-hot { transform: scale(1.3); }
+    .mo .ring { animation: ring 2.4s cubic-bezier(.2,.8,.2,1) infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+    @keyframes ring { from { transform: scale(.6); opacity: .8; } to { transform: scale(2.2); opacity: 0; } }
+    .cell-hot { background: #CFFAFE; box-shadow: inset 0 0 0 2px #0E7490; border-radius: .5rem; }
+    td, th { transition: background-color .3s; }
+    .review { width: min(80vw, 22rem); }
+  </style>
 </head>
-<body class="bg-bright-bg font-source text-lg text-bright-text">
-  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
+<body class="theme-bright bg-bright-bg font-source text-lg text-bright-text">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
 
-  <div class="bg-bright-text px-4 py-2 text-center text-sm text-white">
-    Concept project designed by <a href="../../index.html" class="font-semibold underline underline-offset-2 hover:text-bright-secondary">LK Media</a>. Brightwater is not a real company.
+  <div class="curtain" data-curtain aria-hidden="true">
+    <div class="curtain__word items-center gap-3 font-lexend text-4xl font-semibold">
+      <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15"><svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span><span>Brightwater</span>
+    </div>
+  </div>
+  <div class="scroll-progress" data-progress aria-hidden="true"></div>
+
+  <div class="relative z-[51] bg-bright-text px-4 py-2 text-center text-sm text-white">
+    Concept project designed by <a href="../../" class="font-semibold underline underline-offset-2 hover:text-bright-secondary">LK Media</a>. Brightwater is not a real company.
   </div>
 
-  <header class="sticky top-4 z-40 mx-4 mt-4">
-    <nav class="mx-auto flex max-w-6xl items-center justify-between rounded-2xl bg-white/95 px-4 py-3 shadow-[0_8px_30px_rgba(8,145,178,0.12)] backdrop-blur sm:px-6" aria-label="Main">
-      <a href="#" class="flex items-center gap-2 font-lexend text-lg font-semibold">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-bright-primary text-white">
-          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-        </span>
+  <header class="nav-shell sticky top-3 z-50 mx-3 mt-3 sm:mx-5" data-nav>
+    <nav class="nav-glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-2.5 shadow-[0_8px_30px_rgba(8,145,178,0.12)] sm:px-6" aria-label="Main">
+      <a href="#top" class="nav-logo flex items-center gap-2 font-lexend text-lg font-semibold" aria-label="Brightwater, back to top">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-bright-deep text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
         Brightwater
       </a>
       <div class="hidden items-center gap-8 text-base font-semibold lg:flex">
-        <a href="#services" class="transition-colors duration-200 hover:text-bright-deep">Services</a>
-        <a href="#pricing" class="transition-colors duration-200 hover:text-bright-deep">Pricing</a>
-        <a href="#reviews" class="transition-colors duration-200 hover:text-bright-deep">Reviews</a>
-        <a href="#areas" class="transition-colors duration-200 hover:text-bright-deep">Areas</a>
+        <a href="#services" class="nav-link">Services</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#reviews" class="nav-link">Reviews</a>
+        <a href="#areas" class="nav-link">Areas</a>
       </div>
       <div class="flex items-center gap-2">
-        <a href="tel:+441632960123" class="hidden min-h-[44px] items-center gap-2 rounded-xl px-3 text-base font-semibold text-bright-deep transition-colors duration-200 hover:bg-bright-bg sm:inline-flex">
+        <a href="tel:+441632960123" class="hidden min-h-[44px] items-center gap-2 rounded-xl px-3 text-base font-semibold text-bright-deep hover:bg-bright-bg sm:inline-flex">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           01632 960 123
         </a>
-        <a href="#quote" class="hidden min-h-[44px] items-center rounded-xl bg-bright-cta px-4 sm:inline-flex text-base font-bold text-bright-ctaink shadow-[0_4px_14px_rgba(34,197,94,0.35)] transition-shadow duration-200 hover:shadow-[0_6px_20px_rgba(34,197,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-deep focus-visible:ring-offset-2">Book a clean</a>
-        <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-deep" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
+        <a href="#quote" data-magnetic="0.25" class="hidden min-h-[44px] items-center rounded-xl bg-bright-cta px-4 text-base font-bold text-bright-ctaink shadow-[0_4px_14px_rgba(34,197,94,0.35)] sm:inline-flex"><span data-magnetic-inner>Book a clean</span></a>
+        <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl lg:hidden" aria-controls="mobile-menu" aria-expanded="false" data-menu-toggle>
           <span class="sr-only">Open menu</span>
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
         </button>
       </div>
     </nav>
-    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl bg-white p-4 shadow-lg lg:hidden">
-      <a href="#services" class="block rounded-xl px-3 py-3 font-semibold hover:bg-bright-bg">Services</a>
-      <a href="#pricing" class="block rounded-xl px-3 py-3 font-semibold hover:bg-bright-bg">Pricing</a>
-      <a href="#reviews" class="block rounded-xl px-3 py-3 font-semibold hover:bg-bright-bg">Reviews</a>
-      <a href="#areas" class="block rounded-xl px-3 py-3 font-semibold hover:bg-bright-bg">Areas</a>
-      <a href="tel:+441632960123" class="block rounded-xl px-3 py-3 font-semibold text-bright-deep hover:bg-bright-bg">Call 01632 960 123</a>
-      <a href="#quote" class="mt-2 block rounded-xl bg-bright-cta px-3 py-3 text-center font-bold text-bright-ctaink">Book a clean</a>
+    <div id="mobile-menu" class="mx-auto mt-2 hidden max-w-6xl rounded-2xl bg-white p-3 shadow-xl lg:hidden">
+      <a href="#services" class="block rounded-xl px-4 py-3 font-semibold hover:bg-bright-bg">Services</a>
+      <a href="#pricing" class="block rounded-xl px-4 py-3 font-semibold hover:bg-bright-bg">Pricing</a>
+      <a href="#reviews" class="block rounded-xl px-4 py-3 font-semibold hover:bg-bright-bg">Reviews</a>
+      <a href="#areas" class="block rounded-xl px-4 py-3 font-semibold hover:bg-bright-bg">Areas</a>
+      <a href="tel:+441632960123" class="block rounded-xl px-4 py-3 font-semibold text-bright-deep hover:bg-bright-bg">Call 01632 960 123</a>
+      <a href="#quote" class="mt-2 block rounded-xl bg-bright-cta px-4 py-3 text-center font-bold text-bright-ctaink">Book a clean</a>
     </div>
   </header>
 
   <main id="main">
-    <!-- 1. Hero with instant quote -->
-    <section class="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:px-8 lg:pt-20">
-      <div>
-        <p class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-base font-semibold text-bright-deep shadow-sm">
-          <svg class="h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          4.9 from 380+ local reviews
-        </p>
-        <h1 class="mt-6 font-lexend text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-[3.5rem]">
-          A spotless home, without lifting a finger.
-        </h1>
-        <p class="mt-5 max-w-xl text-xl leading-relaxed text-bright-text/90">
-          Vetted, insured cleaners across Sevenoaks, Tonbridge and West Kent. Fixed prices, the same cleaner every visit, and a free re-clean if anything's missed.
-        </p>
-        <ul class="mt-8 grid gap-3 sm:grid-cols-3">
-          <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>DBS-checked</li>
-          <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>£2M insured</li>
-          <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Free re-clean</li>
-        </ul>
+    <!-- 1. Hero + instant price -->
+    <section id="top" class="relative isolate -mt-20 overflow-hidden pt-28 lg:pt-32" data-hero data-sticky-after>
+      <div class="aurora" aria-hidden="true">
+        <div class="blob" style="--c:#A5F3FC;--o:.7;width:44rem;height:44rem;left:-14rem;top:-10rem"></div>
+        <div class="blob" style="--c:#BBF7D0;--o:.6;--t:24s;width:32rem;height:32rem;right:-8rem;bottom:-8rem"></div>
+        <div class="max-sm:hidden" data-parallax="-160"><span class="bubble" data-follow="0.05" style="width:90px;height:90px;left:44%;top:16rem;--t:8s"></span></div>
+        <div data-parallax="-80"><span class="bubble" data-follow="0.08" style="width:46px;height:46px;left:8%;top:30rem;--t:7s;--dx:-12px"></span></div>
+        <div class="max-sm:hidden" data-parallax="-220"><span class="bubble" data-follow="0.03" style="width:130px;height:130px;right:4%;top:6rem;--t:11s"></span></div>
+        <div data-parallax="-120"><span class="bubble" data-follow="0.1" style="width:30px;height:30px;left:52%;top:34rem;--t:6s"></span></div>
+        <div class="max-sm:hidden" data-parallax="-60"><span class="bubble" data-follow="0.06" style="width:60px;height:60px;left:36%;top:6rem;--t:10s;--dx:-8px"></span></div>
       </div>
+      <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 sm:px-6 lg:grid-cols-[1.12fr_1fr] lg:px-8">
+        <div>
+          <p class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-base font-semibold text-bright-deep shadow-sm" data-hero-item>
+            <svg class="h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            4.9 from 380+ local reviews*
+          </p>
+          <h1 class="mt-6 font-lexend text-[clamp(2.5rem,5.4vw,3.9rem)] font-semibold leading-[1.08] tracking-tight" data-split="words">A spotless home, without lifting a finger.</h1>
+          <p class="mt-5 font-lexend text-xl font-medium text-bright-deep sm:text-2xl" data-hero-item>Fixed prices for your
+            <span class="rotator text-bright-text" data-rotator data-interval="1.6" aria-hidden="true"><span class="rotator__word">kitchen.</span><span class="rotator__word">bathrooms.</span><span class="rotator__word">oven.</span><span class="rotator__word">whole home.</span></span><span class="sr-only">kitchen, bathrooms, oven or whole home.</span>
+          </p>
+          <p class="mt-5 max-w-xl text-xl leading-relaxed text-bright-text/90" data-hero-item>Vetted, insured cleaners across Sevenoaks, Tonbridge and West Kent. The same cleaner every visit, and a free re-clean if anything's missed.</p>
+          <ul class="mt-8 grid gap-3 sm:grid-cols-3" data-hero-item>
+            <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>DBS-checked</li>
+            <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>£2M insured</li>
+            <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Free re-clean</li>
+          </ul>
+        </div>
 
-      <!-- Instant quote card -->
-      <div id="quote" class="scroll-mt-28 rounded-3xl bg-white p-6 shadow-[0_20px_50px_rgba(8,145,178,0.15)] sm:p-8">
-        <h2 class="font-lexend text-2xl font-semibold">Get an instant price</h2>
-        <p class="mt-1 text-base text-bright-text/80">No call needed. Book in 60 seconds.</p>
-        <form id="quote-form" class="mt-6 space-y-5" novalidate>
-          <fieldset>
-            <legend class="text-base font-semibold">Bedrooms</legend>
-            <div class="mt-2 grid grid-cols-4 gap-2">
-              <label class="cursor-pointer"><input type="radio" name="beds" value="1" class="peer sr-only"><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">1</span></label>
-              <label class="cursor-pointer"><input type="radio" name="beds" value="2" class="peer sr-only" checked><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">2</span></label>
-              <label class="cursor-pointer"><input type="radio" name="beds" value="3" class="peer sr-only"><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">3</span></label>
-              <label class="cursor-pointer"><input type="radio" name="beds" value="4" class="peer sr-only"><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">4+</span></label>
+        <!-- Instant price calculator -->
+        <div id="quote" class="soft rounded-3xl bg-white p-6 sm:p-8" data-hero-item data-sticky-hide>
+          <h2 class="font-lexend text-2xl font-semibold">Get an instant price</h2>
+          <p class="mt-1 text-base text-bright-text/80">No call needed. Book in 60 seconds.</p>
+          <form id="quote-form" class="mt-6 space-y-5" novalidate>
+            <fieldset>
+              <legend class="text-base font-semibold">Bedrooms</legend>
+              <div class="mt-2 grid grid-cols-4 gap-2">
+                <label class="cursor-pointer"><input type="radio" name="beds" value="1" class="peer sr-only"><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">1</span></label>
+                <label class="cursor-pointer"><input type="radio" name="beds" value="2" class="peer sr-only" checked><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">2</span></label>
+                <label class="cursor-pointer"><input type="radio" name="beds" value="3" class="peer sr-only"><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">3</span></label>
+                <label class="cursor-pointer"><input type="radio" name="beds" value="4" class="peer sr-only"><span class="flex min-h-[48px] items-center justify-center rounded-xl border-2 border-bright-line bg-bright-bg font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-deep peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep peer-focus-visible:ring-offset-2">4+</span></label>
+              </div>
+            </fieldset>
+            <div>
+              <label for="clean-type" class="text-base font-semibold">Type of clean</label>
+              <select id="clean-type" class="mt-2 block min-h-[48px] w-full cursor-pointer rounded-xl border-2 border-bright-line bg-bright-bg px-3 text-base font-semibold focus:border-bright-deep focus:outline-none">
+                <option value="regular">Regular (weekly or fortnightly)</option>
+                <option value="deep">One-off deep clean</option>
+                <option value="move">End of tenancy</option>
+              </select>
             </div>
-          </fieldset>
-          <div>
-            <label for="clean-type" class="text-base font-semibold">Type of clean</label>
-            <select id="clean-type" class="mt-2 block min-h-[48px] w-full cursor-pointer rounded-xl border-2 border-bright-line bg-bright-bg px-3 text-base font-semibold focus:border-bright-deep focus:outline-none">
-              <option value="regular">Regular (weekly or fortnightly)</option>
-              <option value="deep">One-off deep clean</option>
-              <option value="move">End of tenancy</option>
-            </select>
-          </div>
-          <div>
-            <label for="postcode" class="text-base font-semibold">Postcode</label>
-            <input id="postcode" type="text" autocomplete="postal-code" placeholder="e.g. TN13 1AA" class="mt-2 block min-h-[48px] w-full rounded-xl border-2 border-bright-line bg-bright-bg px-3 text-base uppercase placeholder:normal-case placeholder:text-bright-text/60 focus:border-bright-deep focus:outline-none" aria-describedby="postcode-error">
-            <p id="postcode-error" class="mt-1 hidden text-base font-semibold text-red-700" role="alert">Please enter a postcode so we can check we cover your area.</p>
-          </div>
-          <div class="flex items-end justify-between rounded-2xl bg-bright-bg p-4" aria-live="polite">
-            <div><p class="text-base text-bright-text/80">Your fixed price</p><p class="font-lexend text-3xl font-semibold"><span id="price">£72</span><span class="text-base font-normal text-bright-text/80" id="price-unit"> / visit</span></p></div>
-            <p class="text-right text-sm text-bright-text/80" id="duration">About 3 hours</p>
-          </div>
-          <button type="submit" class="flex min-h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-bright-cta font-lexend text-lg font-semibold text-bright-ctaink shadow-[0_6px_20px_rgba(34,197,94,0.35)] transition-shadow duration-200 hover:shadow-[0_8px_26px_rgba(34,197,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-deep focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70">
-            <span data-label>Choose a date</span>
-          </button>
-          <p id="quote-status" class="hidden rounded-xl bg-green-50 p-3 text-base font-semibold text-bright-ctaink" role="status"></p>
-        </form>
-      </div>
-    </section>
-
-    <!-- 2. Problem -->
-    <section class="bg-white py-20">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h2 class="max-w-2xl font-lexend text-3xl font-semibold tracking-tight sm:text-4xl">Your weekends are for living, not scrubbing.</h2>
-        <div class="mt-10 grid gap-6 md:grid-cols-3">
-          <div class="reveal rounded-2xl bg-bright-bg p-6"><p class="font-lexend text-xl font-semibold">Cleaners who don't show</p><p class="mt-2 leading-relaxed text-bright-text/90">Last-minute cancellations and a different stranger every time.</p></div>
-          <div class="reveal rounded-2xl bg-bright-bg p-6"><p class="font-lexend text-xl font-semibold">Prices that creep up</p><p class="mt-2 leading-relaxed text-bright-text/90">"Extras" you only find out about when the invoice arrives.</p></div>
-          <div class="reveal rounded-2xl bg-bright-bg p-6"><p class="font-lexend text-xl font-semibold">Corners that get missed</p><p class="mt-2 leading-relaxed text-bright-text/90">And nobody to call when they do.</p></div>
+            <fieldset>
+              <legend class="text-base font-semibold">Add-ons</legend>
+              <div class="mt-2 flex flex-wrap gap-2 text-base">
+                <label class="cursor-pointer"><input type="checkbox" name="extra" value="25" class="peer sr-only"><span class="inline-flex min-h-[44px] items-center rounded-full border-2 border-bright-line px-4 font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-line peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep">Oven +£25</span></label>
+                <label class="cursor-pointer"><input type="checkbox" name="extra" value="15" class="peer sr-only"><span class="inline-flex min-h-[44px] items-center rounded-full border-2 border-bright-line px-4 font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-line peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep">Fridge +£15</span></label>
+                <label class="cursor-pointer"><input type="checkbox" name="extra" value="20" class="peer sr-only"><span class="inline-flex min-h-[44px] items-center rounded-full border-2 border-bright-line px-4 font-semibold transition-colors duration-200 peer-checked:border-bright-deep peer-checked:bg-bright-line peer-focus-visible:ring-2 peer-focus-visible:ring-bright-deep">Inside windows +£20</span></label>
+              </div>
+            </fieldset>
+            <div>
+              <label for="postcode" class="text-base font-semibold">Postcode</label>
+              <input id="postcode" type="text" autocomplete="postal-code" placeholder="e.g. TN13 1AA" class="mt-2 block min-h-[48px] w-full rounded-xl border-2 border-bright-line bg-bright-bg px-3 text-base uppercase placeholder:normal-case placeholder:text-bright-text/70 focus:border-bright-deep focus:outline-none" aria-describedby="postcode-error">
+              <p id="postcode-error" class="mt-1 hidden text-base font-semibold text-red-700">Please enter a postcode so we can check we cover your area.</p>
+            </div>
+            <div class="flex items-end justify-between rounded-2xl bg-bright-bg p-4">
+              <div><p class="text-base text-bright-text/80">Your fixed price</p><p class="font-lexend text-4xl font-semibold tabular-nums"><span id="price" class="inline-block" data-prefix="£" data-value="72">£72</span><span class="text-base font-normal text-bright-text/80" id="price-unit"> / visit</span></p></div>
+              <p class="text-right text-base text-bright-text/80" id="duration">About 3 hours</p>
+            </div>
+            <p class="sr-only" aria-live="polite" id="price-live"></p>
+            <button type="submit" class="btn-glow flex min-h-[54px] w-full cursor-pointer items-center justify-center rounded-xl font-lexend text-lg font-semibold text-bright-ctaink [--btn-bg:#22C55E] disabled:cursor-wait">
+              <span class="shine" aria-hidden="true"></span><span class="btn-label" data-label>Choose a date</span>
+            </button>
+            <p id="quote-status" class="hidden rounded-xl bg-green-50 p-3 text-base font-semibold text-bright-ctaink" role="status"></p>
+          </form>
         </div>
       </div>
     </section>
 
-    <!-- 3. Solution / services -->
-    <section id="services" class="py-20">
+    <!-- 2. Before / after -->
+    <section class="bg-white py-24" aria-labelledby="ba-title">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <p class="font-semibold uppercase tracking-wider text-bright-deep">See the difference</p>
+            <h2 id="ba-title" class="mt-2 max-w-2xl font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold leading-tight tracking-tight" data-split="words">Same kitchen. Three hours later.</h2>
+          </div>
+          <p class="max-w-xs text-bright-text/90">Drag the handle, or use the arrow keys. Illustration, not a real customer's home.</p>
+        </div>
+        <div class="compare soft mt-10 aspect-[4/3] rounded-3xl sm:aspect-[16/9]" data-compare data-cursor="Drag">
+          <div class="compare__before" aria-hidden="true">
+            <svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+              <rect width="800" height="450" fill="#B7C2BF"/>
+              <rect x="80" y="50" width="220" height="160" rx="8" fill="#98A6A5" stroke="#7B8988" stroke-width="10"/><path d="M190 50v160M80 130h220" stroke="#7B8988" stroke-width="8"/>
+              <g fill="#6F7C7A" opacity=".45"><ellipse cx="130" cy="88" rx="24" ry="12"/><ellipse cx="252" cy="178" rx="30" ry="10"/><ellipse cx="236" cy="84" rx="14" ry="8"/></g>
+              <g transform="rotate(-9 545 110)"><rect x="480" y="60" width="130" height="96" rx="6" fill="#8D9A98"/><path d="M500 136l30-34 22 22 18-14 30 26" fill="none" stroke="#6F7C7A" stroke-width="6" stroke-linejoin="round"/></g>
+              <rect y="268" width="800" height="24" fill="#8A8D84"/><rect y="292" width="800" height="158" fill="#7D8B87"/>
+              <g stroke="#687673" stroke-width="4" fill="none"><rect x="30" y="310" width="160" height="125" rx="6"/><rect x="215" y="310" width="160" height="125" rx="6"/><rect x="400" y="310" width="160" height="125" rx="6"/><rect x="585" y="310" width="160" height="125" rx="6"/></g>
+              <g fill="#687673"><rect x="160" y="360" width="8" height="30" rx="4"/><rect x="345" y="360" width="8" height="30" rx="4"/><rect x="530" y="360" width="8" height="30" rx="4"/><rect x="715" y="360" width="8" height="30" rx="4"/></g>
+              <g fill="#D3D0C7" stroke="#9A988E" stroke-width="3"><ellipse cx="570" cy="262" rx="72" ry="12"/><ellipse cx="566" cy="246" rx="62" ry="11"/><ellipse cx="574" cy="231" rx="54" ry="10"/><rect x="636" y="196" width="34" height="58" rx="6"/><rect x="480" y="214" width="28" height="44" rx="5" transform="rotate(14 494 236)"/></g>
+              <g fill="none" stroke="#6C5D49" stroke-width="3" opacity=".55"><ellipse cx="270" cy="280" rx="22" ry="5"/><ellipse cx="342" cy="282" rx="15" ry="4"/><ellipse cx="410" cy="279" rx="10" ry="3"/></g>
+              <g fill="#6C5D49" opacity=".6"><circle cx="300" cy="276" r="2.5"/><circle cx="318" cy="279" r="2"/><circle cx="380" cy="276" r="2.5"/><circle cx="440" cy="281" r="2"/><circle cx="455" cy="275" r="2.5"/></g>
+              <path d="M110 268h60l-8-38h-44z" fill="#8A6E59"/>
+              <g stroke="#6E7F5F" stroke-width="7" fill="none" stroke-linecap="round"><path d="M140 232c-22 0-42 16-50 38"/><path d="M140 232c18 2 34 18 38 40"/><path d="M140 232c-4-14-16-20-28-18"/></g>
+              <g fill="#5E6B69" opacity=".3"><circle cx="420" cy="120" r="4"/><circle cx="380" cy="170" r="3"/><circle cx="700" cy="200" r="5"/><circle cx="660" cy="90" r="3"/><circle cx="340" cy="60" r="4"/><circle cx="740" cy="140" r="3"/></g>
+            </svg>
+            <span class="absolute left-4 top-4 rounded-full bg-black/60 px-3 py-1 text-sm font-bold text-white">Before</span>
+          </div>
+          <div class="compare__after" aria-hidden="true"><div class="compare__after-inner">
+            <svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+              <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67E8F9"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient></defs>
+              <rect width="800" height="450" fill="#E6FBFF"/>
+              <rect x="80" y="50" width="220" height="160" rx="8" fill="url(#sky)" stroke="#fff" stroke-width="10"/><path d="M190 50v160M80 130h220" stroke="#fff" stroke-width="8"/>
+              <circle cx="250" cy="90" r="18" fill="#FDE68A"/>
+              <rect x="480" y="60" width="130" height="96" rx="6" fill="#fff" stroke="#0891B2" stroke-width="4"/><path d="M500 136l30-34 22 22 18-14 30 26" fill="none" stroke="#22C55E" stroke-width="6" stroke-linejoin="round"/>
+              <rect y="268" width="800" height="24" fill="#F8FAFC"/><path d="M60 274h200M420 274h120" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".9"/><rect y="292" width="800" height="158" fill="#0891B2"/>
+              <g stroke="#22D3EE" stroke-width="4" fill="none"><rect x="30" y="310" width="160" height="125" rx="6"/><rect x="215" y="310" width="160" height="125" rx="6"/><rect x="400" y="310" width="160" height="125" rx="6"/><rect x="585" y="310" width="160" height="125" rx="6"/></g>
+              <g fill="#fff"><rect x="160" y="360" width="8" height="30" rx="4"/><rect x="345" y="360" width="8" height="30" rx="4"/><rect x="530" y="360" width="8" height="30" rx="4"/><rect x="715" y="360" width="8" height="30" rx="4"/></g>
+              <g fill="#fff" stroke="#A5F3FC" stroke-width="3"><rect x="620" y="214" width="40" height="54" rx="8"/><rect x="668" y="226" width="30" height="42" rx="6"/></g>
+              <path d="M110 268h60l-8-38h-44z" fill="#F97316" opacity=".85"/>
+              <g stroke="#22C55E" stroke-width="7" fill="none" stroke-linecap="round"><path d="M140 232c-10-24-28-34-40-34"/><path d="M140 232c8-26 24-38 40-36"/><path d="M140 232V190"/></g>
+              <g fill="#fff"><path d="M420 110l5 14 14 5-14 5-5 14-5-14-14-5 14-5z"/><path d="M700 190l4 11 11 4-11 4-4 11-4-11-11-4 11-4z"/><path d="M330 240l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M560 230l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/></g>
+              <g fill="#22D3EE"><path d="M110 70l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"/><path d="M760 80l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/></g>
+            </svg>
+            <span class="absolute right-4 top-4 rounded-full bg-bright-cta px-3 py-1 text-sm font-bold text-bright-ctaink">After</span>
+          </div></div>
+          <input type="range" min="0" max="100" value="50" class="compare__range" aria-label="Before and after comparison. Higher values show more of the cleaned kitchen.">
+          <div class="compare__handle" aria-hidden="true"><span class="compare__knob"><svg class="h-6 w-6 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18-6-6 6-6M15 6l6 6-6 6"/></svg></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Services: tilt cards with icon micro-animations -->
+    <section id="services" class="py-24">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <p class="font-semibold uppercase tracking-wider text-bright-deep">The Brightwater way</p>
-        <h2 class="mt-2 max-w-2xl font-lexend text-3xl font-semibold tracking-tight sm:text-4xl">One trusted cleaner. One fixed price. A checklist every time.</h2>
-        <div class="mt-12 grid gap-6 md:grid-cols-3">
-          <article class="reveal rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] transition-shadow duration-200 hover:shadow-[0_14px_40px_rgba(8,145,178,0.18)]">
-            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-bright-bg text-bright-deep"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
+        <h2 class="mt-2 max-w-2xl font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold leading-tight tracking-tight" data-split="words">One trusted cleaner. One fixed price. A checklist every time.</h2>
+        <div class="mt-12 grid gap-6 md:grid-cols-3" data-reveal-group>
+          <article class="svc soft rounded-3xl bg-white p-7" data-tilt="8">
+            <span class="tilt-spot" style="--spot:rgba(34,211,238,.22)" aria-hidden="true"></span>
+            <span class="grid h-14 w-14 place-items-center rounded-2xl bg-bright-bg text-bright-deep"><svg class="ico ico-house h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
             <h3 class="mt-5 font-lexend text-xl font-semibold">Regular cleaning</h3>
-            <ul class="mt-4 space-y-2 text-base">
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Kitchen &amp; bathrooms sanitised</li>
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Dusting, hoovering, mopping</li>
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Beds changed on request</li>
-            </ul>
+            <p class="mt-1 text-base text-bright-text/80">from £54 a visit</p>
+            <ul class="mt-4 space-y-2 text-base"><li>✓ Kitchen &amp; bathrooms sanitised</li><li>✓ Dusting, hoovering, mopping</li><li>✓ Beds changed on request</li></ul>
           </article>
-          <article class="reveal rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] transition-shadow duration-200 hover:shadow-[0_14px_40px_rgba(8,145,178,0.18)]">
-            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-bright-bg text-bright-deep"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8L4 8.8h6.1z"/></svg></span>
+          <article class="svc soft rounded-3xl bg-white p-7" data-tilt="8">
+            <span class="tilt-spot" style="--spot:rgba(34,211,238,.22)" aria-hidden="true"></span>
+            <span class="grid h-14 w-14 place-items-center rounded-2xl bg-bright-bg text-bright-deep"><svg class="ico ico-star h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8L4 8.8h6.1z"/></svg></span>
             <h3 class="mt-5 font-lexend text-xl font-semibold">Deep cleaning</h3>
-            <ul class="mt-4 space-y-2 text-base">
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Inside oven, fridge &amp; cupboards</li>
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Limescale &amp; grout treatment</li>
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Skirting boards &amp; doors</li>
-            </ul>
+            <p class="mt-1 text-base text-bright-text/80">from £150 one-off</p>
+            <ul class="mt-4 space-y-2 text-base"><li>✓ Inside oven, fridge &amp; cupboards</li><li>✓ Limescale &amp; grout treatment</li><li>✓ Skirting boards &amp; doors</li></ul>
           </article>
-          <article class="reveal rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] transition-shadow duration-200 hover:shadow-[0_14px_40px_rgba(8,145,178,0.18)]">
-            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-bright-bg text-bright-deep"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+          <article class="svc soft rounded-3xl bg-white p-7" data-tilt="8">
+            <span class="tilt-spot" style="--spot:rgba(34,211,238,.22)" aria-hidden="true"></span>
+            <span class="grid h-14 w-14 place-items-center rounded-2xl bg-bright-bg text-bright-deep [perspective:200px]"><svg class="ico ico-cal h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
             <h3 class="mt-5 font-lexend text-xl font-semibold">End of tenancy</h3>
-            <ul class="mt-4 space-y-2 text-base">
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Agent-approved checklist</li>
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Deposit-back guarantee</li>
-              <li class="flex gap-2"><svg class="mt-0.5 h-5 w-5 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Carpet steam clean add-on</li>
-            </ul>
+            <p class="mt-1 text-base text-bright-text/80">from £195 one-off</p>
+            <ul class="mt-4 space-y-2 text-base"><li>✓ Agent-approved checklist</li><li>✓ Deposit-back guarantee</li><li>✓ Carpet steam clean add-on</li></ul>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- Pricing (skill anti-pattern: "Hidden pricing") -->
-    <section id="pricing" class="bg-white py-20">
+    <!-- 4. How it works: path draws between steps -->
+    <section class="bg-white py-24" aria-labelledby="how-title">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <h2 id="how-title" class="font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold tracking-tight" data-split="words">Booked in a minute. Clean by Friday.</h2>
+        <div class="relative mt-14" data-draw-trigger>
+          <svg class="pointer-events-none absolute left-0 top-0 hidden h-16 w-full md:block" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+            <path data-draw="scrub" pathLength="1" stroke-dasharray="1" d="M166 50C300 -30 370 130 500 50S700 -30 833 50" fill="none" stroke="#22D3EE" stroke-width="4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <ol class="relative grid gap-10 md:grid-cols-3">
+            <li class="text-center"><span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-bright-deep font-lexend text-2xl font-semibold text-white shadow-lg ring-8 ring-white">1</span><h3 class="mt-5 font-lexend text-xl font-semibold">Get your price</h3><p class="mx-auto mt-2 max-w-xs text-bright-text/90">Pick your home size and clean. The price you see is the price you pay.</p></li>
+            <li class="text-center"><span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-bright-deep font-lexend text-2xl font-semibold text-white shadow-lg ring-8 ring-white">2</span><h3 class="mt-5 font-lexend text-xl font-semibold">Choose a slot</h3><p class="mx-auto mt-2 max-w-xs text-bright-text/90">Morning or afternoon, any weekday. We'll match you with one regular cleaner.</p></li>
+            <li class="text-center"><span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-bright-cta font-lexend text-2xl font-semibold text-bright-ctaink shadow-lg ring-8 ring-white">3</span><h3 class="mt-5 font-lexend text-xl font-semibold">Come home to clean</h3><p class="mx-auto mt-2 max-w-xs text-bright-text/90">Not perfect? Tell us within 48 hours and we'll re-clean it free.</p></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Pricing (open, no hidden extras) -->
+    <section id="pricing" class="py-24">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <h2 class="text-center font-lexend text-3xl font-semibold tracking-tight sm:text-4xl">Fixed prices. No surprises.</h2>
-        <p class="mt-3 text-center text-bright-text/90">All products and equipment included. Prices per visit.</p>
-        <div class="mt-10 overflow-x-auto rounded-2xl border border-bright-line">
+        <h2 class="text-center font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold tracking-tight" data-split="words">Fixed prices. No surprises.</h2>
+        <p class="mt-3 text-center text-bright-text/90">All products and equipment included. Prices per visit. Your calculator choice is highlighted.</p>
+        <div class="soft mt-10 overflow-x-auto rounded-2xl bg-white" tabindex="0" role="region" aria-label="Price table">
           <table class="w-full min-w-[520px] text-left text-base">
             <caption class="sr-only">Prices per visit by home size and type of clean</caption>
             <thead class="bg-bright-bg font-lexend">
               <tr><th scope="col" class="px-5 py-4 font-semibold">Home size</th><th scope="col" class="px-5 py-4 font-semibold">Regular</th><th scope="col" class="px-5 py-4 font-semibold">Deep clean</th><th scope="col" class="px-5 py-4 font-semibold">End of tenancy</th></tr>
             </thead>
             <tbody class="divide-y divide-bright-line">
-              <tr><th scope="row" class="px-5 py-4 font-semibold">1 bedroom</th><td class="px-5 py-4">£54</td><td class="px-5 py-4">£150</td><td class="px-5 py-4">£195</td></tr>
-              <tr><th scope="row" class="px-5 py-4 font-semibold">2 bedrooms</th><td class="px-5 py-4">£72</td><td class="px-5 py-4">£190</td><td class="px-5 py-4">£245</td></tr>
-              <tr><th scope="row" class="px-5 py-4 font-semibold">3 bedrooms</th><td class="px-5 py-4">£90</td><td class="px-5 py-4">£240</td><td class="px-5 py-4">£310</td></tr>
-              <tr><th scope="row" class="px-5 py-4 font-semibold">4+ bedrooms</th><td class="px-5 py-4">£108</td><td class="px-5 py-4">£295</td><td class="px-5 py-4">£380</td></tr>
+              <tr><th scope="row" class="px-5 py-4 font-semibold">1 bedroom</th><td class="px-5 py-4" data-cell="regular-0">£54</td><td class="px-5 py-4" data-cell="deep-0">£150</td><td class="px-5 py-4" data-cell="move-0">£195</td></tr>
+              <tr><th scope="row" class="px-5 py-4 font-semibold">2 bedrooms</th><td class="px-5 py-4" data-cell="regular-1">£72</td><td class="px-5 py-4" data-cell="deep-1">£190</td><td class="px-5 py-4" data-cell="move-1">£245</td></tr>
+              <tr><th scope="row" class="px-5 py-4 font-semibold">3 bedrooms</th><td class="px-5 py-4" data-cell="regular-2">£90</td><td class="px-5 py-4" data-cell="deep-2">£240</td><td class="px-5 py-4" data-cell="move-2">£310</td></tr>
+              <tr><th scope="row" class="px-5 py-4 font-semibold">4+ bedrooms</th><td class="px-5 py-4" data-cell="regular-3">£108</td><td class="px-5 py-4" data-cell="deep-3">£295</td><td class="px-5 py-4" data-cell="move-3">£380</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- 4. Testimonials carousel -->
-    <section id="reviews" class="py-20">
+    <!-- 6. Reviews marquee (two rows, opposite directions) -->
+    <section id="reviews" class="overflow-hidden bg-white py-24" aria-labelledby="reviews-title">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-end justify-between gap-4">
-          <h2 class="font-lexend text-3xl font-semibold tracking-tight sm:text-4xl">Neighbours who switched</h2>
-          <div class="flex gap-2">
-            <button type="button" data-scroll="-1" class="grid h-12 w-12 cursor-pointer place-items-center rounded-full bg-white shadow-md transition-shadow duration-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-deep" aria-label="Previous review"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-            <button type="button" data-scroll="1" class="grid h-12 w-12 cursor-pointer place-items-center rounded-full bg-white shadow-md transition-shadow duration-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-deep" aria-label="Next review"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
-          </div>
-        </div>
-        <ul id="review-track" class="mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-6 motion-reduce:scroll-auto" tabindex="0" aria-label="Customer reviews">
-          <li class="w-[88%] shrink-0 snap-start rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] sm:w-[48%] lg:w-[32%]">
-            <p class="flex text-amber-500" role="img" aria-label="5 out of 5 stars"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></p>
-            <blockquote class="mt-3 italic leading-relaxed text-bright-text/90">“Same cleaner every fortnight for a year now. She knows exactly how we like things. I've recommended Brightwater to half our street.”</blockquote>
-            <p class="mt-5 font-semibold">Hannah W.</p><p class="text-base text-bright-text/80">Sevenoaks · regular clean</p>
-          </li>
-          <li class="w-[88%] shrink-0 snap-start rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] sm:w-[48%] lg:w-[32%]">
-            <p class="flex text-amber-500" role="img" aria-label="5 out of 5 stars"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></p>
-            <blockquote class="mt-3 italic leading-relaxed text-bright-text/90">“Got every penny of our deposit back. The letting agent actually asked who we'd used.”</blockquote>
-            <p class="mt-5 font-semibold">Tom &amp; Aisha R.</p><p class="text-base text-bright-text/80">Tonbridge · end of tenancy</p>
-          </li>
-          <li class="w-[88%] shrink-0 snap-start rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] sm:w-[48%] lg:w-[32%]">
-            <p class="flex text-amber-500" role="img" aria-label="5 out of 5 stars"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></p>
-            <blockquote class="mt-3 italic leading-relaxed text-bright-text/90">“Booking online took a minute and the price didn't change. The oven looks newer than when we moved in.”</blockquote>
-            <p class="mt-5 font-semibold">Gareth P.</p><p class="text-base text-bright-text/80">Westerham · deep clean</p>
-          </li>
-          <li class="w-[88%] shrink-0 snap-start rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] sm:w-[48%] lg:w-[32%]">
-            <p class="flex text-amber-500" role="img" aria-label="4 out of 5 stars"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="text-bright-line"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span></p>
-            <blockquote class="mt-3 italic leading-relaxed text-bright-text/90">“They missed the skirting in the hallway once. I messaged them and they were back the next morning to sort it, no charge.”</blockquote>
-            <p class="mt-5 font-semibold">Lucy M.</p><p class="text-base text-bright-text/80">Edenbridge · regular clean</p>
-          </li>
-        </ul>
+        <h2 id="reviews-title" class="font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold tracking-tight" data-split="words">Neighbours who switched</h2>
+        <p class="mt-2 text-bright-text/90">Illustrative reviews. Hover or focus a row to pause it.</p>
       </div>
-    </section>
-
-    <!-- Areas -->
-    <section id="areas" class="pb-12">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col gap-4 rounded-3xl bg-white p-7 shadow-[0_10px_30px_rgba(8,145,178,0.10)] md:flex-row md:items-center">
-          <svg class="h-8 w-8 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <p><span class="font-semibold">We cover:</span> Sevenoaks, Tonbridge, Tunbridge Wells, Westerham, Edenbridge, Otford, Hildenborough and Borough Green.</p>
+      <div class="mt-10 space-y-5">
+        <div class="marquee" data-marquee="60" tabindex="0" role="region" aria-label="Customer reviews, row 1">
+          <div class="marquee__track"><ul class="marquee__group gap-5 pr-5">
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Same cleaner every fortnight for a year now. She knows exactly how we like things.”</blockquote><p class="mt-4 font-semibold">Hannah W. <span class="font-normal text-bright-text/80">· Sevenoaks</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Got every penny of our deposit back. The letting agent asked who we'd used.”</blockquote><p class="mt-4 font-semibold">Tom &amp; Aisha R. <span class="font-normal text-bright-text/80">· Tonbridge</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Booking online took a minute and the price didn't change. The oven looks new.”</blockquote><p class="mt-4 font-semibold">Gareth P. <span class="font-normal text-bright-text/80">· Westerham</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="4 out of 5 stars">★★★★☆</p><blockquote class="mt-2 leading-relaxed">“They missed the hallway skirting once and came back next morning to sort it, free.”</blockquote><p class="mt-4 font-semibold">Lucy M. <span class="font-normal text-bright-text/80">· Edenbridge</span></p></li>
+          </ul></div>
+        </div>
+        <div class="marquee" data-marquee="70" data-direction="right" tabindex="0" role="region" aria-label="Customer reviews, row 2">
+          <div class="marquee__track"><ul class="marquee__group gap-5 pr-5">
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“With two kids and a dog this is the only way the house stays sane.”</blockquote><p class="mt-4 font-semibold">Priya S. <span class="font-normal text-bright-text/80">· Otford</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Friendly, on time, and they text when they're on the way. Simple as that.”</blockquote><p class="mt-4 font-semibold">Mark D. <span class="font-normal text-bright-text/80">· Hildenborough</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“The deep clean before we moved in was worth every pound. Grout is white again.”</blockquote><p class="mt-4 font-semibold">Ellie &amp; Sam K. <span class="font-normal text-bright-text/80">· Tunbridge Wells</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“I've tried three companies. This is the first one I haven't had to chase.”</blockquote><p class="mt-4 font-semibold">Joan F. <span class="font-normal text-bright-text/80">· Borough Green</span></p></li>
+          </ul></div>
         </div>
       </div>
     </section>
 
-    <!-- 5. CTA after social proof -->
-    <section class="px-4 pb-24 pt-8 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-6xl rounded-3xl bg-gradient-to-br from-bright-deep to-bright-text px-6 py-14 text-center text-white sm:px-12">
-        <h2 class="font-lexend text-3xl font-semibold tracking-tight sm:text-4xl">Come home to clean this week.</h2>
-        <p class="mx-auto mt-3 max-w-xl text-lg text-bright-line">Next available slot: <strong class="text-white">Thursday</strong>. Your first clean is covered by our free re-clean promise.</p>
-        <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <a href="#quote" class="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-bright-cta px-8 font-lexend text-lg font-semibold text-bright-ctaink transition-shadow duration-200 hover:shadow-[0_8px_26px_rgba(34,197,94,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-bright-deep">Get my price</a>
-          <a href="tel:+441632960123" class="inline-flex min-h-[52px] items-center justify-center rounded-xl border-2 border-white/70 px-8 font-lexend text-lg font-semibold text-white transition-colors duration-200 hover:bg-white hover:text-bright-text">Call 01632 960 123</a>
+    <!-- 7. Coverage map -->
+    <section id="areas" class="py-24" aria-labelledby="areas-title">
+      <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.3fr] lg:px-8">
+        <div>
+          <p class="font-semibold uppercase tracking-wider text-bright-deep">Where we clean</p>
+          <h2 id="areas-title" class="mt-2 font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold tracking-tight" data-split="words">Local to West Kent.</h2>
+          <p class="mt-3 text-bright-text/90">Cleaners live within 20 minutes of every home they visit.</p>
+          <ul class="mt-6 grid grid-cols-2 gap-1 font-semibold" data-towns>
+            <li class="town rounded-lg px-3 py-2" data-town="sevenoaks">Sevenoaks</li><li class="town rounded-lg px-3 py-2" data-town="tonbridge">Tonbridge</li>
+            <li class="town rounded-lg px-3 py-2" data-town="tw">Tunbridge Wells</li><li class="town rounded-lg px-3 py-2" data-town="westerham">Westerham</li>
+            <li class="town rounded-lg px-3 py-2" data-town="edenbridge">Edenbridge</li><li class="town rounded-lg px-3 py-2" data-town="otford">Otford</li>
+            <li class="town rounded-lg px-3 py-2" data-town="hildenborough">Hildenborough</li><li class="town rounded-lg px-3 py-2" data-town="bg">Borough Green</li>
+          </ul>
+        </div>
+        <div class="soft overflow-hidden rounded-3xl bg-white p-3" aria-hidden="true">
+          <svg viewBox="0 0 600 420" class="w-full" data-map>
+            <rect width="600" height="420" rx="20" fill="#F0FDFF"/>
+            <path d="M120 70C220 20 420 30 520 110S560 340 440 390 160 400 90 320 40 120 120 70z" fill="#CFFAFE" stroke="#22D3EE" stroke-width="2" stroke-dasharray="6 8"/>
+            <path data-draw="scrub" pathLength="1" stroke-dasharray="1" d="M0 300C100 262 160 342 262 300S420 250 600 292" fill="none" stroke="#67E8F9" stroke-width="12" stroke-linecap="round"/>
+            <g fill="none" stroke="#A5B4B8" stroke-width="3" stroke-linecap="round">
+              <path data-draw pathLength="1" stroke-dasharray="1" d="M90 150H230L380 120"/>
+              <path data-draw data-draw-delay=".2" pathLength="1" stroke-dasharray="1" d="M230 80V150L330 230L400 270L450 370"/>
+              <path data-draw data-draw-delay=".4" pathLength="1" stroke-dasharray="1" d="M120 330L230 150"/>
+            </g>
+            <g font-family="Lexend, sans-serif" font-size="17" font-weight="600" fill="#164E63">
+              <g class="pin" data-pin="westerham"><path d="M90 150c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="90" cy="116" r="6" fill="#fff"/><text x="62" y="172">Westerham</text></g>
+              <g class="pin" data-pin="sevenoaks"><circle class="ring" cx="230" cy="150" r="20" fill="none" stroke="#22C55E" stroke-width="3"/><path d="M230 150c-13 0-20-10-20-19 0-13 9-21 20-21s20 8 20 21c0 9-7 19-20 19z" transform="translate(0 -22)" fill="#22C55E"/><circle cx="230" cy="110" r="7" fill="#fff"/><text x="196" y="176" font-weight="700">Sevenoaks</text></g>
+              <g class="pin" data-pin="otford"><path d="M230 80c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="230" cy="46" r="6" fill="#fff"/><text x="252" y="70">Otford</text></g>
+              <g class="pin" data-pin="bg"><path d="M380 120c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="380" cy="86" r="6" fill="#fff"/><text x="400" y="112">Borough Green</text></g>
+              <g class="pin" data-pin="hildenborough"><path d="M330 230c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="330" cy="196" r="6" fill="#fff"/><text x="200" y="232">Hildenborough</text></g>
+              <g class="pin" data-pin="tonbridge"><path d="M400 270c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="400" cy="236" r="6" fill="#fff"/><text x="422" y="262">Tonbridge</text></g>
+              <g class="pin" data-pin="edenbridge"><path d="M120 330c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="120" cy="296" r="6" fill="#fff"/><text x="74" y="352">Edenbridge</text></g>
+              <g class="pin" data-pin="tw"><path d="M450 370c-11 0-17-9-17-16 0-11 8-18 17-18s17 7 17 18c0 7-6 16-17 16z" transform="translate(0 -18)" fill="#0E7490"/><circle cx="450" cy="336" r="6" fill="#fff"/><text x="380" y="396">Tunbridge Wells</text></g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. FAQ -->
+    <section class="bg-white py-24" aria-labelledby="faq-title">
+      <div class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:px-8">
+        <h2 id="faq-title" class="font-lexend text-[clamp(2rem,4vw,2.75rem)] font-semibold tracking-tight" data-split="words">Good questions.</h2>
+        <div class="border-t border-bright-line">
+          <details class="acc border-b border-bright-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 font-lexend text-lg font-semibold">Do I need to be home?<svg class="acc__icon h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-bright-text/90">No. Most customers leave a key in a lockbox. Your cleaner texts when they arrive and when they leave.</div></details>
+          <details class="acc border-b border-bright-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 font-lexend text-lg font-semibold">Do you bring your own products?<svg class="acc__icon h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-bright-text/90">Yes, all products and equipment are included in the price. Tell us if you'd prefer we use yours.</div></details>
+          <details class="acc border-b border-bright-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 font-lexend text-lg font-semibold">What if I need to cancel?<svg class="acc__icon h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-bright-text/90">Cancel or move a visit for free up to 24 hours before. No contracts on regular cleans.</div></details>
+          <details class="acc border-b border-bright-line"><summary class="flex min-h-[64px] items-center justify-between gap-6 py-5 font-lexend text-lg font-semibold">Is the re-clean really free?<svg class="acc__icon h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><div class="acc__body pb-6 leading-relaxed text-bright-text/90">Yes. Tell us within 48 hours and we'll come back to fix anything that was missed, at no cost.</div></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CTA -->
+    <section class="px-4 py-24 sm:px-6 lg:px-8" data-sticky-hide>
+      <div class="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-bright-deep to-bright-text px-6 py-16 text-center text-white sm:px-12">
+        <span class="bubble" data-follow="0.07" style="width:120px;height:120px;left:6%;top:-30px;opacity:.6" aria-hidden="true"></span>
+        <span class="bubble" data-follow="-0.05" style="width:70px;height:70px;right:10%;bottom:20px;opacity:.6" aria-hidden="true"></span>
+        <h2 class="relative font-lexend text-[clamp(2rem,4.5vw,3.25rem)] font-semibold tracking-tight" data-split="words">Come home to clean this week.</h2>
+        <p class="relative mx-auto mt-3 max-w-xl text-lg text-bright-line">Next available slot: <strong class="text-white">Thursday</strong>. Your first clean is covered by our free re-clean promise.</p>
+        <div class="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <a href="#quote" data-magnetic class="btn-glow inline-flex min-h-[54px] items-center justify-center rounded-xl px-8 font-lexend text-lg font-semibold text-bright-ctaink [--btn-bg:#22C55E]"><span class="shine" aria-hidden="true"></span><span class="btn-label" data-magnetic-inner>Get my price</span></a>
+          <a href="tel:+441632960123" class="inline-flex min-h-[54px] items-center justify-center rounded-xl border-2 border-white/70 px-8 font-lexend text-lg font-semibold text-white transition-colors duration-200 hover:bg-white hover:text-bright-text">Call 01632 960 123</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="bg-white">
-    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-base text-bright-text/80 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
-      <p>© 2026 Brightwater Cleaning (concept). Reviews, prices and phone number are illustrative.</p>
-      <p>Design &amp; build: <a href="../../index.html" class="font-semibold text-bright-deep underline underline-offset-2">LK Media</a></p>
+  <footer class="bg-white pb-24 md:pb-0" data-sticky-hide>
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-base text-bright-text/90 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <p>© 2026 Brightwater Cleaning (concept project). *Reviews, prices and phone number are illustrative.</p>
+      <div class="flex items-center gap-4">
+        <button type="button" data-motion-toggle class="min-h-[44px] rounded-full border-2 border-bright-line px-4 font-semibold disabled:opacity-60">Motion: <span data-motion-state>on</span></button>
+        <p>Design &amp; build: <a href="../../" class="font-semibold text-bright-deep underline underline-offset-2">LK Media</a></p>
+      </div>
     </div>
   </footer>
 
-  <script>
-    // Instant quote
+  <!-- Sticky mobile booking bar -->
+  <div class="fixed inset-x-3 bottom-3 z-40 flex items-center gap-2 rounded-2xl bg-bright-text p-2 pl-4 text-white shadow-2xl md:hidden" data-sticky-bar>
+    <p class="mr-auto text-base leading-tight"><span class="block text-sm text-bright-line">Fixed prices from</span><span class="font-lexend text-lg font-semibold">£54 a visit</span></p>
+    <a href="tel:+441632960123" class="grid h-12 w-12 place-items-center rounded-xl bg-white/10" aria-label="Call Brightwater"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+    <a href="#quote" class="inline-flex min-h-[48px] items-center rounded-xl bg-bright-cta px-5 font-lexend font-semibold text-bright-ctaink">Book a clean</a>
+  </div>
+
+  <script src="../../assets/vendor/gsap-bundle.min.js" defer></script>
+  <script src="../../assets/vendor/lenis.min.js" defer></script>
+  <script src="../../assets/motion.js" defer></script>
+  <script type="module">
+    const LK = window.LK || {};
+    const { gsap, mo } = LK;
+    const $ = (s, c = document) => c.querySelector(s), $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+
+    // ---------- Instant price calculator ----------
     const PRICES = { regular: [54, 72, 90, 108], deep: [150, 190, 240, 295], move: [195, 245, 310, 380] };
     const HOURS = { regular: [2, 3, 3.5, 4.5], deep: [5, 6, 7.5, 9], move: [6, 7, 8.5, 10] };
-    const form = document.getElementById('quote-form');
+    const form = $('#quote-form'), priceEl = $('#price');
+    let live;
     function update() {
       const beds = +form.querySelector('input[name="beds"]:checked').value - 1;
-      const type = document.getElementById('clean-type').value;
-      document.getElementById('price').textContent = '£' + PRICES[type][beds];
-      document.getElementById('price-unit').textContent = type === 'regular' ? ' / visit' : ' one-off';
-      document.getElementById('duration').textContent = 'About ' + HOURS[type][beds] + ' hours';
+      const type = $('#clean-type').value;
+      const extras = $$('input[name="extra"]:checked', form).reduce((n, i) => n + +i.value, 0);
+      const total = PRICES[type][beds] + extras;
+      if (LK.tweenNumber) LK.tweenNumber(priceEl, total, { duration: 0.6 }); else priceEl.textContent = '£' + total;
+      if (mo) gsap.fromTo(priceEl, { scale: 1.12 }, { scale: 1, duration: 0.5, ease: 'back.out(3)', transformOrigin: '0% 70%' });
+      $('#price-unit').textContent = type === 'regular' ? ' / visit' : ' one-off';
+      $('#duration').textContent = 'About ' + (HOURS[type][beds] + (extras ? 0.5 : 0)) + ' hours';
+      clearTimeout(live);
+      live = setTimeout(() => ($('#price-live').textContent = `Price updated: £${total}${type === 'regular' ? ' per visit' : ' one-off'}.`), 500);
+      $$('[data-cell]').forEach((c) => c.classList.toggle('cell-hot', c.dataset.cell === `${type}-${beds}`));
     }
     form.addEventListener('change', update);
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const pc = document.getElementById('postcode'), err = document.getElementById('postcode-error');
+      const pc = $('#postcode'), err = $('#postcode-error');
       const ok = pc.value.trim().length >= 5;
       err.classList.toggle('hidden', ok);
       pc.setAttribute('aria-invalid', String(!ok));
       pc.classList.toggle('border-red-700', !ok);
-      if (!ok) { pc.focus(); return; }
+      if (!ok) { pc.focus(); if (mo) gsap.fromTo(pc, { x: -8 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' }); return; }
       const btn = form.querySelector('button[type="submit"]'), label = btn.querySelector('[data-label]');
-      btn.disabled = true; label.textContent = 'Checking availability…';
+      btn.disabled = true; btn.setAttribute('aria-busy', 'true'); label.textContent = 'Checking availability…';
       setTimeout(() => {
-        btn.disabled = false; label.textContent = 'Choose a date';
-        const s = document.getElementById('quote-status');
-        s.textContent = 'Good news, we cover ' + pc.value.trim().toUpperCase() + '. (This is a demo, so no booking was made.)';
+        btn.disabled = false; btn.removeAttribute('aria-busy'); label.textContent = 'Choose a date';
+        const area = pc.value.trim().toUpperCase();
+        const s = $('#quote-status');
+        s.textContent = 'Good news, we cover ' + area + '. (This is a demo, so no booking was made.)';
         s.classList.remove('hidden');
+        LK.toast?.('Thursday morning is free in ' + area + '. Demo only, nothing was booked.', { title: 'You’re covered!' });
       }, 900);
     });
     update();
 
-    // Review carousel buttons
-    const track = document.getElementById('review-track');
-    document.querySelectorAll('[data-scroll]').forEach((b) =>
-      b.addEventListener('click', () => track.scrollBy({ left: +b.dataset.scroll * track.clientWidth * 0.9 }))
-    );
+    if (mo) {
+      // Service icons give a little hello as each card arrives (helps touch devices, which have no hover)
+      $$('.svc .ico').forEach((ico) => gsap.fromTo(ico, { rotate: -16, scale: 0.7 }, { rotate: 0, scale: 1, duration: 1.1, ease: 'elastic.out(1, 0.4)', scrollTrigger: { trigger: ico, start: 'top 85%', once: true } }));
+      // Map pins drop in with a bounce
+      gsap.from('[data-map] .pin', { y: -60, opacity: 0, duration: 0.9, stagger: 0.09, ease: 'bounce.out', scrollTrigger: { trigger: '[data-map]', start: 'top 70%', once: true } });
+    }
+    // Town list highlights its pin (hover or focus)
+    $$('[data-town]').forEach((li) => {
+      const pin = $(`[data-pin="${li.dataset.town}"]`);
+      li.addEventListener('pointerenter', () => pin?.classList.add('is-hot'));
+      li.addEventListener('pointerleave', () => pin?.classList.remove('is-hot'));
+    });
   </script>
-  <script src="../../assets/site.js" defer></script>
 </body>
 </html>
