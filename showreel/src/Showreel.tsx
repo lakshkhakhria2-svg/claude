@@ -146,14 +146,14 @@ const End = () => {
 };
 
 const SITES: Record<string, Site> = {
-  lk: { name: 'LK Media', tag: 'Studio site', concept: false, url: 'lk-media.netlify.app', full: 'lk-media-full-page.jpg', fullH: 5336, mobile: 'lk-media-mobile.jpg', scroll: 1700,
-    bullets: ['Filterable portfolio grid', 'Fixed-price packages', '98–100 Lighthouse performance'], bg: [PLUM, DEEP], accent: CYAN },
-  cadence: { name: 'Cadence', tag: 'SaaS landing page', concept: true, url: 'lk-media.netlify.app/work/cadence', full: 'cadence-full-page.jpg', fullH: 3461, mobile: 'cadence-mobile.jpg', scroll: 2000,
-    bullets: ['Hero adapts to 3 audiences', 'Live product preview', '3-tier pricing'], bg: ['#0F766E', '#0B3B38'], accent: '#F97316' },
-  northvault: { name: 'Northvault', tag: 'Fintech website', concept: true, url: 'lk-media.netlify.app/work/northvault', full: 'northvault-full-page.jpg', fullH: 3803, mobile: 'northvault-mobile.jpg', scroll: 2100,
-    bullets: ['Security built into the hero', 'Accessible runway chart', 'Dark, high-trust design'], bg: ['#1E293B', '#020617'], accent: '#F59E0B' },
-  brightwater: { name: 'Brightwater', tag: 'Local service site', concept: true, url: 'lk-media.netlify.app/work/brightwater', full: 'brightwater-full-page.jpg', fullH: 3673, mobile: 'brightwater-mobile.jpg', scroll: 2300,
-    bullets: ['Instant price calculator', 'Open pricing table', 'Click-to-call booking'], bg: ['#0891B2', '#0C3A4A'], accent: '#22C55E' },
+  lk: { name: 'LK Media', tag: 'Studio site', concept: false, url: 'lk-media.netlify.app', full: 'lk-media-full-page.jpg', fullH: 9657, mobile: 'lk-media-mobile.jpg', scroll: 2300,
+    bullets: ['Intro sequence + WebGL hero', 'Cursor-following project previews', 'Pinned, scroll-driven process story'], bg: [PLUM, DEEP], accent: CYAN },
+  cadence: { name: 'Cadence', tag: 'SaaS landing page', concept: true, url: 'lk-media.netlify.app/work/cadence', full: 'cadence-full-page.jpg', fullH: 6083, mobile: 'cadence-mobile.jpg', scroll: 2500,
+    bullets: ['Live, animated product demo', 'Audience switcher rewrites the page', 'Monthly / yearly pricing toggle'], bg: ['#0F766E', '#0B3B38'], accent: '#F97316' },
+  northvault: { name: 'Northvault', tag: 'Fintech website', concept: true, url: 'lk-media.netlify.app/work/northvault', full: 'northvault-full-page.jpg', fullH: 6497, mobile: 'northvault-mobile.jpg', scroll: 2500,
+    bullets: ['Rolling balance tickers', 'Charts that draw as you scroll', 'Tilting 3D corporate card'], bg: ['#1E293B', '#020617'], accent: '#F59E0B' },
+  brightwater: { name: 'Brightwater', tag: 'Local service site', concept: true, url: 'lk-media.netlify.app/work/brightwater', full: 'brightwater-full-page.jpg', fullH: 6106, mobile: 'brightwater-mobile.jpg', scroll: 2700,
+    bullets: ['Drag-to-compare before / after', 'Price animates as you choose', 'Animated coverage map'], bg: ['#0891B2', '#0C3A4A'], accent: '#22C55E' },
 };
 
 export const Showreel = () => {

@@ -8,12 +8,9 @@
   <meta name="theme-color" content="#0E7490">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230891B2'/><path d='M16 6.5l6 6a8.5 8.5 0 1 1-12 0z' fill='white'/></svg>">
   <script>(function(r){r.classList.add('js');var m=matchMedia('(prefers-reduced-motion: reduce)').matches,o=null;try{o=localStorage.getItem('lk-motion')}catch(e){}if(!m&&o!=='off')r.classList.add('mo')})(document.documentElement)</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400..700&family=Source+Sans+3:wght@400..700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400..700&family=Source+Sans+3:wght@400..700&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400..700&family=Source+Sans+3:wght@400..700&display=swap"></noscript>
   <link rel="stylesheet" href="../../assets/styles.css">
+  <link rel="stylesheet" href="../../assets/fonts/fonts.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="../../assets/fonts/fonts.css"></noscript>
   <style>
     body { --toast-offset: 0px; }
     @media (max-width: 767px) { body { --toast-offset: 5rem; } }
@@ -111,7 +108,7 @@
           <p class="mt-5 font-lexend text-xl font-medium text-bright-deep sm:text-2xl" data-hero-item>Fixed prices for your
             <span class="rotator text-bright-text" data-rotator data-interval="1.6" aria-hidden="true"><span class="rotator__word">kitchen.</span><span class="rotator__word">bathrooms.</span><span class="rotator__word">oven.</span><span class="rotator__word">whole home.</span></span><span class="sr-only">kitchen, bathrooms, oven or whole home.</span>
           </p>
-          <p class="mt-5 max-w-xl text-xl leading-relaxed text-bright-text/90" data-hero-item>Vetted, insured cleaners across Sevenoaks, Tonbridge and West Kent. The same cleaner every visit, and a free re-clean if anything's missed.</p>
+          <p class="mt-5 max-w-xl text-xl leading-relaxed text-bright-text/90" data-hero-item="rise">Vetted, insured cleaners across Sevenoaks, Tonbridge and West Kent. The same cleaner every visit, and a free re-clean if anything's missed.</p>
           <ul class="mt-8 grid gap-3 sm:grid-cols-3" data-hero-item>
             <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>DBS-checked</li>
             <li class="flex items-center gap-2 font-semibold"><svg class="h-6 w-6 shrink-0 text-bright-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>£2M insured</li>
@@ -120,7 +117,7 @@
         </div>
 
         <!-- Instant price calculator -->
-        <div id="quote" class="soft rounded-3xl bg-white p-6 sm:p-8" data-hero-item data-sticky-hide>
+        <div id="quote" class="soft rounded-3xl bg-white p-6 sm:p-8" data-hero-item="rise" data-sticky-hide>
           <h2 class="font-lexend text-2xl font-semibold">Get an instant price</h2>
           <p class="mt-1 text-base text-bright-text/80">No call needed. Book in 60 seconds.</p>
           <form id="quote-form" class="mt-6 space-y-5" novalidate>
@@ -300,18 +297,18 @@
       <div class="mt-10 space-y-5">
         <div class="marquee" data-marquee="60" tabindex="0" role="region" aria-label="Customer reviews, row 1">
           <div class="marquee__track"><ul class="marquee__group gap-5 pr-5">
-            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Same cleaner every fortnight for a year now. She knows exactly how we like things.”</blockquote><p class="mt-4 font-semibold">Hannah W. <span class="font-normal text-bright-text/80">· Sevenoaks</span></p></li>
-            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Got every penny of our deposit back. The letting agent asked who we'd used.”</blockquote><p class="mt-4 font-semibold">Tom &amp; Aisha R. <span class="font-normal text-bright-text/80">· Tonbridge</span></p></li>
-            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Booking online took a minute and the price didn't change. The oven looks new.”</blockquote><p class="mt-4 font-semibold">Gareth P. <span class="font-normal text-bright-text/80">· Westerham</span></p></li>
-            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-600" aria-label="4 out of 5 stars">★★★★☆</p><blockquote class="mt-2 leading-relaxed">“They missed the hallway skirting once and came back next morning to sort it, free.”</blockquote><p class="mt-4 font-semibold">Lucy M. <span class="font-normal text-bright-text/80">· Edenbridge</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Same cleaner every fortnight for a year now. She knows exactly how we like things.”</blockquote><p class="mt-4 font-semibold">Hannah W. <span class="font-normal text-bright-text/80">· Sevenoaks</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Got every penny of our deposit back. The letting agent asked who we'd used.”</blockquote><p class="mt-4 font-semibold">Tom &amp; Aisha R. <span class="font-normal text-bright-text/80">· Tonbridge</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Booking online took a minute and the price didn't change. The oven looks new.”</blockquote><p class="mt-4 font-semibold">Gareth P. <span class="font-normal text-bright-text/80">· Westerham</span></p></li>
+            <li class="review rounded-3xl bg-bright-bg p-6"><p class="text-amber-700" aria-label="4 out of 5 stars">★★★★☆</p><blockquote class="mt-2 leading-relaxed">“They missed the hallway skirting once and came back next morning to sort it, free.”</blockquote><p class="mt-4 font-semibold">Lucy M. <span class="font-normal text-bright-text/80">· Edenbridge</span></p></li>
           </ul></div>
         </div>
         <div class="marquee" data-marquee="70" data-direction="right" tabindex="0" role="region" aria-label="Customer reviews, row 2">
           <div class="marquee__track"><ul class="marquee__group gap-5 pr-5">
-            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“With two kids and a dog this is the only way the house stays sane.”</blockquote><p class="mt-4 font-semibold">Priya S. <span class="font-normal text-bright-text/80">· Otford</span></p></li>
-            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Friendly, on time, and they text when they're on the way. Simple as that.”</blockquote><p class="mt-4 font-semibold">Mark D. <span class="font-normal text-bright-text/80">· Hildenborough</span></p></li>
-            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“The deep clean before we moved in was worth every pound. Grout is white again.”</blockquote><p class="mt-4 font-semibold">Ellie &amp; Sam K. <span class="font-normal text-bright-text/80">· Tunbridge Wells</span></p></li>
-            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-600" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“I've tried three companies. This is the first one I haven't had to chase.”</blockquote><p class="mt-4 font-semibold">Joan F. <span class="font-normal text-bright-text/80">· Borough Green</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“With two kids and a dog this is the only way the house stays sane.”</blockquote><p class="mt-4 font-semibold">Priya S. <span class="font-normal text-bright-text/80">· Otford</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“Friendly, on time, and they text when they're on the way. Simple as that.”</blockquote><p class="mt-4 font-semibold">Mark D. <span class="font-normal text-bright-text/80">· Hildenborough</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“The deep clean before we moved in was worth every pound. Grout is white again.”</blockquote><p class="mt-4 font-semibold">Ellie &amp; Sam K. <span class="font-normal text-bright-text/80">· Tunbridge Wells</span></p></li>
+            <li class="review rounded-3xl border-2 border-bright-line p-6"><p class="text-amber-700" aria-label="5 out of 5 stars">★★★★★</p><blockquote class="mt-2 leading-relaxed">“I've tried three companies. This is the first one I haven't had to chase.”</blockquote><p class="mt-4 font-semibold">Joan F. <span class="font-normal text-bright-text/80">· Borough Green</span></p></li>
           </ul></div>
         </div>
       </div>

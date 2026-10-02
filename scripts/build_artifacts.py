@@ -34,7 +34,7 @@ def build(name, src, rel_prefix):
         for s in ('cadence', 'northvault', 'brightwater'):
             body = body.replace(f'href="work/{s}/"', f'href="{urls.get(s, "#")}"')
     else:
-        body = body.replace('href="../../index.html"', f'href="{AGENCY}"')
+        body = body.replace('href="../../index.html"', f'href="{AGENCY}"').replace('href="../../"', f'href="{AGENCY}"')
     bg = {'agency': '#FDF2F8', 'cadence': '#F0FDFA', 'northvault': '#0F172A', 'brightwater': '#ECFEFF'}[name]
     scheme = 'dark' if name == 'northvault' else 'light'
     page = (f'<title>{TITLES[name]}</title>\n{head.strip()}\n'
@@ -42,12 +42,13 @@ def build(name, src, rel_prefix):
             f'<div class="{cls}">\n{body.strip()}\n</div>\n')
     d = os.path.join(OUT, name); os.makedirs(os.path.join(d, 'assets'), exist_ok=True)
     open(os.path.join(d, 'index.html'), 'w').write(page)
-    for f in ('assets/styles.css', 'assets/site.js'):
+    for f in ('assets/styles.css', 'assets/motion.js'):
         shutil.copy(os.path.join(ROOT, f), os.path.join(d, f))
+    for sub in ('assets/vendor', 'assets/fonts'):
+        shutil.copytree(os.path.join(ROOT, sub), os.path.join(d, sub), dirs_exist_ok=True)
     if name == 'agency':
-        os.makedirs(os.path.join(d, 'assets/work'), exist_ok=True); os.makedirs(os.path.join(d, 'brand'), exist_ok=True)
-        for s in ('cadence', 'northvault', 'brightwater'):
-            shutil.copy(os.path.join(ROOT, f'assets/work/{s}.jpg'), os.path.join(d, f'assets/work/{s}.jpg'))
+        shutil.copytree(os.path.join(ROOT, 'assets/work'), os.path.join(d, 'assets/work'), dirs_exist_ok=True)
+        os.makedirs(os.path.join(d, 'brand'), exist_ok=True)
         shutil.copy(os.path.join(ROOT, 'brand/lk-media-logo-a.png'), os.path.join(d, 'brand/lk-media-logo-a.png'))
 
 build('agency', 'index.html', '')

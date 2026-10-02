@@ -19,6 +19,27 @@
   const FINE = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+  // One shared IntersectionObserver per margin: far cheaper than a ScrollTrigger for "play once in view".
+  const ios = {};
+  const onView = (el, fn, margin = '0px 0px -12% 0px') => {
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) return fn();
+    const io = ios[margin] || (ios[margin] = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const fns = e.target.__ov?.[margin];
+      if (!fns) return;
+      delete e.target.__ov[margin];
+      io.unobserve(e.target);
+      fns.forEach((f) => f());
+    }), { rootMargin: margin }));
+    el.__ov = el.__ov || {};
+    (el.__ov[margin] = el.__ov[margin] || []).push(fn);
+    io.observe(el);
+  };
+  const watchView = (el, toggle) => {
+    if (!('IntersectionObserver' in window)) return toggle(true);
+    new IntersectionObserver(([e]) => toggle(e.isIntersecting)).observe(el);
+  };
   const heroHooks = [];
   const heroRolls = []; // counters / tickers inside the hero start after the curtain lifts
   const LK = (window.LK = { mo: MO, fine: FINE, gsap, lenis: null, onHero: (fn) => heroHooks.push(fn) });
@@ -135,10 +156,10 @@
       range.value = p;
       box.dataset.pos = p;
     };
-    range.addEventListener('input', () => set(+range.value));
-    let dragging = false;
+    let dragging = false, touched = false;
+    range.addEventListener('input', () => { touched = true; set(+range.value); });
     const fromEvent = (e) => { const r = box.getBoundingClientRect(); set(((e.clientX - r.left) / r.width) * 100); };
-    box.addEventListener('pointerdown', (e) => { if (e.button) return; dragging = true; box.setPointerCapture(e.pointerId); fromEvent(e); box.classList.add('is-dragging'); });
+    box.addEventListener('pointerdown', (e) => { if (e.button) return; dragging = touched = true; box.setPointerCapture(e.pointerId); fromEvent(e); box.classList.add('is-dragging'); });
     box.addEventListener('pointermove', (e) => dragging && fromEvent(e));
     const end = () => { dragging = false; box.classList.remove('is-dragging'); };
     box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
@@ -146,10 +167,11 @@
     set(+range.value);
     if (MO) {
       const o = { p: +range.value };
-      gsap.timeline({ scrollTrigger: { trigger: box, start: 'top 70%', once: true } })
-        .to(o, { p: 30, duration: 0.7, ease: 'power2.inOut', onUpdate: () => !dragging && set(o.p) })
-        .to(o, { p: 70, duration: 0.9, ease: 'power2.inOut', onUpdate: () => !dragging && set(o.p) })
-        .to(o, { p: 50, duration: 0.6, ease: 'power2.inOut', onUpdate: () => !dragging && set(o.p) });
+      const hint = gsap.timeline({ paused: true })
+        .to(o, { p: 30, duration: 0.7, ease: 'power2.inOut', onUpdate: () => !touched && set(o.p) })
+        .to(o, { p: 70, duration: 0.9, ease: 'power2.inOut', onUpdate: () => !touched && set(o.p) })
+        .to(o, { p: 50, duration: 0.6, ease: 'power2.inOut', onUpdate: () => !touched && set(o.p) });
+      onView(box, () => hint.play(), '0px 0px -30% 0px');
     }
   });
 
@@ -229,7 +251,7 @@
   /* ================= Everything below runs only with motion allowed ================= */
 
   /* ---------- Lenis smooth scroll ---------- */
-  if (window.Lenis) {
+  if (window.Lenis && FINE) { // phones keep native momentum scrolling
     const lenis = new window.Lenis({ lerp: 0.11, wheelMultiplier: 1, smoothWheel: true });
     LK.lenis = lenis;
     lenis.on('scroll', ST.update);
@@ -352,8 +374,7 @@
     const isHeading = /^H[1-6]$/.test(el.tagName);
     const type = kind === 'chars' && isHeading ? 'lines,words,chars' : kind === 'words' ? 'lines,words' : 'lines';
     const key = type.endsWith('chars') ? 'chars' : type.endsWith('words') ? 'words' : 'lines';
-    let anim;
-    Split.create(el, {
+    const cfg = {
       type, mask: 'lines', autoSplit: true, aria: isHeading ? 'auto' : 'none', ignore: '[data-scramble], [data-no-split]',
       linesClass: 'split-line', wordsClass: 'split-word', charsClass: 'split-char',
       onSplit(self) {
@@ -361,13 +382,21 @@
         const vars = { yPercent: 110, rotate: key === 'lines' ? 0 : 6, duration: key === 'chars' ? 0.9 : 1.1, ease: 'expo.out', stagger: key === 'chars' ? 0.018 : key === 'words' ? 0.04 : 0.09 };
         if (inHero) {
           // Before the entrance plays, hold the hero paused; on later re-splits (resize) just let it settle.
-          anim = gsap.from(targets, { ...vars, paused: !started });
-          if (!started) heroSplits.push(anim);
-          return anim;
+          const a = gsap.from(targets, { ...vars, paused: !started });
+          if (!started) heroSplits.push(a);
+          return a;
         }
-        return gsap.from(targets, { ...vars, scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
+        anim = gsap.from(targets, { ...vars, paused: !played });
+        return anim;
       },
-    });
+    };
+    let anim, played = false;
+    if (inHero) return Split.create(el, cfg);
+    // Split lazily as the element nears the viewport, play when it is in view.
+    onView(el, () => {
+      Split.create(el, cfg);
+      onView(el, () => { played = true; anim?.play(); });
+    }, '0px 0px 40% 0px');
   }
 
   /* ---------- Scramble / decode ---------- */
@@ -389,7 +418,7 @@
       tl.to(w, { yPercent: -100, opacity: 0, duration: 0.6, ease: 'expo.inOut' }, `+=${parseFloat(el.dataset.interval) || 1.8}`)
         .fromTo(n, { yPercent: 100, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.6, ease: 'expo.inOut' }, '<');
     });
-    ST.create({ trigger: el, start: 'top bottom', end: 'bottom top', onToggle: (s) => (s.isActive ? tl.play() : tl.pause()) });
+    watchView(el, (on) => (on ? tl.play() : tl.pause()));
     el.classList.add('is-live');
   }
   $$('[data-rotator]').forEach(rotator);
@@ -398,18 +427,25 @@
   const reveals = $$('[data-reveal]').filter((el) => !el.closest('[data-hero]'));
   if (reveals.length) {
     gsap.set(reveals, { opacity: 0, y: 40 });
-    ST.batch(reveals, { start: 'top 90%', once: true, onEnter: (b) => gsap.to(b, { opacity: 1, y: 0, duration: 1, stagger: 0.09, ease: 'power3.out', overwrite: true }) });
+    const rio = new IntersectionObserver((es) => {
+      const batch = es.filter((e) => e.isIntersecting).map((e) => e.target);
+      batch.forEach((t) => rio.unobserve(t));
+      if (batch.length) gsap.to(batch, { opacity: 1, y: 0, duration: 1, stagger: 0.09, ease: 'power3.out', overwrite: true });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach((r) => rio.observe(r));
   }
   $$('[data-reveal-group]').forEach((g) => {
     const kids = Array.from(g.children);
-    gsap.from(kids, { opacity: 0, y: 36, duration: 0.9, stagger: 0.08, scrollTrigger: { trigger: g, start: 'top 85%', once: true } });
+    gsap.set(kids, { opacity: 0, y: 36 });
+    onView(g, () => gsap.to(kids, { opacity: 1, y: 0, duration: 0.9, stagger: 0.08 }));
   });
 
   /* ---------- Image / panel wipe reveal (two opposite translates, no clip-path) ---------- */
   $$('[data-wipe]').forEach((el) => {
     const inner = el.firstElementChild;
     const dir = el.dataset.wipe === 'left' ? 'xPercent' : 'yPercent';
-    const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
+    const tl = gsap.timeline({ paused: true });
+    onView(el, () => tl.play());
     tl.from(el, { [dir]: 101, duration: 1.3, ease: 'expo.out' }).from(inner, { [dir]: -101, scale: 1.25, duration: 1.3, ease: 'expo.out' }, 0);
   });
 
@@ -422,19 +458,20 @@
     el.dataset.value = from;
     const run = () => LK.tweenNumber(el, to, { from, duration: parseFloat(el.dataset.duration) || 1.6 });
     if (el.closest('[data-hero]')) heroRolls.push(run);
-    else ST.create({ trigger: el, start: 'top 90%', once: true, onEnter: run });
+    else onView(el, run, '0px 0px -8% 0px');
   });
   $$('[data-ring]').forEach((c) => {
-    const final = getComputedStyle(c).strokeDashoffset;
-    gsap.fromTo(c, { strokeDashoffset: 100 }, { strokeDashoffset: final, duration: 1.8, ease: 'power3.out', scrollTrigger: { trigger: c.closest('svg'), start: 'top 90%', once: true } });
+    const final = parseFloat(c.getAttribute('stroke-dashoffset')) || 0;
+    gsap.set(c, { strokeDashoffset: 100 });
+    const run = () => gsap.to(c, { strokeDashoffset: final, duration: 1.8, ease: 'power3.out' });
+    if (c.closest('[data-hero]')) heroRolls.push(run); else onView(c.closest('svg'), run, '0px 0px -8% 0px');
   });
   $$('[data-draw]').forEach((p) => {
     const scrub = p.dataset.draw === 'scrub';
     const trigger = p.closest('[data-draw-trigger]') || p.closest('svg');
-    gsap.fromTo(p, { strokeDashoffset: 1 }, {
-      strokeDashoffset: 0, ease: scrub ? 'none' : 'power2.inOut', duration: parseFloat(p.dataset.drawDuration) || 1.6, delay: parseFloat(p.dataset.drawDelay) || 0,
-      scrollTrigger: scrub ? { trigger, start: 'top 75%', end: 'bottom 45%', scrub: 0.6 } : { trigger, start: 'top 85%', once: true },
-    });
+    if (scrub) return gsap.fromTo(p, { strokeDashoffset: 1 }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger, start: 'top 75%', end: 'bottom 45%', scrub: 0.6 } });
+    gsap.set(p, { strokeDashoffset: 1 });
+    onView(trigger, () => gsap.to(p, { strokeDashoffset: 0, ease: 'power2.inOut', duration: parseFloat(p.dataset.drawDuration) || 1.6, delay: parseFloat(p.dataset.drawDelay) || 0 }));
   });
   // Odometer: each digit is a 0–9 column rolled into place
   $$('[data-ticker]').forEach((el) => {
@@ -456,7 +493,7 @@
     gsap.set(cols.map((c) => c[0]), { yPercent: 0 });
     const roll = () => cols.forEach(([col, d], k) => gsap.to(col, { yPercent: -10 * d, duration: 1.6 + k * 0.06, ease: 'expo.out', delay: 0.1 }));
     if (el.closest('[data-hero]')) heroRolls.push(roll);
-    else ST.create({ trigger: el, start: 'top 92%', once: true, onEnter: roll });
+    else onView(el, roll, '0px 0px -8% 0px');
   });
 
   /* ---------- Outline text that fills on scroll ---------- */
@@ -490,10 +527,12 @@
     ST.addEventListener('refreshInit', build);
     const skewTo = skew ? gsap.quickTo(track, 'skewX', { duration: 0.6, ease: 'power3' }) : null;
     let hover = false;
+    let inView = false;
+    watchView(m, (on) => { inView = on; on ? tween.play() : tween.pause(); });
     ST.create({
       trigger: m, start: 'top bottom', end: 'bottom top',
-      onToggle: (s) => (s.isActive ? tween.play() : tween.pause()),
       onUpdate: (s) => {
+        if (!inView) return;
         const v = s.getVelocity();
         const boost = gsap.utils.clamp(-6, 6, v / 250);
         if (!hover) gsap.to(tween, { timeScale: (s.direction === -1 ? -1 : 1) * (1 + Math.abs(boost)), duration: 0.25, overwrite: true, onComplete: () => gsap.to(tween, { timeScale: s.direction === -1 ? -1 : 1, duration: 1.2, ease: 'power2.out' }) });
@@ -567,8 +606,9 @@
   /* ---------- Start: split hero, lift curtain, play the entrance ---------- */
   $$('[data-split]').forEach((el) => splitReveal(el, !!el.closest('[data-hero]')));
 
+  // Text blocks only rise (they stay painted under the curtain); small items also fade.
   const heroItems = $$('[data-hero] [data-hero-item]');
-  gsap.set(heroItems, { opacity: 0, y: 30 });
+  heroItems.forEach((el) => gsap.set(el, el.dataset.heroItem === 'rise' ? { y: 30 } : { opacity: 0, y: 30 }));
 
   let firstVisit = false;
   try { firstVisit = !sessionStorage.getItem('lk-intro'); sessionStorage.setItem('lk-intro', '1'); } catch (e) {}
@@ -588,14 +628,14 @@
         const o = { n: 0 };
         const intro = gsap.timeline();
         intro.from(word, { yPercent: 110, duration: 0.7, stagger: 0.05, ease: 'expo.out' }, 0)
-          .to(o, { n: 100, duration: 0.85, ease: 'power2.inOut', onUpdate: () => count && (count.textContent = Math.round(o.n)) }, 0)
-          .to(word, { yPercent: -110, duration: 0.45, stagger: 0.03, ease: 'expo.in' }, 0.95);
+          .to(o, { n: 100, duration: 0.75, ease: 'power2.inOut', onUpdate: () => count && (count.textContent = Math.round(o.n)) }, 0)
+          .to(word, { yPercent: -110, duration: 0.4, stagger: 0.025, ease: 'expo.in' }, 0.8);
         tl.add(intro);
         const skipIt = () => intro.progress() < 1 && intro.timeScale(6);
         skip?.addEventListener('click', skipIt);
         ['keydown', 'wheel', 'touchstart'].forEach((ev) => addEventListener(ev, skipIt, { once: true, passive: true }));
       }
-      tl.to(curtain, { yPercent: -100, duration: 0.85, ease: 'expo.inOut', onComplete: hideCurtain });
+      tl.to(curtain, { yPercent: -100, duration: 0.75, ease: 'expo.inOut', onComplete: hideCurtain });
     }
     const at = cur ? '-=0.45' : 0;
     tl.addLabel('hero', at);
@@ -609,10 +649,9 @@
     window.__motionReady = true;
   };
   // Scramble outside the hero plays when it scrolls into view
-  $$('[data-scramble]').filter((el) => !el.closest('[data-hero]')).forEach((el) => ST.create({ trigger: el, start: 'top 85%', once: true, onEnter: () => scramble(el) }));
+  $$('[data-scramble]').filter((el) => !el.closest('[data-hero]')).forEach((el) => onView(el, () => scramble(el)));
 
-  const fontsReady = document.fonts ? Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 900))]) : Promise.resolve();
+  const fontsReady = document.fonts ? Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 600))]) : Promise.resolve();
   // Let page scripts (which run after this file) register hooks first.
   fontsReady.then(() => requestAnimationFrame(() => { start(); ST.refresh(); }));
-  addEventListener('load', () => ST.refresh());
 })();
