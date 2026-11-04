@@ -97,6 +97,7 @@ body {
           <kbd>↑</kbd><span>Throttle (or W)</span>
           <kbd>↓</kbd><span>Brake (or S)</span>
           <kbd>Shift</kbd><span>Nitro (or Space / N)</span>
+          <kbd>R</kbd><span>Restart any time</span>
         </div>
         <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
         <button class="btn" id="startBtn">Start driving</button>
@@ -109,7 +110,7 @@ body {
         <div><div class="stat" id="finalScore">0</div><div class="stat-label" id="finalBest">Best 0</div></div>
         <p id="finalStats"></p>
         <button class="btn" id="againBtn">Drive again</button>
-        <span class="stat-label desk-only">or press Space</span>
+        <span class="stat-label desk-only">or press R</span>
       </div>
     </div>
   </div>
@@ -433,7 +434,8 @@ body {
   const keys = { left: false, right: false, up: false, down: false, nitro: false };
   const keyMap = { ShiftLeft: 'nitro', ShiftRight: 'nitro', KeyN: 'nitro', Space: 'nitro', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down' };
   addEventListener('keydown', e => {
-    if ((e.code === 'Space' || e.code === 'Enter') && (state === 'menu' || state === 'over')) { e.preventDefault(); start(); return; }
+    if (e.code === 'KeyR' && !e.repeat) { e.preventDefault(); start(); return; }
+    if ((e.code === 'Space' || e.code === 'Enter') && state !== 'play') { e.preventDefault(); start(); return; }
     if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); }
   });
   addEventListener('keyup', e => { if (keyMap[e.code]) keys[keyMap[e.code]] = false; });
@@ -633,7 +635,7 @@ body {
 
   function slidePlayer(p, dt) {
     const sp = Math.hypot(p.vx, p.v);
-    if (sp > 0.01) { const dec = Math.min(sp, (p.y > 0.05 ? 1 : 10) * dt); p.vx -= p.vx / sp * dec; p.v -= p.v / sp * dec; }
+    if (sp > 0.01) { const dec = Math.min(sp, (p.y > 0.05 ? 2 : 20) * dt); p.vx -= p.vx / sp * dec; p.v -= p.v / sp * dec; }
     p.yawRate *= Math.exp(-(p.y > 0.05 ? 0.2 : 1.4) * dt);
     p.yaw += p.yawRate * dt;
     p.x += p.vx * dt;
@@ -785,7 +787,7 @@ body {
     const p = player;
     if (p.wrecked) return;
     p.wrecked = true; state = 'wreck'; wreckTimer = 0;
-    timeScale = 0.3; shake = 0.9; flash();
+    timeScale = 0.55; shake = 0.9; flash();
     p.hull = 0; updateHull();
     const cx = hit ? hit.cx : p.x, cz = hit ? hit.cz : 0;
     burst(cx, 0.8, cz, 80, 14);
@@ -876,7 +878,7 @@ body {
   let last = performance.now();
   function frame(now) {
     const realDt = Math.min(0.05, (now - last) / 1000); last = now;
-    timeScale = Math.min(1, timeScale + realDt * 0.6);
+    timeScale = Math.min(1, timeScale + realDt * 2);
     const dt = realDt * (player.wrecked ? timeScale : 1);
     time += dt;
     if (state === 'play' || state === 'wreck' || state === 'over') {
@@ -886,7 +888,7 @@ body {
       if (state === 'wreck') {
         wreckTimer += realDt;
         const sp = Math.hypot(player.v, player.vx);
-        if ((wreckTimer > 1.6 && sp < 1.5 && player.y < 0.05) || wreckTimer > 4.5) gameOver();
+        if ((wreckTimer > 0.7 && sp < 4 && player.y < 0.05) || wreckTimer > 1.6) gameOver();
       }
     } else if (state === 'menu') {
       scroll(27 * dt);
