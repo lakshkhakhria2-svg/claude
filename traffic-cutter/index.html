@@ -588,7 +588,7 @@ body {
   // ---------- simulation ----------
   function drivePlayer(p, dt) {
     const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    const rate = steerIn !== 0 ? 4.5 : 7;
+    const rate = steerIn !== 0 ? 11 : 16;
     p.steer += clamp(steerIn - p.steer, -rate * dt, rate * dt);
 
     let a;
@@ -600,16 +600,16 @@ body {
 
     // heading: steering turns the car, tyres align it back with the road when you let go
     const vt = Math.hypot(p.vx, p.v);
-    const steerRate = 1.5 * Math.min(1, p.v / 12) / (1 + p.v / 40);
-    const maxYaw = Math.min(0.35, Math.asin(Math.min(1, (10 + vt * 0.08) / Math.max(vt, 1))));
-    let wTarget = -p.steer * steerRate - p.yaw * 3.2 * (1 - Math.abs(p.steer) * 0.7);
-    if (Math.abs(p.yaw) > maxYaw && Math.sign(wTarget) === Math.sign(p.yaw)) wTarget = -p.yaw * 2;
-    const yawGrip = p.slide > 0 ? 2.2 : 7;
+    const steerRate = 3.2 * Math.min(1, p.v / 10) / (1 + p.v / 45);
+    const maxYaw = Math.min(0.4, Math.asin(Math.min(1, (13 + vt * 0.1) / Math.max(vt, 1))));
+    let wTarget = -p.steer * steerRate - p.yaw * 22 * (1 - Math.abs(p.steer) * 0.9);
+    if (Math.abs(p.yaw) > maxYaw && Math.sign(wTarget) === Math.sign(p.yaw)) wTarget = (Math.sign(p.yaw) * maxYaw - p.yaw) * 10;
+    const yawGrip = p.slide > 0 ? 6 : 32;
     p.yawRate += (wTarget - p.yawRate) * Math.min(1, dt * yawGrip);
     p.yaw += p.yawRate * dt;
 
     // lateral grip pulls the velocity toward where the car points (looser right after a hit)
-    const grip = Math.min(1, dt * (p.slide > 0 ? 2 : 6.5));
+    const grip = Math.min(1, dt * (p.slide > 0 ? 5 : 30));
     p.vx += (-Math.sin(p.yaw) * vt - p.vx) * grip;
     p.slide = Math.max(0, p.slide - dt);
     p.x += p.vx * dt;
@@ -733,7 +733,7 @@ body {
           if (hit.impact > WRECK_IMPACT) { wreck(hit.impact, hit, c); }
           else {
             shake = Math.max(shake, Math.min(0.6, hit.impact * 0.05));
-            p.slide = 0.35 + hit.impact * 0.06;
+            p.slide = 0.15 + hit.impact * 0.025;
             flash();
             throwDebris(hit.cx, hit.cz, Math.min(4, Math.floor(hit.impact / 3)), c.color, 4);
             damage(hit.impact * 4.5);
@@ -819,8 +819,8 @@ body {
     playerMesh.rotation.set(0, p.yaw, p.roll);
     // suspension: lean out of turns, squat under throttle, dive under braking
     const vt = Math.hypot(p.vx, p.v);
-    p.bodyRoll += (clamp(-p.yawRate * vt * 0.0045, -0.08, 0.08) - p.bodyRoll) * Math.min(1, dt * 8);
-    p.bodyPitch += (clamp(p.accel * 0.0028, -0.06, 0.035) - p.bodyPitch) * Math.min(1, dt * 6);
+    p.bodyRoll += (clamp(-p.yawRate * vt * 0.0015, -0.035, 0.035) - p.bodyRoll) * Math.min(1, dt * 16);
+    p.bodyPitch += (clamp(p.accel * 0.0012, -0.025, 0.015) - p.bodyPitch) * Math.min(1, dt * 14);
     ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
     p.spin += Math.max(0, p.v) * dt / 0.36;
     syncCar(playerMesh, ud.body, p.spin, p.steer);
@@ -842,9 +842,9 @@ body {
     camera.fov += ((wrecked ? baseFov : baseFov + speedT * 14) - camera.fov) * Math.min(1, dt * 3);
     camera.updateProjectionMatrix();
     const tPos = wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * 0.8 - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4, 8.4 - speedT * 1.2);
-    const tLook = wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * 0.9 - Math.sin(p.yaw) * 8, 1.0, -14);
-    camPos.lerp(tPos, 1 - Math.exp(-dt * (wrecked ? 2 : 7)));
-    camLook.lerp(tLook, 1 - Math.exp(-dt * (wrecked ? 3 : 9)));
+    const tLook = wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * 0.9 - Math.sin(p.yaw) * 3, 1.0, -14);
+    camPos.lerp(tPos, 1 - Math.exp(-dt * (wrecked ? 2 : 14)));
+    camLook.lerp(tLook, 1 - Math.exp(-dt * (wrecked ? 3 : 16)));
     camera.position.copy(camPos);
     camera.position.x += (Math.random() - 0.5) * shake;
     camera.position.y += (Math.random() - 0.5) * shake;
