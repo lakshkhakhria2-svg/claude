@@ -68,6 +68,42 @@ body {
 .pad.gas { color: var(--amber); }
 .pad.brake { color: var(--danger); }
 .pad.nos { color: var(--cyan); }
+.btn.ghost { background: transparent; color: var(--paint); border: 1px solid #ffffff3a; }
+.btn.ghost:hover { border-color: #ffffff80; }
+.btnrow { display: flex; gap: 8px; }
+.btnrow .btn { flex: 1; white-space: nowrap; }
+.stage:not([data-state=play]):not([data-state=wreck]) :is(.hud, .nosbar, .combobar) { display: none; }
+.cash { font-family: var(--display); color: #7be08a; font-variant-numeric: tabular-nums; }
+.earned { font-size: 15px; }
+.hs { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.hs ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+.hs li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; font-size: 13px; color: #c3c7d6; padding: 3px 6px; border-radius: 3px; }
+.hs li b { font-family: var(--display); font-weight: 400; color: var(--paint); }
+.hs li.me { background: #ffb62726; color: var(--paint); }
+.hs .empty { font-size: 13px; color: var(--muted); }
+.newhs { font-family: var(--display); color: var(--amber); font-size: 18px; letter-spacing: .04em; animation: pulse 1s ease-in-out infinite alternate; }
+@keyframes pulse { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .newhs { animation: none; } }
+.overlay.garage { justify-content: center; }
+.gcard { max-width: 400px; width: 100%; max-height: 100%; overflow-y: auto; text-align: left; box-sizing: border-box; gap: 4px; }
+.ghead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.ghead h1 { font-size: 28px; }
+.ghead .cash { font-size: 24px; }
+.urow { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding-block: 10px; border-top: 1px solid #ffffff14; }
+.uinfo { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.uinfo b { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: .03em; }
+.uinfo span { font-size: 12px; color: #c3c7d6; }
+.pips { display: flex; gap: 4px; margin-top: 2px; }
+.pips i { width: 20px; height: 5px; border-radius: 1px; background: #ffffff22; }
+.pips i.on { background: var(--amber); }
+.ubtn { font-family: var(--display); font-size: 14px; min-width: 84px; padding: 9px 10px; border-radius: 4px; border: 0; cursor: pointer; background: #7be08a; color: var(--night); font-variant-numeric: tabular-nums; }
+.ubtn:disabled { background: #ffffff14; color: var(--muted); cursor: default; }
+.ubtn:focus-visible, .swatch:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.paintrow { display: flex; flex-direction: column; gap: 8px; padding-block: 12px; border-top: 1px solid #ffffff14; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ffffff30; cursor: pointer; padding: 0; }
+.swatch.sel { border-color: var(--paint); box-shadow: 0 0 0 2px var(--night), 0 0 0 4px var(--amber); }
+@media (min-width: 760px) { .overlay.garage { justify-content: flex-start; padding-left: 24px; } }
 .nosbar { position: absolute; left: 50%; bottom: 24px; width: 40%; height: 6px; transform: translateX(-50%); background: #0b0d14aa; border: 1px solid #ffffff22; border-radius: 3px; overflow: hidden; pointer-events: none; }
 .nosbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f7dff, var(--cyan)); }
 .nosbar span { position: absolute; right: 100%; top: -5px; margin-right: 6px; font-size: 10px; letter-spacing: .12em; color: var(--cyan); }
@@ -100,17 +136,29 @@ body {
           <kbd>R</kbd><span>Restart any time</span>
         </div>
         <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
-        <button class="btn" id="startBtn">Start driving</button>
-        <span class="stat-label">Best <span id="bestStart">0</span></span>
+        <div class="btnrow"><button class="btn" id="startBtn">Drive</button><button class="btn ghost" id="garageBtn">Garage</button></div>
+        <div class="hs"><span class="stat-label">High scores</span><ol id="hsStart"></ol></div>
+        <span class="stat-label">Cash <span class="cash" id="cashStart">$0</span><span hidden id="bestStart"></span></span>
       </div>
     </div>
     <div class="overlay" id="overOv" hidden>
       <div class="card">
         <h1 class="crash-title">WRECKED</h1>
+        <div class="newhs" id="newHs" hidden>NEW HIGH SCORE!</div>
         <div><div class="stat" id="finalScore">0</div><div class="stat-label" id="finalBest">Best 0</div></div>
         <p id="finalStats"></p>
-        <button class="btn" id="againBtn">Drive again</button>
+        <div class="hs"><ol id="hsOver"></ol></div>
+        <p class="earned">Earned <span class="cash" id="earned">$0</span> · Total <span class="cash" id="cashOver">$0</span></p>
+        <div class="btnrow"><button class="btn" id="againBtn">Retry</button><button class="btn ghost" id="garageBtn2">Garage</button></div>
         <span class="stat-label desk-only">or press R</span>
+      </div>
+    </div>
+    <div class="overlay garage" id="garageOv" hidden>
+      <div class="card gcard">
+        <div class="ghead"><h1>GARAGE</h1><div class="cash" id="gCash">$0</div></div>
+        <div id="uList"></div>
+        <div class="paintrow"><span class="stat-label">Paint (free)</span><div class="swatches" id="swatches"></div></div>
+        <div class="btnrow"><button class="btn ghost" id="gBack">Back</button><button class="btn" id="gDrive">Drive</button></div>
       </div>
     </div>
   </div>
@@ -390,7 +438,7 @@ body {
     const blinkers = [];
     for (const x of [-1, 1]) { const bl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.13, 0.3), blinkOff); bl.position.set(x * (w / 2 + 0.02), truck ? 1.0 : 0.76, l / 2 - 0.3); b.add(bl); blinkers.push(bl); }
     shadowAll(g);
-    g.userData = { w, l, tails, blinkers, body: b, wheels, front };
+    g.userData = { w, l, tails, blinkers, body: b, wheels, front, paint: body };
     return g;
   }
 
@@ -451,14 +499,79 @@ body {
   });
   $('startBtn').onclick = start;
   $('againBtn').onclick = start;
+  $('garageBtn').onclick = openGarage;
+  $('garageBtn2').onclick = openGarage;
+  $('gBack').onclick = closeGarage;
+  $('gDrive').onclick = start;
 
   let best = 0;
   try { best = +localStorage.getItem('laneSplitterBest') || 0; } catch (e) {}
   $('bestStart').textContent = best;
 
+  // ---------- garage: saved progress, upgrades and paint ----------
+  const COSTS = [250, 600, 1200, 2200, 4000];
+  const PAINTS = [['Ocean', 0x00a6e0], ['Race red', 0xd62828], ['Lime', 0x7bc043], ['Orange', 0xff7a00], ['Violet', 0x7b3fe4], ['Gold', 0xf2c200], ['Pearl', 0xeeeeee], ['Stealth', 0x15171c]];
+  const save = { cash: 0, color: 0x00a6e0, scores: [], levels: { engine: 0, brakes: 0, handling: 0, nitro: 0, armor: 0 } };
+  try { const s = JSON.parse(localStorage.getItem('laneSplitterSave') || 'null'); if (s) { save.cash = +s.cash || 0; save.color = s.color ?? save.color; Object.assign(save.levels, s.levels || {}); if (Array.isArray(s.scores)) save.scores = s.scores.slice(0, 5); } } catch (e) {}
+  const persist = () => { try { localStorage.setItem('laneSplitterSave', JSON.stringify(save)); } catch (e) {} };
+  const S = {};
+  const statsFor = L => ({
+    vmax: 75 + L.engine * 5.6, accel: 1 + L.engine * 0.12, brake: 1 + L.brakes * 0.15, lat: 1 + L.handling * 0.08,
+    nitroDrain: 0.22 * (1 - L.nitro * 0.11), nitroGain: 1 + L.nitro * 0.2, armor: 1 - L.armor * 0.13, wreck: 13 + L.armor * 1.8
+  });
+  const UPGRADES = [
+    { id: 'engine', name: 'Engine', info: s => `Top speed ${Math.round(s.vmax / MPS)} mph · acceleration +${Math.round((s.accel - 1) * 100)}%` },
+    { id: 'brakes', name: 'Brakes', info: s => `Stopping power +${Math.round((s.brake - 1) * 100)}%` },
+    { id: 'handling', name: 'Handling', info: s => `Lane-change speed +${Math.round((s.lat - 1) * 100)}%` },
+    { id: 'nitro', name: 'Nitro', info: s => `Full tank lasts ${(1 / s.nitroDrain).toFixed(1)} s · recharge +${Math.round((s.nitroGain - 1) * 100)}%` },
+    { id: 'armor', name: 'Armor', info: s => `Damage taken −${Math.round((1 - s.armor) * 100)}% · survives ${Math.round(s.wreck / MPS)} mph hits` },
+  ];
+  if (!save.scores.length && best > 0) save.scores = [{ score: best, miles: 0, date: Date.now() }];
+  function renderScores(el, mine) {
+    el.innerHTML = save.scores.length
+      ? save.scores.map((r, i) => `<li class="${r === mine ? 'me' : ''}"><span>${i + 1}.</span><b>${r.score.toLocaleString('en-US')}</b><span>${r.miles ? r.miles.toFixed(2) + ' mi' : ''}</span></li>`).join('')
+      : '<li class="empty">No runs yet. Your best five runs show up here.</li>';
+  }
+  const money = n => '$' + Math.round(n).toLocaleString('en-US');
+  function applyLoadout() {
+    Object.assign(S, statsFor(save.levels));
+    playerMesh.userData.paint.color = lin(save.color);
+    $('cashStart').textContent = money(save.cash);
+    renderScores($('hsStart'));
+  }
+  function renderGarage() {
+    $('gCash').textContent = money(save.cash);
+    $('uList').innerHTML = UPGRADES.map(u => {
+      const lv = save.levels[u.id], maxed = lv >= COSTS.length;
+      const now = u.info(statsFor(save.levels));
+      const next = maxed ? '' : u.info(statsFor({ ...save.levels, [u.id]: lv + 1 })).split(' · ')[0];
+      return `<div class="urow"><div class="uinfo"><b>${u.name}</b><span>${now}${maxed ? '' : `<br>Next level: ${next}`}</span>
+        <div class="pips" aria-label="Level ${lv} of ${COSTS.length}">${COSTS.map((_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</div></div>
+        <button class="ubtn" id="up-${u.id}" data-u="${u.id}" ${maxed || save.cash < COSTS[lv] ? 'disabled' : ''}>${maxed ? 'MAX' : money(COSTS[lv])}</button></div>`;
+    }).join('');
+    $('swatches').innerHTML = PAINTS.map(([n, c]) => `<button class="swatch${c === save.color ? ' sel' : ''}" id="paint-${c}" data-c="${c}" title="${n}" aria-label="${n}" style="background:#${c.toString(16).padStart(6, '0')}"></button>`).join('');
+  }
+  $('uList').addEventListener('click', e => {
+    const id = e.target.closest('.ubtn')?.dataset.u; if (!id) return;
+    const lv = save.levels[id]; if (lv >= COSTS.length || save.cash < COSTS[lv]) return;
+    save.cash -= COSTS[lv]; save.levels[id] = lv + 1; persist(); applyLoadout(); renderGarage();
+  });
+  $('swatches').addEventListener('click', e => {
+    const c = e.target.closest('.swatch')?.dataset.c; if (!c) return;
+    save.color = +c; persist(); applyLoadout(); renderGarage();
+  });
+  function openGarage() {
+    if (state !== 'menu') reset();
+    state = 'garage';
+    $('startOv').hidden = true; $('overOv').hidden = true; $('garageOv').hidden = false;
+    renderGarage();
+  }
+  function closeGarage() { state = 'menu'; $('garageOv').hidden = true; $('startOv').hidden = false; applyLoadout(); }
+  applyLoadout();
+
+
   // ---------- game state ----------
-  const V_MAX = 103, V_CRUISE = 33, V_MIN = 9;      // m/s
-  const WRECK_IMPACT = 13;                            // closing speed (m/s) that wrecks you outright
+  const V_CRUISE = 33, V_MIN = 9;                     // m/s; top speed and crash tolerance come from upgrades (S)
   const BARRIER_X = ROAD_W / 2 + 2.05;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   let state = 'menu', player, cars = [], score, distance, combo, comboTimer, nearMisses, topSpeed, spawnAcc, time = 0, shake = 0, timeScale = 1, wreckTimer = 0;
@@ -498,7 +611,7 @@ body {
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
     player = { isPlayer: true, x: laneX(2), z: 0, vx: 0, v: 31, yaw: 0, yawRate: 0, steer: 0, w: 1.9, l: 4.4, mass: 1.3,
       y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0 };
-    score = 0; distance = 0; combo = 1; comboTimer = 0; nearMisses = 0; topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
+    bestAnnounced = false; score = 0; distance = 0; combo = 1; comboTimer = 0; nearMisses = 0; topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
     updateHull();
     for (let i = 0; i < 7; i++) spawnCar(-25 - i * 32);
   }
@@ -506,7 +619,7 @@ body {
   function start() {
     reset();
     state = 'play';
-    $('startOv').hidden = true; $('overOv').hidden = true;
+    $('startOv').hidden = true; $('overOv').hidden = true; $('garageOv').hidden = true;
   }
 
   function spawnCar(z) {
@@ -529,6 +642,10 @@ body {
 
   const laneClear = (lane, car) => !cars.some(c => c !== car && (c.lane === lane || c.target === lane) && Math.abs(c.z - car.z) < (c.l + car.l) / 2 + 8);
 
+  let bestAnnounced = false;
+  function checkBest() {
+    if (!bestAnnounced && best > 0 && score > best) { bestAnnounced = true; showPop('NEW BEST!', true); }
+  }
   let popTimer;
   function showPop(text, hot) {
     const el = $('pop');
@@ -599,27 +716,27 @@ body {
 
   // ---------- simulation ----------
   // Arcade highway handling: steering sets a sideways speed, the car's angle just follows it.
-  const V_NITRO = 120;
   function drivePlayer(p, dt) {
     const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     p.steer += clamp(steerIn - p.steer, -(steerIn ? 7 : 12) * dt, (steerIn ? 7 : 12) * dt);
 
     const boosting = keys.nitro && p.nitro > 0 && !keys.down;
     let a;
-    if (keys.down) a = -(30 + Math.min(12, p.v * 0.15));        // brakes win over everything
-    else if (boosting) a = 24 * (1 - (p.v / V_NITRO) ** 2) + 4;
-    else if (keys.up) a = 15 * (1 - (p.v / V_MAX) ** 2);
+    const V_NITRO = S.vmax + 17;
+    if (keys.down) a = -(30 + Math.min(12, p.v * 0.15)) * S.brake;   // brakes win over everything
+    else if (boosting) a = (24 * (1 - (p.v / V_NITRO) ** 2) + 4) * S.accel;
+    else if (keys.up) a = 15 * S.accel * (1 - (p.v / S.vmax) ** 2);
     else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);   // engine braking
-    if (!boosting && p.v > V_MAX) a = Math.min(a, -6);           // bleed off nitro overspeed
+    if (!boosting && p.v > S.vmax) a = Math.min(a, -6);           // bleed off nitro overspeed
     p.v = clamp(p.v + a * dt, V_MIN, V_NITRO);
     p.accel += (a - p.accel) * Math.min(1, dt * 4);
     p.boosting = boosting;
-    p.nitro = clamp(p.nitro + (boosting ? -0.22 : 0.012) * dt, 0, 1);
+    p.nitro = clamp(p.nitro + (boosting ? -S.nitroDrain : 0.012 * S.nitroGain) * dt, 0, 1);
 
     // sideways speed grows only a little with forward speed, so lane changes stay predictable
-    const latMax = 6 + p.v * 0.06;
+    const latMax = (6 + p.v * 0.06) * S.lat;
     const prevVx = p.vx;
-    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46);
+    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat;
     p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
     p.x += p.vx * dt;
     p.latA += ((p.vx - prevVx) / dt - p.latA) * Math.min(1, dt * 10);
@@ -671,7 +788,7 @@ body {
   }
 
   function damage(amount) {
-    player.hull -= amount;
+    player.hull -= amount * S.armor;
     updateHull();
     if (player.hull <= 0) wreck(0);
   }
@@ -718,7 +835,7 @@ body {
     if (!p.wrecked) topSpeed = Math.max(topSpeed, p.v / MPS);
 
     distance += Math.max(0, p.v) * dt;
-    if (!p.wrecked) score += (p.v / MPS) * dt * 0.5 * combo;
+    if (!p.wrecked) { score += (p.v / MPS) * dt * 0.5 * combo; checkBest(); }
 
     const bodies = [...cars, p];
     for (const c of cars) {
@@ -732,9 +849,10 @@ body {
         if (gap < 0.9 && gap > -0.05 && p.v > c.v + 6.7) {
           nearMisses++;
           combo = Math.min(combo + 1, 10); comboTimer = 3;
-          p.nitro = Math.min(1, p.nitro + (gap < 0.35 ? 0.22 : 0.14));
+          p.nitro = Math.min(1, p.nitro + (gap < 0.35 ? 0.22 : 0.14) * S.nitroGain);
           const bonus = Math.round(50 * combo * (p.v / MPS / 100));
           score += bonus;
+          checkBest();
           showPop((gap < 0.35 ? 'INCHES! +' : 'CUT UP +') + bonus, gap < 0.35);
         }
       }
@@ -749,7 +867,7 @@ body {
         if (hit.impact > 4) knockLoose(c);
         if (!p.wrecked) {
           combo = 1; comboTimer = 0;
-          if (hit.impact > WRECK_IMPACT) { wreck(hit.impact, hit, c); }
+          if (hit.impact > S.wreck) { wreck(hit.impact, hit, c); }
           else {
             shake = Math.max(shake, Math.min(0.6, hit.impact * 0.05));
             p.slide = 0.15 + hit.impact * 0.025;
@@ -791,7 +909,7 @@ body {
     p.hull = 0; updateHull();
     const cx = hit ? hit.cx : p.x, cz = hit ? hit.cz : 0;
     burst(cx, 0.8, cz, 80, 14);
-    throwDebris(cx, cz, 16, 0x00a6e0, 9);
+    throwDebris(cx, cz, 16, save.color, 9);
     if (c) { throwDebris(cx, cz, 6, c.color, 7); knockLoose(c); }
     if (impact > 20) { p.vy = 5 + Math.random() * 3; p.rollRate = (Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 3); }
     else { p.vy = 1.5 + impact * 0.08; p.rollRate = (Math.random() - 0.5) * 3; }
@@ -802,11 +920,22 @@ body {
   function gameOver() {
     state = 'over';
     score = Math.round(score);
+    const prevTop = save.scores[0]?.score || 0;
     if (score > best) { best = score; try { localStorage.setItem('laneSplitterBest', best); } catch (e) {} }
+    const run = { score, miles: distance / 1609, date: Date.now() };
+    if (score > 0) { save.scores.push(run); save.scores.sort((a, b) => b.score - a.score); save.scores = save.scores.slice(0, 5); }
+    const rank = save.scores.indexOf(run);
+    $('newHs').hidden = !(score > prevTop && score > 0);
+    $('newHs').textContent = score > prevTop ? 'NEW HIGH SCORE!' : '';
+    renderScores($('hsOver'), run);
+    $('finalBest').textContent = rank >= 0 ? `#${rank + 1} on your board · Best ${best.toLocaleString('en-US')}` : 'Best ' + best.toLocaleString('en-US');
     $('finalScore').textContent = score;
-    $('finalBest').textContent = 'Best ' + best;
     $('bestStart').textContent = best;
     $('finalStats').textContent = `${(distance / 1609).toFixed(2)} miles · ${nearMisses} near misses · top speed ${Math.round(topSpeed)} mph`;
+    const earned = Math.round(score / 6);
+    save.cash += earned; persist(); applyLoadout();
+    $('earned').textContent = '+' + money(earned);
+    $('cashOver').textContent = money(save.cash);
     $('overOv').hidden = false;
   }
 
@@ -870,6 +999,14 @@ body {
     camera.position.x += (Math.random() - 0.5) * shake;
     camera.position.y += (Math.random() - 0.5) * shake;
     camera.lookAt(camLook);
+    if (state === 'garage') {
+      const t = time * 0.35, wide = camera.aspect > 1.2;
+      camera.fov = baseFov; camera.updateProjectionMatrix();
+      camera.position.set(p.x + Math.sin(t) * 6.2, 2.2, Math.cos(t) * 6.2);
+      const right = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(p.x, 0, 0)).cross(new THREE.Vector3(0, 1, 0)).normalize();
+      camera.lookAt(new THREE.Vector3(p.x, 0.7, 0).addScaledVector(right, wide ? 2.2 : 0));
+      camPos.copy(camera.position);
+    }
     sun.position.set(p.x + SUN_DIR.x * 80, SUN_DIR.y * 80, -12 + SUN_DIR.z * 80);
     sun.target.position.set(p.x, 0, -12);
     sky.position.copy(camera.position);
@@ -890,12 +1027,13 @@ body {
         const sp = Math.hypot(player.v, player.vx);
         if ((wreckTimer > 0.7 && sp < 4 && player.y < 0.05) || wreckTimer > 1.6) gameOver();
       }
-    } else if (state === 'menu') {
+    } else if (state === 'menu' || state === 'garage') {
       scroll(27 * dt);
       for (const c of cars) { c.z += (27 - c.v) * dt; c.spin += c.v * dt / 0.36; }
       cars = cars.filter(c => { const keep = c.z < DESPAWN_Z; if (!keep) scene.remove(c.mesh); return keep; });
       if (cars.length < 6) spawnCar(SPAWN_Z);
     }
+    if (stage.dataset.state !== state) stage.dataset.state = state;
     updateSparks(dt);
     updateDebris(dt);
     if (shake > 0) shake = Math.max(0, shake - 1.2 * realDt);
