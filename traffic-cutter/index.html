@@ -67,6 +67,10 @@ body {
 .pad.on { background: #ffffff2e; }
 .pad.gas { color: var(--amber); }
 .pad.brake { color: var(--danger); }
+.pad.nos { color: var(--cyan); }
+.nosbar { position: absolute; left: 50%; bottom: 24px; width: 40%; height: 6px; transform: translateX(-50%); background: #0b0d14aa; border: 1px solid #ffffff22; border-radius: 3px; overflow: hidden; pointer-events: none; }
+.nosbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f7dff, var(--cyan)); }
+.nosbar span { position: absolute; right: 100%; top: -5px; margin-right: 6px; font-size: 10px; letter-spacing: .12em; color: var(--cyan); }
 @media (pointer: coarse) { .pads { display: flex; } .desk-only { display: none; } }
 @media (pointer: fine) { .touch-only { display: none; } }
 @media (prefers-reduced-motion: reduce) { .pop.show { animation-duration: .01s; opacity: 1; } }
@@ -83,16 +87,18 @@ body {
     <div class="flash" id="flash"></div>
     <div class="pop" id="pop"></div>
     <div class="combobar"><i id="comboBar"></i></div>
+    <div class="nosbar"><span>NOS</span><i id="nosBar"></i></div>
     <div class="overlay" id="startOv">
       <div class="card">
         <h1>LANE <em>SPLITTER</em></h1>
-        <p>Weave through rush-hour traffic at full speed. Shave past cars for near-miss points and chain them for a combo. Scrapes cost hull; a hard hit wrecks you.</p>
+        <p>Weave through rush-hour traffic at full speed. Shave past cars for near-miss points, combo and nitro. Scrapes cost hull; a hard hit wrecks you.</p>
         <div class="keys desk-only">
           <kbd>← →</kbd><span>Steer (or A / D)</span>
           <kbd>↑</kbd><span>Throttle (or W)</span>
           <kbd>↓</kbd><span>Brake (or S)</span>
+          <kbd>Shift</kbd><span>Nitro (or Space / N)</span>
         </div>
-        <p class="touch-only">Use the pads under the road to steer, gas and brake.</p>
+        <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
         <button class="btn" id="startBtn">Start driving</button>
         <span class="stat-label">Best <span id="bestStart">0</span></span>
       </div>
@@ -114,6 +120,7 @@ body {
     </div>
     <div class="grp">
       <div class="pad brake" data-k="down">BRAKE</div>
+      <div class="pad nos" data-k="nitro">NOS</div>
       <div class="pad gas" data-k="up">GAS</div>
     </div>
   </div>
@@ -395,6 +402,9 @@ body {
   const spoiler = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.07, 0.4), trimMat);
   spoiler.position.set(0, 1.22, 2.05); spoiler.castShadow = true; playerMesh.userData.body.add(spoiler);
   for (const x of [-0.7, 0.7]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.12), trimMat); st.position.set(x, 1.05, 2.05); playerMesh.userData.body.add(st); }
+  const flame = new THREE.Group();
+  for (const x of [-0.45, 0.45]) { const f = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.9, 8), new THREE.MeshBasicMaterial({ color: 0x6fd8ff, transparent: true, opacity: 0.85 })); f.rotation.x = Math.PI / 2; f.position.set(x, 0.45, 2.65); flame.add(f); }
+  flame.visible = false; playerMesh.userData.body.add(flame);
   scene.add(playerMesh);
 
   // sparks
@@ -420,11 +430,11 @@ body {
   }
 
   // ---------- input ----------
-  const keys = { left: false, right: false, up: false, down: false };
-  const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down' };
+  const keys = { left: false, right: false, up: false, down: false, nitro: false };
+  const keyMap = { ShiftLeft: 'nitro', ShiftRight: 'nitro', KeyN: 'nitro', Space: 'nitro', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down' };
   addEventListener('keydown', e => {
+    if ((e.code === 'Space' || e.code === 'Enter') && (state === 'menu' || state === 'over')) { e.preventDefault(); start(); return; }
     if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); }
-    if ((e.code === 'Space' || e.code === 'Enter') && (state === 'menu' || state === 'over')) { e.preventDefault(); start(); }
   });
   addEventListener('keyup', e => { if (keyMap[e.code]) keys[keyMap[e.code]] = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
@@ -485,7 +495,7 @@ body {
     cars = []; sparks = [];
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
     player = { isPlayer: true, x: laneX(2), z: 0, vx: 0, v: 31, yaw: 0, yawRate: 0, steer: 0, w: 1.9, l: 4.4, mass: 1.3,
-      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0 };
+      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0 };
     score = 0; distance = 0; combo = 1; comboTimer = 0; nearMisses = 0; topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
     updateHull();
     for (let i = 0; i < 7; i++) spawnCar(-25 - i * 32);
@@ -586,33 +596,39 @@ body {
   function knockLoose(c) { if (!c.loose) { c.loose = true; c.blink = 0; c.target = c.lane; } }
 
   // ---------- simulation ----------
+  // Arcade highway handling: steering sets a sideways speed, the car's angle just follows it.
+  const V_NITRO = 120;
   function drivePlayer(p, dt) {
     const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    const rate = steerIn !== 0 ? 6.5 : 16;
-    p.steer += clamp(steerIn - p.steer, -rate * dt, rate * dt);
+    p.steer += clamp(steerIn - p.steer, -(steerIn ? 7 : 12) * dt, (steerIn ? 7 : 12) * dt);
 
+    const boosting = keys.nitro && p.nitro > 0 && !keys.down;
     let a;
-    if (keys.down) a = -(30 + Math.min(12, p.v * 0.15));   // brakes win over throttle
+    if (keys.down) a = -(30 + Math.min(12, p.v * 0.15));        // brakes win over everything
+    else if (boosting) a = 24 * (1 - (p.v / V_NITRO) ** 2) + 4;
     else if (keys.up) a = 15 * (1 - (p.v / V_MAX) ** 2);
-    else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);
-    p.v = clamp(p.v + a * dt, V_MIN, V_MAX);
+    else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);   // engine braking
+    if (!boosting && p.v > V_MAX) a = Math.min(a, -6);           // bleed off nitro overspeed
+    p.v = clamp(p.v + a * dt, V_MIN, V_NITRO);
     p.accel += (a - p.accel) * Math.min(1, dt * 4);
+    p.boosting = boosting;
+    p.nitro = clamp(p.nitro + (boosting ? -0.22 : 0.012) * dt, 0, 1);
 
-    // heading: steering turns the car, tyres align it back with the road when you let go
-    const vt = Math.hypot(p.vx, p.v);
-    const steerRate = 1.9 * Math.min(1, p.v / 10) / (1 + p.v / 45);
-    const maxYaw = Math.min(0.3, Math.asin(Math.min(1, (8 + vt * 0.06) / Math.max(vt, 1))));
-    let wTarget = -p.steer * steerRate - p.yaw * 22 * (1 - Math.abs(p.steer) * 0.9);
-    if (Math.abs(p.yaw) > maxYaw && Math.sign(wTarget) === Math.sign(p.yaw)) wTarget = (Math.sign(p.yaw) * maxYaw - p.yaw) * 10;
-    const yawGrip = p.slide > 0 ? 6 : 32;
-    p.yawRate += (wTarget - p.yawRate) * Math.min(1, dt * yawGrip);
-    p.yaw += p.yawRate * dt;
-
-    // lateral grip pulls the velocity toward where the car points (looser right after a hit)
-    const grip = Math.min(1, dt * (p.slide > 0 ? 5 : 30));
-    p.vx += (-Math.sin(p.yaw) * vt - p.vx) * grip;
-    p.slide = Math.max(0, p.slide - dt);
+    // sideways speed grows only a little with forward speed, so lane changes stay predictable
+    const latMax = 6 + p.v * 0.06;
+    const prevVx = p.vx;
+    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46);
+    p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
     p.x += p.vx * dt;
+    p.latA += ((p.vx - prevVx) / dt - p.latA) * Math.min(1, dt * 10);
+
+    // the car points along its motion; after a hit it keeps some spin before the tyres catch it
+    const prevYaw = p.yaw;
+    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * 1.8;
+    if (p.slide > 0) { p.yaw += p.yawRate * dt; p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 3); }
+    else p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 16);
+    p.yawRate = p.slide > 0 ? p.yawRate * Math.exp(-4 * dt) : (p.yaw - prevYaw) / dt;
+    p.slide = Math.max(0, p.slide - dt);
   }
 
   function slidePlayer(p, dt) {
@@ -714,6 +730,7 @@ body {
         if (gap < 0.9 && gap > -0.05 && p.v > c.v + 6.7) {
           nearMisses++;
           combo = Math.min(combo + 1, 10); comboTimer = 3;
+          p.nitro = Math.min(1, p.nitro + (gap < 0.35 ? 0.22 : 0.14));
           const bonus = Math.round(50 * combo * (p.v / MPS / 100));
           score += bonus;
           showPop((gap < 0.35 ? 'INCHES! +' : 'CUT UP +') + bonus, gap < 0.35);
@@ -819,7 +836,7 @@ body {
     playerMesh.rotation.set(0, p.yaw, p.roll);
     // suspension: lean out of turns, squat under throttle, dive under braking
     const vt = Math.hypot(p.vx, p.v);
-    p.bodyRoll += (clamp(-p.yawRate * vt * 0.0015, -0.035, 0.035) - p.bodyRoll) * Math.min(1, dt * 16);
+    p.bodyRoll += (clamp((p.wrecked ? 0 : p.latA) * 0.0016, -0.045, 0.045) - p.bodyRoll) * Math.min(1, dt * 14);
     p.bodyPitch += (clamp(p.accel * 0.0012, -0.045, 0.015) - p.bodyPitch) * Math.min(1, dt * 14);
     ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
     p.spin += Math.max(0, p.v) * dt / 0.36;
@@ -839,7 +856,9 @@ body {
     // chase camera on a soft spring; pulls back and up when you wreck
     const speedT = clamp((vt / MPS - 35) / 195, 0, 1);
     const wrecked = p.wrecked;
-    camera.fov += ((wrecked ? baseFov : baseFov + speedT * 14) - camera.fov) * Math.min(1, dt * 3);
+    camera.fov += ((wrecked ? baseFov : baseFov + speedT * 14 + (p.boosting ? 9 : 0)) - camera.fov) * Math.min(1, dt * 3);
+    flame.visible = p.boosting && !wrecked; if (flame.visible) flame.scale.set(1, 0.8 + Math.random() * 0.6, 1);
+    $('nosBar').style.width = (p.nitro * 100) + '%';
     camera.updateProjectionMatrix();
     const tPos = wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * 0.8 - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4, 8.4 - speedT * 1.2);
     const tLook = wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * 0.9 - Math.sin(p.yaw) * 3, 1.0, -14);
