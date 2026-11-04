@@ -588,20 +588,20 @@ body {
   // ---------- simulation ----------
   function drivePlayer(p, dt) {
     const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    const rate = steerIn !== 0 ? 11 : 16;
+    const rate = steerIn !== 0 ? 6.5 : 16;
     p.steer += clamp(steerIn - p.steer, -rate * dt, rate * dt);
 
     let a;
-    if (keys.up) a = 15 * (1 - (p.v / V_MAX) ** 2);
-    else if (keys.down) a = -26;
+    if (keys.down) a = -(30 + Math.min(12, p.v * 0.15));   // brakes win over throttle
+    else if (keys.up) a = 15 * (1 - (p.v / V_MAX) ** 2);
     else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);
     p.v = clamp(p.v + a * dt, V_MIN, V_MAX);
     p.accel += (a - p.accel) * Math.min(1, dt * 4);
 
     // heading: steering turns the car, tyres align it back with the road when you let go
     const vt = Math.hypot(p.vx, p.v);
-    const steerRate = 3.2 * Math.min(1, p.v / 10) / (1 + p.v / 45);
-    const maxYaw = Math.min(0.4, Math.asin(Math.min(1, (13 + vt * 0.1) / Math.max(vt, 1))));
+    const steerRate = 1.9 * Math.min(1, p.v / 10) / (1 + p.v / 45);
+    const maxYaw = Math.min(0.3, Math.asin(Math.min(1, (8 + vt * 0.06) / Math.max(vt, 1))));
     let wTarget = -p.steer * steerRate - p.yaw * 22 * (1 - Math.abs(p.steer) * 0.9);
     if (Math.abs(p.yaw) > maxYaw && Math.sign(wTarget) === Math.sign(p.yaw)) wTarget = (Math.sign(p.yaw) * maxYaw - p.yaw) * 10;
     const yawGrip = p.slide > 0 ? 6 : 32;
@@ -820,7 +820,7 @@ body {
     // suspension: lean out of turns, squat under throttle, dive under braking
     const vt = Math.hypot(p.vx, p.v);
     p.bodyRoll += (clamp(-p.yawRate * vt * 0.0015, -0.035, 0.035) - p.bodyRoll) * Math.min(1, dt * 16);
-    p.bodyPitch += (clamp(p.accel * 0.0012, -0.025, 0.015) - p.bodyPitch) * Math.min(1, dt * 14);
+    p.bodyPitch += (clamp(p.accel * 0.0012, -0.045, 0.015) - p.bodyPitch) * Math.min(1, dt * 14);
     ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
     p.spin += Math.max(0, p.v) * dt / 0.36;
     syncCar(playerMesh, ud.body, p.spin, p.steer);
