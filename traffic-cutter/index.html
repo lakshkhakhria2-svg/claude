@@ -74,7 +74,7 @@ body {
 .linkbtn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .suspect { position: absolute; left: 12px; top: 74px; width: 180px; background: #0b0d14c4; border: 1px solid #ff4d5e55; border-radius: 4px; padding: 7px 9px; display: none; flex-direction: column; gap: 5px; pointer-events: none; font-variant-numeric: tabular-nums; }
 .stage[data-mode=chase][data-state=play] .suspect, .stage[data-mode=chase][data-state=wreck] .suspect { display: flex; }
-.stage[data-mode=chase] :is(.gauge.heat, .gauge.hull) { display: none; }
+.stage[data-mode=chase] .gauge.heat { display: none; }
 .sh-top, .sh-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .sh-top b { font-family: var(--display); font-weight: 400; font-size: 14px; color: var(--danger); letter-spacing: .08em; }
 .sh-top span, .sh-row { font-size: 12px; color: #c3c7d6; }
@@ -1077,7 +1077,7 @@ body {
     c.yaw = -Math.atan2(c.vx, Math.max(c.v, 3)); c.yawRate = 0;
   }
   function takedown(s, arrested) {
-    s.suspect = false; s.mesh.remove(s.marker); s.loose = true; s.blink = 0;
+    s.suspect = false; s.wasSuspect = true; s.mesh.remove(s.marker); s.loose = true; s.blink = 0;
     s.yawRate += (Math.random() - 0.5) * 3;
     const bonus = 5000 * chaseLevel + Math.round(Math.max(0, chaseTimer) * 50);
     addBonus(arrested ? 'SUSPECT ARRESTED' : 'SUSPECT TAKEN DOWN', bonus);
@@ -1134,11 +1134,11 @@ body {
     throwDebris(hit.cx, hit.cz, Math.min(5, Math.floor(hit.impact / 2.5)), s.color, 5);
     Sound.scrape();
     if (hit.impact > S.wreck * 1.7) wreck(hit.impact, hit, null);       // only a reckless head-on wrecks you
-    else if (hit.impact > 6) damage(hit.impact * 1.2);
+    else if (hit.impact > 6) damage(hit.impact * 1.2, 'suspect');
   }
   const MODE_DESC = {
     endless: 'Weave through traffic for points. Drive fast enough and the police come after you.',
-    chase: "You're the cop. Your cruiser can't be wrecked. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
+    chase: "You're the cop. Hitting traffic damages your cruiser; ramming the getaway car doesn't. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
   };
   function refreshModeDesc() {
     const lv = save.chaseLevel || 1;
@@ -1461,15 +1461,15 @@ body {
         shake = Math.max(shake, Math.min(0.5, into * 0.04));
         burst(side * BARRIER_X, 0.6, 0, 25, 8);
         if (!p.wrecked) { Sound.scrape(); loseChain(); }
-        if (!p.wrecked) { damage(into * 2.2); flash(); p.slide = 0.4; }
+        if (!p.wrecked) { damage(into * 2.2, 'wall'); flash(); p.slide = 0.4; }
       }
     }
     if (Math.random() < 0.7) burst(side * BARRIER_X, 0.4, (Math.random() - 0.5) * p.l, 2, 6);
     p.v -= 4 * (1 / 60);
   }
 
-  function damage(amount) {
-    if (mode === 'chase') return;   // your cruiser is indestructible in Chase
+  function damage(amount, source = 'car') {
+    if (mode === 'chase' && source !== 'car') return;   // in Chase only traffic hurts you
     player.hull -= amount * S.armor;
     updateHull();
     if (player.hull <= 0) wreck(0);
@@ -1538,6 +1538,7 @@ body {
       const hit = collide(p, c);
       if (!hit) continue;
       if (c.suspect) { ramSuspect(c, hit); continue; }
+      if (c.wasSuspect) continue;   // bumping the wreck you just took down is free
       if (hit.impact > 1.5) {
         if (Math.random() < 0.8) burst(hit.cx, 0.7, hit.cz, Math.min(40, 6 + hit.impact * 2), 6 + hit.impact * 0.4);
         if (c.police) { if (hit.impact > 9) { knockLoose(c); copDown(c); } }   // cops shrug off their own shoves
@@ -1552,7 +1553,7 @@ body {
             Sound.scrape();
             flash();
             throwDebris(hit.cx, hit.cz, Math.min(4, Math.floor(hit.impact / 3)), c.color, 4);
-            damage(hit.impact * 4.5);
+            damage(hit.impact * 4.5, 'car');
           }
         } else if (hit.impact > 5) { shake = Math.max(shake, 0.3); throwDebris(hit.cx, hit.cz, 3, c.color, 4); }
       } else if (Math.random() < 0.4) burst(hit.cx, 0.6, hit.cz, 2, 4);
@@ -1584,11 +1585,12 @@ body {
   }
 
   function wreck(impact, hit, c) {
-    if (mode === 'chase') {          // indestructible cruiser: big bump, no wreck
+    if (mode === 'chase' && player.hull > 0) {   // Chase: a hard hit is a big bump; traffic hits cost hull, the suspect never does
       shake = Math.max(shake, 0.6); flash();
       if (hit) burst(hit.cx, 0.8, hit.cz, 40, 10);
       if (c) knockLoose(c);
       Sound.crash(false);
+      if (c && !c.suspect) damage(impact * 4.5, 'car');
       return;
     }
     const p = player;
