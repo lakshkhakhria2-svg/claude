@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Powder Ridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;600;800&display=swap">
+<style>
+/* Layout: full-window 3D slope, HUD in the corners, trick text centre, overlays for title/pause/results. Single bright alpine theme. */
+:root {
+  --ink: #0f1a2b;
+  --panel: #0f1a2bcc;
+  --snow: #f4f8ff;
+  --orange: #ff6a2b;
+  --ice: #7fd3ff;
+  --gold: #ffc93c;
+  --red: #ff4d5e;
+  --muted: #9fb0c8;
+  --display: "Bungee", "Arial Black", system-ui, sans-serif;
+  --ui: "Rubik", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--ink); color: var(--snow); font-family: var(--ui); overflow: hidden; user-select: none; -webkit-user-select: none; }
+#stage { position: fixed; inset: 0; }
+#stage canvas { display: block; width: 100%; height: 100%; }
+.hud { position: absolute; pointer-events: none; font-variant-numeric: tabular-nums; }
+.tl { top: 14px; left: 16px; }
+.tr { top: 14px; right: 16px; text-align: right; }
+.box { background: var(--panel); border-radius: 6px; padding: 8px 12px; }
+.score { font-family: var(--display); font-size: 30px; line-height: 1; }
+.label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.mult { font-family: var(--display); font-size: 15px; color: var(--ice); margin-top: 4px; }
+.big { font-family: var(--display); font-size: 22px; line-height: 1.05; }
+.trick { top: 22%; left: 50%; transform: translateX(-50%); text-align: center; font-family: var(--display); font-size: 30px; color: var(--snow); text-shadow: 0 3px 0 var(--ink), 0 0 20px #0008; white-space: nowrap; }
+.trick small { display: block; font-family: var(--ui); font-weight: 800; font-size: 13px; letter-spacing: .12em; color: var(--gold); text-shadow: 0 2px 0 var(--ink); }
+.pop { top: 33%; left: 50%; transform: translateX(-50%); text-align: center; opacity: 0; white-space: nowrap; }
+.pop b { display: block; font-family: var(--display); font-size: 26px; color: var(--gold); text-shadow: 0 3px 0 var(--ink); }
+.pop span { font-weight: 800; font-size: 16px; color: var(--snow); text-shadow: 0 2px 0 var(--ink); }
+.pop.bad b { color: var(--red); }
+.pop.show { animation: pop 1.6s ease-out forwards; }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 12px) scale(.85); } 10% { opacity: 1; transform: translate(-50%, 0) scale(1.06); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -18px); } }
+.keys { left: 16px; bottom: 14px; font-size: 12px; color: #dce6f5; display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: min(760px, calc(100vw - 32px)); }
+.keys kbd, .ctl kbd { font-family: var(--ui); font-weight: 800; font-size: 11px; background: #ffffff1f; border: 1px solid #ffffff38; border-radius: 3px; padding: 1px 5px; color: var(--snow); }
+.rhold { right: 16px; bottom: 14px; width: 140px; }
+.rhold i { display: block; height: 6px; border-radius: 3px; background: #ffffff22; overflow: hidden; margin-top: 4px; }
+.rhold i b { display: block; height: 100%; width: 0; background: var(--orange); }
+.balance { bottom: 80px; left: 50%; transform: translateX(-50%); width: 220px; text-align: center; }
+.balance i { position: relative; display: block; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--red), #ffffff33 25%, #ffffff33 75%, var(--red)); margin-top: 4px; }
+.balance i b { position: absolute; top: -3px; width: 6px; height: 16px; margin-left: -3px; border-radius: 2px; background: var(--snow); left: 50%; }
+.lift { bottom: 18%; left: 50%; transform: translateX(-50%); text-align: center; font-weight: 800; letter-spacing: .06em; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: radial-gradient(ellipse at center, #0f1a2b55, #0f1a2bcc); }
+.card { background: #0f1a2bf0; border: 1px solid #ffffff22; border-radius: 10px; padding: 24px 26px; width: min(460px, 100%); max-height: 100%; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; }
+.card h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 40px; line-height: .95; letter-spacing: .01em; }
+.card h1 em { font-style: normal; color: var(--orange); }
+.card h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 26px; }
+.card p { margin: 0; color: #c9d6e8; line-height: 1.45; font-size: 14px; }
+.ctl { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 13px; color: #c9d6e8; align-items: center; }
+.ctl kbd { white-space: nowrap; }
+.btn { font-family: var(--display); font-size: 18px; border: 0; border-radius: 6px; padding: 12px 16px; background: var(--orange); color: var(--ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--snow); border: 1px solid #ffffff44; }
+.btn:focus-visible { outline: 3px solid var(--ice); outline-offset: 2px; }
+.row { display: flex; gap: 10px; }
+.row .btn { flex: 1; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stats div { background: #ffffff0d; border-radius: 6px; padding: 8px 10px; }
+.stats b { display: block; font-family: var(--display); font-weight: 400; font-size: 22px; }
+.stats .best { color: var(--gold); }
+.tricklist { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 13px; }
+.tricklist li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 6px; border-radius: 3px; background: #ffffff0a; }
+.tricklist b { font-variant-numeric: tabular-nums; color: var(--gold); }
+.mute { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); pointer-events: none; font-size: 12px; color: var(--muted); }
+@media (max-width: 600px) { .score { font-size: 24px; } .trick { font-size: 22px; } .keys { display: none; } .card h1 { font-size: 32px; } }
+@media (prefers-reduced-motion: reduce) { .pop.show { animation-duration: .01s; animation-delay: 1.5s; opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="hud tl box"><div class="label">Run score</div><div class="score" id="hScore">0</div><div class="mult" id="hMult">LINE x1.0</div></div>
+  <div class="hud tr box"><div class="label">Time</div><div class="big" id="hTime">0:00.0</div><div class="label" style="margin-top:6px">Speed</div><div class="big" id="hSpeed">0 km/h</div></div>
+  <div class="hud trick" id="trick"></div>
+  <div class="hud pop" id="pop"><b id="popName"></b><span id="popPts"></span></div>
+  <div class="hud balance box" id="balance" hidden><div class="label">Balance · A / D</div><i><b id="balMark"></b></i></div>
+  <div class="hud rhold box" id="rhold" hidden><div class="label">Restarting…</div><i><b id="rBar"></b></i></div>
+  <div class="hud lift box" id="lift" hidden>Riding the gondola back up · press <kbd>F</kbd> to skip</div>
+  <div class="hud mute" id="muteNote"></div>
+  <div class="hud keys box" id="keys">
+    <span><kbd>A</kbd><kbd>D</kbd> steer / spin</span><span><kbd>W</kbd><kbd>S</kbd> tuck, brake / flip</span><span><kbd>←</kbd><kbd>→</kbd> air roll</span>
+    <span><kbd>Space</kbd> pop</span><span><kbd>Shift</kbd><kbd>Q</kbd><kbd>E</kbd> grab</span><span><kbd>R</kbd> hold restart</span><span><kbd>Esc</kbd> menu</span>
+  </div>
+
+  <div class="overlay" id="titleOv">
+    <div class="card">
+      <h1>POWDER<br><em>RIDGE</em></h1>
+      <p><b>Timber Run</b>: a forest freeski line with kickers, rails, a tree glade, a big air and a cliff. Stack spins, flips, corks and grabs, stomp clean landings, and keep your line multiplier alive to the finish.</p>
+      <div class="ctl">
+        <kbd>A / D</kbd><span>Steer on snow · spin in the air</span>
+        <kbd>W / S</kbd><span>Tuck / brake on snow · front / back flip in the air</span>
+        <kbd>← / →</kbd><span>Steer on snow · air roll (off-axis)</span>
+        <kbd>Space</kbd><span>Hold to load, release to pop · pop off rails</span>
+        <kbd>Shift / Q / E</kbd><span>Safety · Tail · Nose grab (hold ¼ s for ×1.25)</span>
+        <kbd>Hold R</kbd><span>Restart the run (2 s)</span>
+        <kbd>F</kbd><span>Skip the gondola ride</span>
+        <kbd>Esc / P</kbd><span>Pause menu</span>
+        <kbd>M</kbd><span>Sound on / off</span>
+      </div>
+      <p>Tip: spin + <kbd>S</kbd> as you leave the lip for a cork. Controllers work too.</p>
+      <div class="stats"><div><span class="label">Best score</span><b class="best" id="tBest">–</b></div><div><span class="label">Best time</span><b class="best" id="tTime">–</b></div></div>
+      <button class="btn" id="startBtn">Drop in</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="pauseOv" hidden>
+    <div class="card">
+      <h2>PAUSED</h2>
+      <div class="row"><button class="btn" id="resumeBtn">Resume</button><button class="btn ghost" id="restartBtn">Restart run</button></div>
+      <p>Controls: A/D spin, W/S flip, arrows roll, Space pop, Shift/Q/E grab, hold R restart, F skip gondola, M sound.</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="endOv" hidden>
+    <div class="card">
+      <h2 id="endTitle">RUN COMPLETE</h2>
+      <div class="stats">
+        <div><span class="label">Score</span><b id="eScore">0</b></div>
+        <div><span class="label">Time</span><b id="eTime">0:00</b></div>
+        <div><span class="label">Best score</span><b class="best" id="eBest">0</b></div>
+        <div><span class="label">Best time</span><b class="best" id="eBestTime">–</b></div>
+      </div>
+      <div><span class="label">Top tricks</span><ul class="tricklist" id="eTricks"></ul></div>
+      <div class="row"><button class="btn" id="againBtn">Ride again</button></div>
+      <p>Ride again takes the gondola back up. Press <kbd>F</kbd> to skip it.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  if (!window.THREE) { $('titleOv').querySelector('p').textContent = 'The 3D engine failed to load. Check your connection and reload.'; return; }
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+  const wrapPi = a => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // =========================================================
+  //  Course: Timber Run (all features defined analytically)
+  // =========================================================
+  const SLOPE = 0.32, HALF_W = 24, FINISH_Z = -1180, G = 12.3;
+  const KICKERS = [
+    { z: -190, x: -5, w: 9, len: 10, h: 2.2 },
+    { z: -255, x: 4, w: 9, len: 10, h: 2.6 },
+    { z: -320, x: 0, w: 11, len: 12, h: 3.2 },
+    { z: -520, x: -12, w: 6, len: 7, h: 1.6 },
+    { z: -580, x: 11, w: 6, len: 7, h: 1.8 },
+    { z: -720, x: 0, w: 14, len: 16, h: 4.6, big: true },
+    { z: -965, x: -6, w: 10, len: 11, h: 3.0 },
+    { z: -1030, x: 6, w: 10, len: 11, h: 3.4 },
+  ];
+  const RAILS = [
+    { x: -8, z1: -382, z2: -414, h: 0.9, hw: 0.08, kind: 'Rail' },
+    { x: 7.5, z1: -380, z2: -410, h: 0.6, hw: 0.4, kind: 'Box' },
+    { x: 0, z1: -1078, z2: -1112, h: 1.0, hw: 0.08, kind: 'Rail' },
+  ];
+  const CLIFF_Z = -860, CLIFF_DROP = 9;
+  const FEATURE_Z = [...KICKERS.map(k => k.z), ...RAILS.map(r => (r.z1 + r.z2) / 2), CLIFF_Z];
+
+  function baseH(z) {
+    let b = z * SLOPE * smooth(-z / 25);
+    const fz = FINISH_Z - 15;
+    if (z < fz) b = fz * SLOPE + (z - fz) * 0.04 - SLOPE * 12 * smooth((fz - z) / 30) * 0;  // gentle run-out
+    return b;
+  }
+  function H(x, z) {
+    let h = baseH(z);
+    // rolling snow, kept off the features
+    let mask = 1;
+    for (const fz of FEATURE_Z) mask = Math.min(mask, smooth((Math.abs(z - fz) - 6) / 18));
+    if (z > -40 || z < FINISH_Z + 20) mask *= 0.3;
+    h += (0.55 * Math.sin(x * 0.13 + z * 0.045) + 0.4 * Math.sin(z * 0.09 - x * 0.06) + 0.25 * Math.sin(z * 0.21 + x * 0.17)) * mask;
+    // side banks keep you on the run
+    const ax = Math.abs(x);
+    if (ax > HALF_W) { const d = ax - HALF_W; h += d < 8 ? d * d * 0.12 : 7.68 + (d - 8) * 0.45; }
+    // kickers
+    for (const k of KICKERS) {
+      if (z <= k.z + k.len && z > k.z) {
+        const t = (k.z + k.len - z) / k.len;
+        const m = 1 - smooth((Math.abs(x - k.x) - k.w / 2) / 1.4);
+        if (m > 0) h += k.h * Math.pow(t, 1.7) * m;
+      }
+      if (k.big) h -= 6 * smooth((k.z - 6 - z) / 40);           // steeper landing below the big air
+    }
+    // cliff band: a sharp drop on the left, a ramp-around on the right
+    const xf = smooth((x - 8) / 6);
+    const step = smooth((CLIFF_Z - z) / 0.7), ramp = smooth((CLIFF_Z - z) / 45);
+    h -= CLIFF_DROP * ((1 - xf) * step + xf * ramp);
+    return h;
+  }
+  const grad = (x, z) => [(H(x + 0.25, z) - H(x - 0.25, z)) / 0.5, (H(x, z + 0.25) - H(x, z - 0.25)) / 0.5];
+  const railTop = (r, z) => lerp(H(r.x, r.z1) + r.h, H(r.x, r.z2) + r.h, (r.z1 - z) / (r.z1 - r.z2));
+
+  // =========================================================
+  //  Renderer & scene
+  // =========================================================
+  const stage = $('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  let res = DPR;
+  renderer.setPixelRatio(res);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  stage.prepend(renderer.domElement);
+  const scene = new THREE.Scene();
+  const lin = c => new THREE.Color(c).convertSRGBToLinear();
+  const FOG = 0xc9dcef;
+  scene.fog = new THREE.Fog(lin(FOG), 70, 360);
+  const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 900);
+
+  const SUN = new THREE.Vector3(-0.55, 0.7, 0.45).normalize();
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(800, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: { top: { value: new THREE.Color(0x2c6fd1) }, hor: { value: new THREE.Color(FOG) }, sun: { value: SUN } },
+    vertexShader: 'varying vec3 d; void main(){ d = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `uniform vec3 top; uniform vec3 hor; uniform vec3 sun; varying vec3 d;
+      void main(){ float h = clamp(d.y, 0.0001, 1.0); vec3 c = mix(hor, top, pow(h, 0.5));
+        float s = max(dot(normalize(d), sun), 0.0001); c += vec3(1.0, 0.93, 0.8) * (pow(s, 700.0) * 2.5 + pow(s, 10.0) * 0.2);
+        gl_FragColor = vec4(c, 1.0); }`
+  }));
+  scene.add(sky);
+  scene.add(new THREE.HemisphereLight(lin(0xcfe2ff), lin(0x8a9bb0), 0.75));
+  const sun = new THREE.DirectionalLight(lin(0xfff3e0), 1.9);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 160 });
+  sun.shadow.bias = -0.0006;
+  scene.add(sun, sun.target);
+
+  function resize() {
+    const w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize);
+
+  // ---------- terrain mesh ----------
+  const mat = (c, o = {}) => new THREE.MeshLambertMaterial({ ...o, color: lin(c) });
+  {
+    const W = 120, Z0 = 40, Z1 = -1330, SX = 120, SZ = Z0 - Z1;
+    const geo = new THREE.PlaneGeometry(W, SZ, SX, SZ);
+    geo.rotateX(-Math.PI / 2);
+    geo.translate(0, 0, (Z0 + Z1) / 2);
+    const pos = geo.attributes.position, cols = new Float32Array(pos.count * 3);
+    const snow = lin(0xf3f7fd), kick = lin(0xd7e5f5), rock = lin(0x7d8592), pack = lin(0xe7eef8);
+    const c = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i);
+      pos.setY(i, H(x, z));
+      const [gx, gz] = grad(x, z);
+      const steep = Math.hypot(gx, gz);
+      let onKick = false;
+      for (const k of KICKERS) if (z <= k.z + k.len && z > k.z - 0.5 && Math.abs(x - k.x) < k.w / 2 + 1.2) onKick = true;
+      if (steep > 1.6 && Math.abs(x) < HALF_W + 4) c.copy(rock);
+      else if (onKick) c.copy(kick);
+      else if (Math.abs(x) < HALF_W) c.copy(pack).lerp(snow, smooth((Math.abs(x) - 4) / 14));
+      else c.copy(snow);
+      cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    geo.computeVertexNormals();
+    const terrain = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
+    terrain.receiveShadow = true;
+    scene.add(terrain);
+  }
+
+  // ---------- trees (instanced) ----------
+  const obstacles = [];
+  {
+    const trunkGeo = new THREE.CylinderGeometry(0.18, 0.28, 2, 6).translate(0, 1, 0);
+    const lowGeo = new THREE.ConeGeometry(1.9, 4.2, 8).translate(0, 3.6, 0);
+    const highGeo = new THREE.ConeGeometry(1.3, 3.2, 8).translate(0, 6.0, 0);
+    const capGeo = new THREE.ConeGeometry(0.85, 1.4, 8).translate(0, 7.6, 0);
+    const spots = [];
+    const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+    for (let z = 30; z > -1320; z -= 3.2) {
+      for (let k = 0; k < 4; k++) {
+        const side = rnd() < 0.5 ? -1 : 1;
+        const x = side * (HALF_W + 3 + rnd() * 32);
+        spots.push([x, z + rnd() * 3, 0.8 + rnd() * 0.8]);
+      }
+    }
+    // the glade: trees on the run itself between the side hits
+    for (let i = 0; i < 70; i++) {
+      const z = -455 - rnd() * 200, x = (rnd() * 2 - 1) * (HALF_W - 3);
+      if (KICKERS.some(k => Math.abs(z - (k.z + k.len / 2)) < k.len + 8 && Math.abs(x - k.x) < k.w / 2 + 4)) continue;
+      if (Math.abs(x) < 3) continue;                         // keep a clean line down the middle
+      const s = 0.7 + rnd() * 0.6;
+      spots.push([x, z, s]);
+      obstacles.push({ x, z, r: 0.35 * s + 0.2 });
+    }
+    const n = spots.length;
+    const mk = (geo, color) => { const im = new THREE.InstancedMesh(geo, mat(color, { flatShading: true }), n); im.castShadow = true; im.frustumCulled = false; scene.add(im); return im; };
+    const trunk = mk(trunkGeo, 0x5a3d28), low = mk(lowGeo, 0x1f4d34), high = mk(highGeo, 0x245a3b), cap = mk(capGeo, 0xeef4fb);
+    const d = new THREE.Object3D();
+    spots.forEach(([x, z, s], i) => {
+      d.position.set(x, H(x, z) - 0.2, z); d.rotation.y = rnd() * 6; d.scale.setScalar(s); d.updateMatrix();
+      [trunk, low, high, cap].forEach(im => im.setMatrixAt(i, d.matrix));
+    });
+  }
+
+  // ---------- rails, gates, gondola ----------
+  const steel = new THREE.MeshStandardMaterial({ color: lin(0xb8c2cc), metalness: 0.8, roughness: 0.3 });
+  for (const r of RAILS) {
+    const a = new THREE.Vector3(r.x, railTop(r, r.z1), r.z1), b = new THREE.Vector3(r.x, railTop(r, r.z2), r.z2);
+    const len = a.distanceTo(b);
+    const geo = r.kind === 'Box' ? new THREE.BoxGeometry(r.hw * 2, 0.12, len) : new THREE.CylinderGeometry(r.hw, r.hw, len, 10).rotateX(Math.PI / 2);
+    const m = new THREE.Mesh(geo, r.kind === 'Box' ? mat(0x3a6fd8) : steel);
+    m.position.copy(a).add(b).multiplyScalar(0.5); m.lookAt(b); m.castShadow = true;
+    if (r.kind === 'Box') m.position.y -= 0.06;
+    scene.add(m);
+    for (const p of [a, b]) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, r.h, 6), steel);
+      post.position.set(p.x, p.y - r.h / 2, p.z); scene.add(post);
+    }
+  }
+  function banner(text, z, color) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    const g = c.getContext('2d'); g.fillStyle = color; g.fillRect(0, 0, 512, 96);
+    g.fillStyle = '#fff'; g.font = '700 58px Bungee, Arial Black, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 256, 52);
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    const y = H(0, z);
+    const grp = new THREE.Group();
+    for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.4, 6, 0.4), mat(0x222c3a)); p.position.set(s * 9, y + 3, z); grp.add(p); }
+    const b = new THREE.Mesh(new THREE.BoxGeometry(18.4, 1.6, 0.2), new THREE.MeshBasicMaterial({ map: tex, fog: true }));
+    b.position.set(0, y + 5.6, z); grp.add(b);
+    scene.add(grp);
+  }
+  banner('TIMBER RUN', -4, '#ff6a2b');
+  banner('FINISH', FINISH_Z, '#1e5bd6');
+  // gondola cable and cabin (used for the ride back up)
+  const CABLE_X = 40;
+  const cablePt = t => new THREE.Vector3(CABLE_X, lerp(H(CABLE_X, FINISH_Z) + 26, H(CABLE_X, 10) + 26, t), lerp(FINISH_Z, 10, t));
+  {
+    const pts = [cablePt(0), cablePt(1)];
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x333a44 })));
+    for (let t = 0; t <= 1.001; t += 0.125) {
+      const p = cablePt(t), g = H(CABLE_X, p.z);
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(0.6, p.y - g, 0.6), mat(0x6c7a8a));
+      tower.position.set(CABLE_X, (p.y + g) / 2, p.z); scene.add(tower);
+    }
+  }
+  const cabin = new THREE.Group();
+  { const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.2, 3), mat(0xd23b2a)); body.position.y = -2.4; cabin.add(body);
+    const win = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.8, 2.6), mat(0x1c2a3a)); win.position.y = -2.0; cabin.add(win);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.3, 0.1), mat(0x333a44)); arm.position.y = -0.65; cabin.add(arm); }
+  cabin.visible = false; scene.add(cabin);
+
+  // ---------- skier ----------
+  const skier = new THREE.Group(); skier.rotation.order = 'YXZ';
+  const pivot = new THREE.Group(); pivot.position.y = 0.9; skier.add(pivot);
+  const model = new THREE.Group(); model.position.y = -0.9; pivot.add(model);
+  const jacket = mat(0xff6a2b), pants = mat(0x1b2a44), white = mat(0xf5f7fa), dark = mat(0x12161c), skiMat = mat(0x2fa7e8), goggle = new THREE.MeshStandardMaterial({ color: lin(0xffb000), metalness: 0.7, roughness: 0.2 });
+  const part = (geo, m, x, y, z, parent = model) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+  for (const x of [-0.14, 0.14]) {
+    const ski = part(new THREE.BoxGeometry(0.1, 0.035, 1.75), skiMat, x, 0.02, 0);
+    part(new THREE.BoxGeometry(0.1, 0.035, 0.18), skiMat, 0, 0.05, -0.92, ski).rotation.x = 0.5;   // tips
+    part(new THREE.BoxGeometry(0.1, 0.035, 0.18), skiMat, 0, 0.05, 0.92, ski).rotation.x = -0.5;   // tails (twin tips)
+    part(new THREE.BoxGeometry(0.14, 0.18, 0.3), dark, x, 0.13, 0);
+  }
+  const legs = new THREE.Group(); model.add(legs);
+  for (const x of [-0.12, 0.12]) part(new THREE.BoxGeometry(0.15, 0.68, 0.18), pants, x, 0.55, 0, legs);
+  const upper = new THREE.Group(); upper.position.y = 0.88; model.add(upper);
+  part(new THREE.BoxGeometry(0.46, 0.62, 0.3), jacket, 0, 0.3, 0, upper);
+  part(new THREE.SphereGeometry(0.15, 14, 10), mat(0xe8b896), 0, 0.78, 0, upper);
+  part(new THREE.SphereGeometry(0.165, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), white, 0, 0.8, 0, upper);
+  part(new THREE.BoxGeometry(0.26, 0.08, 0.06), goggle, 0, 0.8, -0.14, upper);
+  const arms = [-1, 1].map(s => {
+    const a = new THREE.Group(); a.position.set(s * 0.29, 0.55, 0); upper.add(a);
+    part(new THREE.BoxGeometry(0.11, 0.56, 0.12), jacket, 0, -0.27, 0, a);
+    const pole = part(new THREE.CylinderGeometry(0.012, 0.012, 1.15, 5), dark, 0, -0.62, -0.05, a); pole.rotation.x = 0.35;
+    return a;
+  });
+  scene.add(skier);
+
+  // snow spray
+  const SPRAY = 220, sprayPos = new Float32Array(SPRAY * 3), spray = [];
+  const sprayGeo = new THREE.BufferGeometry(); sprayGeo.setAttribute('position', new THREE.BufferAttribute(sprayPos, 3));
+  scene.add(new THREE.Points(sprayGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.9 })));
+  function emitSpray(n, x, y, z, vx, vy, vz, spread) {
+    for (let i = 0; i < n; i++) { if (spray.length >= SPRAY) spray.shift(); spray.push({ x, y, z, vx: vx + (Math.random() - .5) * spread, vy: vy + Math.random() * spread * 0.6, vz: vz + (Math.random() - .5) * spread, life: 0.5 + Math.random() * 0.5 }); }
+  }
+
+  // =========================================================
+  //  Sound (synthesised)
+  // =========================================================
+  const Sound = (() => {
+    let ac, master, wind, carve, grindG, noise, muted = false;
+    try { muted = localStorage.getItem('powderRidgeMute') === '1'; } catch (e) {}
+    const gn = (v, to) => { const g = ac.createGain(); g.gain.value = v; if (to) g.connect(to); return g; };
+    const loop = (type, f, q) => { const s = ac.createBufferSource(); s.buffer = noise; s.loop = true; const b = ac.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; const g = gn(0, master); s.connect(b); b.connect(g); s.start(); return g; };
+    function init() {
+      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      try {
+        ac = new AC(); const comp = ac.createDynamicsCompressor(); comp.connect(ac.destination); master = gn(muted ? 0 : 0.8, comp);
+        noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        wind = loop('bandpass', 600, 0.5); carve = loop('highpass', 2200, 0.8); grindG = loop('bandpass', 3200, 6);
+      } catch (e) { ac = null; }
+    }
+    function hit(type, from, to, peak, dur) {
+      if (!ac) return; const t = ac.currentTime, s = ac.createBufferSource(); s.buffer = noise;
+      const b = ac.createBiquadFilter(); b.type = type; b.frequency.setValueAtTime(from, t); b.frequency.exponentialRampToValueAtTime(to, t + dur);
+      const g = gn(0, master); g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      s.connect(b); b.connect(g); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+    }
+    function tone(f1, f2, peak, dur, delay = 0) {
+      if (!ac) return; const t = ac.currentTime + delay, o = ac.createOscillator(); o.type = 'triangle';
+      o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+      const g = gn(0, master); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); o.start(t); o.stop(t + dur + 0.05);
+    }
+    return {
+      init,
+      update(speed, carving, air, grinding) {
+        if (!ac) return; const t = ac.currentTime;
+        wind.gain.setTargetAtTime(Math.min(0.35, (speed / 30) ** 2 * 0.3 + (air ? 0.05 : 0)), t, 0.15);
+        carve.gain.setTargetAtTime(air || grinding ? 0 : Math.min(0.25, carving * speed * 0.012), t, 0.08);
+        grindG.gain.setTargetAtTime(grinding ? 0.12 : 0, t, 0.04);
+      },
+      pop: () => { hit('lowpass', 900, 120, 0.5, 0.18); },
+      land: s => { hit('lowpass', 1400, 150, 0.35 + s * 0.4, 0.3); },
+      bail: () => { hit('lowpass', 2000, 100, 0.9, 0.7); tone(300, 90, 0.15, 0.5); },
+      chime: n => { tone(660 * (1 + n * 0.05), 990, 0.14, 0.25); tone(990 * (1 + n * 0.05), 1320, 0.1, 0.3, 0.07); },
+      toggle() { muted = !muted; try { localStorage.setItem('powderRidgeMute', muted ? '1' : '0'); } catch (e) {} if (ac) master.gain.setTargetAtTime(muted ? 0 : 0.8, ac.currentTime, 0.02); return muted; },
+      suspend(on) { if (ac) on ? ac.suspend() : ac.resume(); },
+    };
+  })();
+  document.addEventListener('visibilitychange', () => Sound.suspend(document.hidden));
+
+  // =========================================================
+  //  Input: keyboard + gamepad
+  // =========================================================
+  const down = new Set();
+  const K = c => down.has(c);
+  addEventListener('keydown', e => {
+    Sound.init();
+    if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
+    if (e.repeat) return;
+    down.add(e.code);
+    if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
+    if (e.code === 'KeyM') { const m = Sound.toggle(); note(m ? 'Sound off' : 'Sound on'); }
+    if (e.code === 'KeyF' && state === 'lift') finishLift();
+    if (e.code === 'Enter') { if (state === 'title') startRun(); else if (state === 'end') rideAgain(); }
+  });
+  addEventListener('keyup', e => down.delete(e.code));
+  addEventListener('blur', () => down.clear());
+  let pad = { x: 0, y: 0, rx: 0, pop: false, grabA: false, grabB: false, grabC: false, start: false, restart: false, skip: false };
+  let padStartPrev = false;
+  function pollPad() {
+    const gp = navigator.getGamepads ? [...navigator.getGamepads()].find(g => g) : null;
+    if (!gp) { pad = { x: 0, y: 0, rx: 0 }; return; }
+    const dz = v => Math.abs(v) < 0.2 ? 0 : v, b = i => gp.buttons[i]?.pressed;
+    pad = { x: dz(gp.axes[0] || 0), y: dz(gp.axes[1] || 0), rx: dz(gp.axes[2] || 0), pop: b(0), grabA: b(2) || b(7), grabB: b(4), grabC: b(5) || b(6), restart: b(3), skip: b(1), start: b(9) };
+    if (pad.start && !padStartPrev) { if (state === 'title') startRun(); else if (state === 'end') rideAgain(); else togglePause(); }
+    if (pad.skip && state === 'lift') finishLift();
+    padStartPrev = pad.start;
+  }
+  const inp = () => ({
+    left: K('KeyA') || pad.x < -0.3, right: K('KeyD') || pad.x > 0.3,
+    up: K('KeyW') || pad.y < -0.3, downK: K('KeyS') || pad.y > 0.3,
+    rollL: K('ArrowLeft') || pad.rx < -0.3, rollR: K('ArrowRight') || pad.rx > 0.3,
+    steerL: K('KeyA') || K('ArrowLeft') || pad.x < -0.3, steerR: K('KeyD') || K('ArrowRight') || pad.x > 0.3,
+    pop: K('Space') || pad.pop,
+    grab: K('ShiftLeft') || K('ShiftRight') || pad.grabA ? 'Safety' : K('KeyQ') || pad.grabB ? 'Tail Grab' : K('KeyE') || pad.grabC ? 'Nose Grab' : null,
+    restart: K('KeyR') || pad.restart,
+  });
+
+  // =========================================================
+  //  Rider state & physics
+  // =========================================================
+  const START = { x: 0, z: 6 };
+  let state = 'title', time = 0, runTime = 0, runStarted = false;
+  let score = 0, line = 1, tricks = [], best = { score: 0, time: 0 };
+  try { Object.assign(best, JSON.parse(localStorage.getItem('powderRidgeBest') || '{}')); } catch (e) {}
+  const R = {};   // rider
+  function resetRider() {
+    Object.assign(R, { x: START.x, z: START.z, y: H(START.x, START.z), heading: 0, s: 0, vy: 0, vx: 0, vz: 0, air: false, groundVy: null,
+      switch: false, crouch: 0, popHold: 0, popWasDown: false, bail: 0, bailMsg: '', grind: null, safe: { x: START.x, z: START.z, heading: 0 }, safeT: 0, tilt: 0, lean: 0,
+      t: null, restartHold: 0 });
+  }
+  function newAir(switchTakeoff) {
+    return { spin: 0, spinRate: 0, pitch: 0, pitchRate: 0, roll: 0, rollRate: 0, maxPitch: 0, maxRoll: 0, airTime: 0, grabName: null, grabTime: 0, curGrab: null, curGrabT: 0, switchTakeoff };
+  }
+
+  const SPIN_PTS = { 180: 500, 360: 1500, 540: 3000, 720: 6000, 900: 9000, 1080: 13000, 1260: 17000, 1440: 22000 };
+  function describe(t) {
+    const spinDeg = Math.round(Math.abs(t.spin) / Math.PI) * 180;
+    const flips = Math.round(Math.abs(t.pitch) / (2 * Math.PI));
+    const back = t.pitch > 0;
+    const cork = flips === 0 && t.maxPitch > 0.45 && spinDeg >= 360;
+    const bio = flips === 0 && !cork && t.maxRoll > 0.45 && spinDeg >= 360;
+    let name;
+    if (flips > 0 && spinDeg >= 360) name = `${flips > 1 ? 'Double ' : ''}${back ? 'Rodeo' : 'Misty'} ${spinDeg}`;
+    else if (flips > 0) name = `${flips > 2 ? 'Triple ' : flips > 1 ? 'Double ' : ''}${back ? 'Backflip' : 'Frontflip'}`;
+    else if (cork) name = `Cork ${spinDeg}`;
+    else if (bio) name = `Bio ${spinDeg}`;
+    else if (spinDeg >= 180) name = `${spinDeg}`;
+    else name = 'Straight Air';
+    if (t.switchTakeoff && (spinDeg >= 180 || flips)) name = 'Switch ' + name;
+    const grab = t.grabTime >= 0.25 ? t.grabName : null;
+    if (grab) name += ' ' + grab;
+    return { name, spinDeg, flips, cork: cork || bio, grab };
+  }
+  function trickPoints(d, t) {
+    const sp = d.spinDeg <= 0 ? 0 : SPIN_PTS[d.spinDeg] ?? 22000 + (d.spinDeg - 1440) / 180 * 5000;
+    let pts = sp * (d.cork ? 1.3 : 1) + d.flips * 2500 + t.airTime * 120;
+    if (d.grab) pts *= 1.25;
+    if (t.switchTakeoff && (d.spinDeg >= 180 || d.flips)) pts *= 1.15;
+    return Math.round(pts);
+  }
+
+  let popTimer = 0;
+  function popup(name, pts, bad = false) {
+    $('popName').textContent = name; $('popPts').textContent = pts;
+    const el = $('pop'); el.className = 'hud pop' + (bad ? ' bad' : ''); void el.offsetWidth; el.classList.add('show');
+  }
+  let noteT = 0;
+  function note(t) { $('muteNote').textContent = t; noteT = 1.5; }
+
+  function award(name, base, clean) {
+    const pts = Math.round(base * line) + (clean ? 450 : 0);
+    score += pts;
+    tricks.push({ name: name + (clean ? ' · Clean' : ''), pts });
+    if (base > 0) line = Math.min(3, line + 0.1);
+    popup(name, `+${pts.toLocaleString('en-US')}${clean ? '  CLEAN +450' : ''}`);
+    Sound.chime(Math.min(10, tricks.length));
+  }
+  function bail(msg) {
+    if (R.bail > 0) return;
+    R.bail = 1.7; R.bailMsg = msg; R.grind = null;
+    line = 1;
+    popup('BAIL', msg, true);
+    Sound.bail();
+    R.tumble = { rx: (Math.random() - .5) * 14, ry: (Math.random() - .5) * 10, rz: (Math.random() - .5) * 14 };
+    emitSpray(40, R.x, R.y + 0.4, R.z, 0, 2, 0, 6);
+  }
+  function respawn() {
+    R.x = R.safe.x; R.z = R.safe.z; R.y = H(R.x, R.z); R.heading = R.safe.heading; R.s = 9; R.air = false; R.vy = 0; R.groundVy = null;
+    R.bail = 0; R.t = null; R.switch = false; R.tumble = null;
+    pivot.rotation.set(0, 0, 0); model.rotation.set(0, 0, 0);
+  }
+
+  function launch(vy) {
+    const [gx, gz] = grad(R.x, R.z), dx = -Math.sin(R.heading), dz = -Math.cos(R.heading);
+    const ga = gx * dx + gz * dz, hv = R.s / Math.sqrt(1 + ga * ga);
+    R.vx = dx * hv; R.vz = dz * hv; R.vy = vy; R.air = true;
+    R.t = newAir(R.switch);
+  }
+
+  function landEval() {
+    const t = R.t;
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(t.pitch, t.spin, t.roll, 'YXZ'));
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q), fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(q);
+    const a = Math.abs(wrapPi(Math.atan2(-fwd.x, -fwd.z)));
+    const switchLand = a > Math.PI / 2, mis = switchLand ? Math.PI - a : a;
+    return { up: up.y, mis, switchLand };
+  }
+
+  function land() {
+    const t = R.t;
+    const [gx, gz] = grad(R.x, R.z);
+    const hv = Math.hypot(R.vx, R.vz) || 0.001, mdx = R.vx / hv, mdz = R.vz / hv;
+    const downhill = -(gx * mdx + gz * mdz);
+    const align = clamp(downhill * 2, 0, 1);
+    const impact = -R.vy * (1 - align);
+    const e = landEval();
+    R.air = false; R.y = H(R.x, R.z);
+    R.s = Math.min(42, hv + Math.max(0, -R.vy) * clamp(downhill, 0, 0.6));
+    R.heading = Math.atan2(-mdx, -mdz);
+    R.groundVy = null;
+    Sound.land(clamp(-R.vy / 20, 0, 1));
+    emitSpray(14 + Math.min(30, -R.vy * 2), R.x, R.y + 0.1, R.z, mdx * 3, 1.5, mdz * 3, 4);
+    if (e.up < 0.62) return bail('Landed upside down');
+    if (e.mis > 0.85) return bail('Landed sideways');
+    if (impact > 13.5) return bail('Flat landing');
+    if (e.switchLand) R.switch = !R.switch;
+    const d = describe(t), base = trickPoints(d, t);
+    const clean = e.mis < 0.26 && e.up > 0.93 && impact < 9;
+    if (!clean) R.s *= 0.85;
+    if (d.name === 'Straight Air' && t.airTime < 0.7) { R.t = null; return; }
+    award(d.name, base, clean);
+    R.t = null;
+  }
+
+  function startGrind(r) {
+    const e = landEval();
+    if (e.up < 0.62) return bail('Hit the rail upside down');
+    const slide = e.mis > 0.6;
+    R.grind = { r, time: 0, bal: (Math.random() - .5) * 0.2, drift: 0, slide, name: `${slide ? (r.kind === 'Box' ? 'Boardslide' : 'Lipslide') : (r.kind === 'Box' ? 'Box 50-50' : '50-50')}` };
+    if (e.switchLand) R.switch = !R.switch;
+    R.air = false; R.t = null;
+    R.heading = 0; R.x = r.x; R.y = railTop(r, R.z);
+    R.s = Math.max(6, Math.hypot(R.vx, R.vz));
+    Sound.land(0.3);
+  }
+  function endGrind(popped) {
+    const g = R.grind; if (!g) return;
+    const pts = Math.round(g.time * 600 * (g.slide ? 1.3 : 1));
+    R.grind = null;
+    if (g.time > 0.25) award(`${R.switch ? 'Switch ' : ''}${g.name} ${g.time.toFixed(1)}s`, pts, false);
+    launch(popped ? 5.5 : 1.5);
+  }
+
+  function rideStep(dt, I) {
+    if (R.bail > 0) {
+      R.bail -= dt;
+      const dx = -Math.sin(R.heading), dz = -Math.cos(R.heading);
+      R.s = Math.max(0, R.s - 14 * dt);
+      R.x += dx * R.s * dt; R.z += dz * R.s * dt; R.x = clamp(R.x, -40, 40);
+      if (R.air) { R.vy -= G * dt; R.y += R.vy * dt; if (R.y < H(R.x, R.z)) { R.y = H(R.x, R.z); R.air = false; } } else R.y = H(R.x, R.z);
+      pivot.rotation.x += R.tumble.rx * dt; pivot.rotation.y += R.tumble.ry * dt; pivot.rotation.z += R.tumble.rz * dt;
+      R.tumble.rx *= Math.exp(-2 * dt); R.tumble.ry *= Math.exp(-2 * dt); R.tumble.rz *= Math.exp(-2 * dt);
+      if (Math.random() < 0.5) emitSpray(2, R.x, R.y + 0.2, R.z, 0, 1, 0, 3);
+      if (R.bail <= 0) respawn();
+      return;
+    }
+
+    if (R.grind) {
+      const g = R.grind, r = g.r;
+      const slopeR = (railTop(r, r.z2) - railTop(r, r.z1)) / (r.z1 - r.z2);   // negative = downhill
+      R.s = clamp(R.s + (-G * slopeR - 0.6) * dt, 3, 40);
+      R.z -= R.s * dt; R.x = r.x; R.y = railTop(r, R.z); R.heading = 0;
+      g.time += dt;
+      // balance: drift grows the longer you hold it, A/D pushes you back
+      g.drift += (Math.random() - 0.5) * 6 * dt; g.drift = clamp(g.drift, -1.2, 1.2);
+      g.bal += (g.drift * (0.7 + g.time * 0.35) + ((I.steerR ? 1 : 0) - (I.steerL ? 1 : 0)) * 2.4) * dt;
+      if (Math.abs(g.bal) > 1) { R.grind = null; launch(0.5); R.x += Math.sign(g.bal) * 0.6; R.t = null; bail('Lost balance'); return; }
+      if (Math.random() < 0.4) emitSpray(1, R.x, R.y, R.z, 0, 0.5, 2, 1.5);
+      const popNow = I.pop && !R.popWasDown; R.popWasDown = I.pop;
+      if (popNow) { Sound.pop(); return endGrind(true); }
+      if (R.z <= r.z2) return endGrind(false);
+      return;
+    }
+
+    if (!R.air) {
+      // ---------- on snow ----------
+      const steer = (I.steerL ? 1 : 0) - (I.steerR ? 1 : 0);
+      R.heading += steer * (1.9 / (1 + Math.max(0, R.s) / 30)) * dt;
+      R.heading = clamp(wrapPi(R.heading), -1.5, 1.5);
+      const dx = -Math.sin(R.heading), dz = -Math.cos(R.heading);
+      const [gx, gz] = grad(R.x, R.z), ga = gx * dx + gz * dz;
+      const tuck = I.up, brake = I.downK;
+      let a = -G * ga / Math.sqrt(1 + ga * ga);
+      a -= Math.sign(R.s) * (0.35 + Math.abs(steer) * 1.4 + (brake ? 9 : 0));
+      a -= Math.sign(R.s) * R.s * R.s * (tuck ? 0.0028 : 0.006);
+      if (tuck && R.s < 4) a += 3;   // skate off the start
+      R.s = clamp(R.s + a * dt, -6, 42);
+      if (Math.abs(R.s) < 0.15 && !tuck && Math.abs(ga) < 0.05) R.s = 0;
+      const step = R.s * dt / Math.sqrt(1 + ga * ga);
+      const nx = clamp(R.x + dx * step, -44, 44), nz = R.z + dz * step;
+      const ny = H(nx, nz);
+      const vyNow = (ny - R.y) / dt;
+      R.x = nx; R.z = nz;
+      // crouch / pop
+      R.crouch = lerp(R.crouch, I.pop ? 1 : tuck ? 0.65 : brake ? 0.25 : 0.1, Math.min(1, dt * 10));
+      if (I.pop) R.popHold = Math.min(0.6, R.popHold + dt);
+      const released = !I.pop && R.popWasDown; R.popWasDown = I.pop;
+      if (released && runStarted) {
+        const v = Math.max(R.groundVy ?? vyNow, vyNow) + 2.6 + R.popHold * 3.2; R.popHold = 0;
+        Sound.pop(); launch(v); R.y += 0.05; return;
+      }
+      if (!I.pop) R.popHold = 0;
+      // the ground drops away faster than gravity can follow: take off
+      if (R.groundVy !== null && vyNow < R.groundVy - G * dt * 1.1 - 0.3 && Math.abs(R.s) > 4) { launch(R.groundVy); R.y += R.vy * dt; return; }
+      R.y = ny; R.groundVy = vyNow;
+      R.tilt = lerp(R.tilt, Math.atan(ga), Math.min(1, dt * 12));
+      R.lean = lerp(R.lean, steer * Math.min(0.45, Math.abs(R.s) / 40), Math.min(1, dt * 8));
+      if (Math.abs(steer) > 0 && R.s > 8 && Math.random() < 0.8) emitSpray(2, R.x + dz * 0.3 * steer, R.y + 0.05, R.z, -dz * steer * 3, 1.2, dx * steer * 3, 2);
+      if (brake && R.s > 5) emitSpray(3, R.x, R.y + 0.05, R.z, dx * 2, 1.5, dz * 2, 3);
+      // trees
+      for (const o of obstacles) if (Math.abs(o.z - R.z) < 2 && Math.hypot(o.x - R.x, o.z - R.z) < o.r + 0.3) return bail('Tree!');
+      // remember a safe spot to respawn from
+      R.safeT += dt;
+      const nearFeature = KICKERS.some(k => R.z < k.z + k.len + 12 && R.z > k.z - 4) || (R.z < CLIFF_Z + 15 && R.z > CLIFF_Z - 4) || RAILS.some(r => R.z < r.z1 + 10 && R.z > r.z2 - 4);
+      if (R.safeT > 1 && R.s > 4 && Math.abs(R.heading) < 1 && !nearFeature) { R.safeT = 0; R.safe = { x: R.x, z: R.z, heading: R.heading }; }
+      return;
+    }
+
+    // ---------- in the air ----------
+    const t = R.t;
+    t.airTime += dt;
+    const sIn = (I.left ? 1 : 0) - (I.right ? 1 : 0);
+    if (sIn) t.spinRate += (sIn * 7.4 - t.spinRate) * Math.min(1, dt * 12);
+    else t.spinRate *= Math.exp(-9 * dt);
+    t.spin += t.spinRate * dt;
+    const pIn = (I.downK ? 1 : 0) - (I.up ? 1 : 0);   // S = back, W = front
+    if (pIn) t.pitchRate += (pIn * 5.4 - t.pitchRate) * Math.min(1, dt * 16);
+    else { const w = wrapPi(t.pitch); if (Math.abs(w) < 1.35) t.pitchRate = -w * 6.5; else t.pitchRate = Math.sign(t.pitchRate || w) * Math.max(Math.abs(t.pitchRate), 3.4); }
+    t.pitch += t.pitchRate * dt;
+    const rIn = (I.rollL ? 1 : 0) - (I.rollR ? 1 : 0);
+    if (rIn) t.rollRate += (rIn * 5 - t.rollRate) * Math.min(1, dt * 9);
+    else { const w = wrapPi(t.roll); t.rollRate = Math.abs(w) < 1.4 ? -w * 6 : Math.sign(t.rollRate || w) * 3.4; }
+    t.roll += t.rollRate * dt;
+    if (Math.abs(t.pitch) < Math.PI) t.maxPitch = Math.max(t.maxPitch, Math.abs(t.pitch));
+    t.maxRoll = Math.max(t.maxRoll, Math.abs(wrapPi(t.roll)));
+    if (I.grab) { if (t.curGrab !== I.grab) { t.curGrab = I.grab; t.curGrabT = 0; } t.curGrabT += dt; if (t.curGrabT > t.grabTime) { t.grabTime = t.curGrabT; t.grabName = I.grab; } }
+    else t.curGrab = null;
+    R.crouch = lerp(R.crouch, I.grab ? 1 : 0.35, Math.min(1, dt * 10));
+    R.popWasDown = I.pop;
+    R.vy -= G * dt;
+    R.vx *= Math.exp(-0.05 * dt); R.vz *= Math.exp(-0.05 * dt);
+    R.x = clamp(R.x + R.vx * dt, -44, 44); R.z += R.vz * dt; R.y += R.vy * dt;
+    for (const r of RAILS) {
+      if (R.vy <= 0.5 && R.z <= r.z1 && R.z >= r.z2 - 0.5 && Math.abs(R.x - r.x) < r.hw + 0.35) {
+        const top = railTop(r, R.z);
+        if (R.y >= top - 0.35 && R.y <= top + 0.6) return startGrind(r);
+      }
+    }
+    for (const o of obstacles) if (R.y - H(o.x, o.z) < 7 && Math.hypot(o.x - R.x, o.z - R.z) < o.r + 0.3) return bail('Tree!');
+    const gy = H(R.x, R.z);
+    if (R.y <= gy) land();
+  }
+
+  // =========================================================
+  //  Game flow
+  // =========================================================
+  function startRun() {
+    Sound.init();
+    resetRider();
+    score = 0; line = 1; tricks = []; runTime = 0; runStarted = false;
+    state = 'ride';
+    ['titleOv', 'endOv', 'pauseOv'].forEach(id => $(id).hidden = true);
+    $('lift').hidden = true; cabin.visible = false; skier.visible = true;
+    camPos.set(0, H(0, 20) + 5, 18);
+  }
+  function togglePause() {
+    if (state === 'ride') { state = 'paused'; $('pauseOv').hidden = false; }
+    else if (state === 'paused') { state = 'ride'; $('pauseOv').hidden = true; }
+  }
+  $('startBtn').onclick = startRun;
+  $('resumeBtn').onclick = togglePause;
+  $('restartBtn').onclick = startRun;
+  $('againBtn').onclick = () => rideAgain();
+  const fmt = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+  function finishRun() {
+    state = 'end';
+    const newBest = score > best.score, newTime = !best.time || runTime < best.time;
+    if (newBest) best.score = score;
+    if (newTime) best.time = runTime;
+    try { localStorage.setItem('powderRidgeBest', JSON.stringify(best)); } catch (e) {}
+    $('endTitle').textContent = newBest ? 'NEW BEST RUN!' : 'RUN COMPLETE';
+    $('eScore').textContent = score.toLocaleString('en-US');
+    $('eTime').textContent = fmt(runTime);
+    $('eBest').textContent = best.score.toLocaleString('en-US');
+    $('eBestTime').textContent = best.time ? fmt(best.time) : '–';
+    const top = [...tricks].sort((a, b) => b.pts - a.pts).slice(0, 6);
+    $('eTricks').innerHTML = top.length ? '' : '<li><span>No tricks landed this run</span></li>';
+    for (const tr of top) { const li = document.createElement('li'); li.innerHTML = '<span></span><b></b>'; li.firstChild.textContent = tr.name; li.lastChild.textContent = tr.pts.toLocaleString('en-US'); $('eTricks').append(li); }
+    $('endOv').hidden = false;
+    refreshTitle();
+  }
+  let liftT = 0;
+  function rideAgain() {
+    $('endOv').hidden = true;
+    state = 'lift'; liftT = 0; cabin.visible = true; skier.visible = false; $('lift').hidden = false;
+  }
+  function finishLift() { $('lift').hidden = true; cabin.visible = false; startRun(); }
+  function refreshTitle() {
+    $('tBest').textContent = best.score ? best.score.toLocaleString('en-US') : '–';
+    $('tTime').textContent = best.time ? fmt(best.time) : '–';
+  }
+  refreshTitle();
+
+  // =========================================================
+  //  Per-frame
+  // =========================================================
+  const camPos = new THREE.Vector3(0, 8, 20), camLook = new THREE.Vector3(0, 0, -10);
+  const hud = {};
+  const setT = (id, v) => { if (hud[id] !== v) { hud[id] = v; $(id).textContent = v; } };
+
+  function syncRider(dt) {
+    skier.position.set(R.x, R.y, R.z);
+    if (R.grind) {
+      skier.rotation.set(Math.atan((railTop(R.grind.r, R.grind.r.z2) - railTop(R.grind.r, R.grind.r.z1)) / (R.grind.r.z1 - R.grind.r.z2)), R.heading + (R.switch ? Math.PI : 0), R.grind.bal * 0.5);
+      pivot.rotation.set(0, R.grind.slide ? Math.PI / 2 : 0, 0);
+    } else if (R.bail <= 0) {
+      skier.rotation.set(R.air ? lerp(skier.rotation.x, 0, Math.min(1, dt * 3)) : R.tilt, R.heading + (R.switch ? Math.PI : 0), R.air ? 0 : R.lean);
+      if (R.t) pivot.rotation.set(R.t.pitch * (R.switch ? -1 : 1), R.t.spin, R.t.roll, 'YXZ');
+      else pivot.rotation.set(0, 0, 0);
+    }
+    pivot.rotation.order = 'YXZ';
+    const c = R.crouch;
+    upper.position.y = 0.88 - c * 0.3; legs.scale.y = 1 - c * 0.3; legs.position.y = -c * 0.02;
+    const grabbing = R.t && R.t.curGrab;
+    arms[0].rotation.set(grabbing === 'Tail Grab' ? 1.2 : -0.35 - c * 0.3, 0, 0.25);
+    arms[1].rotation.set(grabbing === 'Safety' ? -0.2 : grabbing === 'Nose Grab' ? -1.9 : -0.35 - c * 0.3, 0, grabbing === 'Safety' ? -0.15 : -0.25);
+    upper.rotation.x = c * 0.45;
+  }
+
+  function camStep(dt) {
+    let target, look;
+    if (state === 'lift') {
+      liftT += dt / 5;
+      const p = cablePt(Math.min(1, liftT));
+      cabin.position.copy(p);
+      target = p.clone().add(new THREE.Vector3(9, 2, 10)); look = p.clone().add(new THREE.Vector3(-10, -6, -20));
+      if (liftT >= 1) finishLift();
+      camPos.lerp(target, 1 - Math.exp(-dt * 4)); camLook.lerp(look, 1 - Math.exp(-dt * 4));
+    } else if (state === 'title') {
+      const a = time * 0.12;
+      target = new THREE.Vector3(Math.sin(a) * 9, H(0, -4) + 4.5, -4 + Math.cos(a) * 9 + 6);
+      look = new THREE.Vector3(0, H(0, -60) + 1, -60);
+      camPos.lerp(target, 1 - Math.exp(-dt * 2)); camLook.lerp(look, 1 - Math.exp(-dt * 2));
+    } else {
+      let dx, dz;
+      if (R.air) { const hv = Math.hypot(R.vx, R.vz) || 1; dx = R.vx / hv; dz = R.vz / hv; }
+      else { dx = -Math.sin(R.heading); dz = -Math.cos(R.heading); }
+      const sp = Math.abs(R.air ? Math.hypot(R.vx, R.vz) : R.s);
+      const back = 6.5 + sp * 0.06, up = 2.6 + (R.air ? 1.2 : 0);
+      target = new THREE.Vector3(R.x - dx * back, Math.max(R.y + up, H(R.x - dx * back, R.z - dz * back) + 1.6), R.z - dz * back);
+      look = new THREE.Vector3(R.x + dx * 5, R.y + 0.8, R.z + dz * 5);
+      camPos.lerp(target, 1 - Math.exp(-dt * 6)); camLook.lerp(look, 1 - Math.exp(-dt * 8));
+      camera.fov = lerp(camera.fov, 68 + Math.min(14, sp * 0.35), Math.min(1, dt * 2)); camera.updateProjectionMatrix();
+    }
+    camera.position.copy(camPos); camera.lookAt(camLook);
+    sky.position.copy(camera.position);
+    const f = state === 'lift' ? cabin.position : skier.position;
+    sun.position.set(f.x + SUN.x * 60, f.y + SUN.y * 60, f.z + SUN.z * 60); sun.target.position.copy(f);
+  }
+
+  function hudStep(I) {
+    setT('hScore', score.toLocaleString('en-US'));
+    setT('hMult', `LINE x${line.toFixed(1)}`);
+    setT('hTime', fmt(runTime));
+    setT('hSpeed', `${Math.round(Math.abs(R.air ? Math.hypot(R.vx, R.vz) : R.s || 0) * 3.6)} km/h`);
+    let tk = '';
+    if (state === 'ride' && R.air && R.t && R.t.airTime > 0.15 && R.bail <= 0) {
+      const d = describe(R.t);
+      if (d.name !== 'Straight Air' || R.t.curGrab) tk = `${d.name}<small>${trickPoints(d, R.t).toLocaleString('en-US')} pts</small>`;
+    } else if (R.grind) tk = `${R.grind.name}<small>${(R.grind.time * 600 * (R.grind.slide ? 1.3 : 1)).toFixed(0)} pts</small>`;
+    if (hud.trick !== tk) { hud.trick = tk; $('trick').innerHTML = tk; }
+    $('balance').hidden = !R.grind;
+    if (R.grind) $('balMark').style.left = `${50 + clamp(R.grind.bal, -1, 1) * 50}%`;
+    $('rhold').hidden = !(R.restartHold > 0.05);
+    $('rBar').style.width = `${Math.min(1, R.restartHold / 2) * 100}%`;
+    const hudOn = state === 'ride' || state === 'paused';
+    document.querySelectorAll('.tl, .tr, .keys').forEach(e => e.style.visibility = hudOn ? 'visible' : 'hidden');
+  }
+
+  // adaptive resolution for slower machines
+  let frameAvg = 1 / 60, perfT = 0;
+  function adapt(raw) {
+    if (raw <= 0 || raw > 0.5) return;
+    frameAvg += (raw - frameAvg) * 0.05; perfT += raw;
+    if (perfT < 1.5) return; perfT = 0;
+    let n = res;
+    if (frameAvg > 1 / 45) n = Math.max(0.6, res - 0.15); else if (frameAvg < 1 / 57) n = Math.min(DPR, res + 0.1);
+    if (Math.abs(n - res) > 0.01) { res = n; renderer.setPixelRatio(res); resize(); }
+  }
+
+  resetRider();
+  let last = performance.now();
+  function frame(now) {
+    const raw = (now - last) / 1000; last = now; adapt(raw);
+    const dt = Math.min(0.05, raw);
+    time += dt;
+    pollPad();
+    const I = inp();
+    if (state === 'ride') {
+      // hold R for 2 s to restart
+      R.restartHold = I.restart ? R.restartHold + dt : 0;
+      if (R.restartHold >= 2) { startRun(); }
+      const steps = Math.ceil(dt / 0.008);
+      for (let i = 0; i < steps && state === 'ride'; i++) rideStep(dt / steps, I);
+      if (!runStarted && R.z < START.z - 3) runStarted = true;
+      if (runStarted) runTime += dt;
+      if (R.z < FINISH_Z && R.bail <= 0 && state === 'ride') finishRun();
+    } else if (state === 'end' && !R.air) {
+      R.s = Math.max(0, R.s - 10 * dt);
+      R.z -= R.s * dt; R.y = H(R.x, R.z); R.crouch = lerp(R.crouch, 0.2, dt * 4);
+    }
+    if (state !== 'lift' && state !== 'title') syncRider(dt);
+    // spray particles
+    for (const p of spray) { p.vy -= 9 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.life -= dt; }
+    while (spray.length && spray[0].life <= 0) spray.shift();
+    for (let i = 0; i < SPRAY; i++) { const p = spray[i]; sprayPos[i * 3] = p ? p.x : 0; sprayPos[i * 3 + 1] = p && p.life > 0 ? p.y : -999; sprayPos[i * 3 + 2] = p ? p.z : 0; }
+    sprayGeo.attributes.position.needsUpdate = true;
+    camStep(dt);
+    hudStep(I);
+    if (noteT > 0) { noteT -= dt; if (noteT <= 0) $('muteNote').textContent = ''; }
+    const turning = (I.steerL || I.steerR) ? 1 : I.downK ? 0.8 : 0.15;
+    Sound.update(state === 'ride' ? Math.abs(R.air ? Math.hypot(R.vx, R.vz) : R.s) : 0, turning, R.air, !!R.grind);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  resize();
+  skier.position.set(START.x, H(START.x, START.z), START.z);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
