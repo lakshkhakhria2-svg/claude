@@ -87,26 +87,29 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
   <div class="hud lift box" id="lift" hidden>Riding the gondola back up · press <kbd>F</kbd> to skip</div>
   <div class="hud mute" id="muteNote"></div>
   <div class="hud keys box" id="keys">
-    <span><kbd>A</kbd><kbd>D</kbd> steer / spin</span><span><kbd>W</kbd><kbd>S</kbd> tuck, brake / flip</span><span><kbd>←</kbd><kbd>→</kbd> air roll</span>
-    <span><kbd>Space</kbd> pop</span><span><kbd>Shift</kbd><kbd>Q</kbd><kbd>E</kbd> grab</span><span><kbd>R</kbd> hold restart</span><span><kbd>Esc</kbd> menu</span>
+    <span><kbd>A</kbd><kbd>D</kbd> steer / spin / balance</span><span><kbd>W</kbd><kbd>S</kbd> press, butter / flip</span><span><kbd>←</kbd><kbd>→</kbd> roll (bio)</span>
+    <span><kbd>Space</kbd> pop</span><span><kbd>Shift</kbd> tuck / grab</span><span><kbd>Q</kbd><kbd>E</kbd> grab</span><span><kbd>X</kbd> brake</span><span><kbd>R</kbd> hold restart</span><span><kbd>Esc</kbd> menu</span>
   </div>
 
   <div class="overlay" id="titleOv">
     <div class="card">
       <h1>POWDER<br><em>RIDGE</em></h1>
-      <p><b>Timber Run</b>: a forest freeski line with kickers, rails, a tree glade, a big air and a cliff. Stack spins, flips, corks and grabs, stomp clean landings, and keep your line multiplier alive to the finish.</p>
+      <p><b>Timber Run</b>: a forest freeski line with a jump line, a rail park, a tree glade, a big air, a cliff and a second rail deck. Stack spins, flips, corks and grabs, stomp clean landings, and keep your line multiplier alive to the finish.</p>
       <div class="ctl">
-        <kbd>A / D</kbd><span>Steer on snow · spin in the air</span>
-        <kbd>W / S</kbd><span>Tuck / brake on snow · front / back flip in the air</span>
-        <kbd>← / →</kbd><span>Steer on snow · air roll (off-axis)</span>
-        <kbd>Space</kbd><span>Hold to load, release to pop · pop off rails</span>
-        <kbd>Shift / Q / E</kbd><span>Safety · Tail · Nose grab (hold ¼ s for ×1.25)</span>
+        <kbd>A / D</kbd><span>Steer · spin in the air · balance on rails</span>
+        <kbd>W / S</kbd><span>Hold on snow = nose / tail press (add A/D to <b>butter</b>) · in the air: flip forward / back · on rails: nose / tail press</span>
+        <kbd>S + spin</kbd><span>Cork (off-axis back) · <kbd>W</kbd> + spin = Misty</span>
+        <kbd>← / →</kbd><span>Air roll · roll + spin = Bio</span>
+        <kbd>Space</kbd><span>Hold to load, release to pop (hold A/D while loading to wind up a spin) · pop off rails</span>
+        <kbd>Shift</kbd><span>Tuck on snow · Safety grab in the air</span>
+        <kbd>Q / E</kbd><span>Tail · Nose grab (hold ¼ s for ×1.25)</span>
+        <kbd>X</kbd><span>Brake (hockey stop)</span>
         <kbd>Hold R</kbd><span>Restart the run (2 s)</span>
         <kbd>F</kbd><span>Skip the gondola ride</span>
         <kbd>Esc / P</kbd><span>Pause menu</span>
         <kbd>M</kbd><span>Sound on / off</span>
       </div>
-      <p>Tip: spin + <kbd>S</kbd> as you leave the lip for a cork. Controllers work too.</p>
+      <p>Tips: press <kbd>W</kbd> and spin with <kbd>A</kbd>/<kbd>D</kbd> into the lip, then pop, for a Nose Butter. Spin onto rails for 270 on, slide them sideways for a Boardslide or Lipslide. Controllers work too.</p>
       <div class="stats"><div><span class="label">Best score</span><b class="best" id="tBest">–</b></div><div><span class="label">Best time</span><b class="best" id="tTime">–</b></div></div>
       <button class="btn" id="startBtn">Drop in</button>
     </div>
@@ -116,7 +119,7 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
     <div class="card">
       <h2>PAUSED</h2>
       <div class="row"><button class="btn" id="resumeBtn">Resume</button><button class="btn ghost" id="restartBtn">Restart run</button></div>
-      <p>Controls: A/D spin, W/S flip, arrows roll, Space pop, Shift/Q/E grab, hold R restart, F skip gondola, M sound.</p>
+      <p>Controls: A/D steer/spin/balance, W/S press &amp; butter on snow or flip in the air, arrows roll, Space pop, Shift tuck/grab, Q/E grab, X brake, hold R restart, F skip gondola, M sound.</p>
     </div>
   </div>
 
@@ -149,58 +152,84 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
   // =========================================================
   //  Course: Timber Run (all features defined analytically)
   // =========================================================
-  const SLOPE = 0.32, HALF_W = 24, FINISH_Z = -1180, G = 12.3;
+  const HALF_W = 24, FINISH_Z = -1180, G = 12.3;
+  // the slope steepens and flattens in sections: start deck, drop-in, jump line, flat rail park, glade, big air, cliff, jumps, second rail deck, run-out
+  const SLOPE_KEYS = [[60, 0.03], [0, 0.04], [-22, 0.4], [-60, 0.3], [-345, 0.3], [-362, 0.13], [-448, 0.13], [-468, 0.3], [-1048, 0.3], [-1062, 0.13], [-1140, 0.13], [-1152, 0.22], [-1178, 0.05], [-1420, 0.04]];
+  function slopeAt(z) {
+    for (let i = 0; i < SLOPE_KEYS.length - 1; i++) {
+      const [z1, s1] = SLOPE_KEYS[i], [z2, s2] = SLOPE_KEYS[i + 1];
+      if (z <= z1 && z >= z2) return lerp(s1, s2, smooth((z1 - z) / (z1 - z2)));
+    }
+    return 0.04;
+  }
+  const BT0 = 60, BTS = 0.5, BTN = Math.ceil((BT0 + 1420) / BTS);
+  const baseTable = new Float32Array(BTN + 2);
+  for (let i = 1; i <= BTN + 1; i++) baseTable[i] = baseTable[i - 1] - slopeAt(BT0 - (i - 0.5) * BTS) * BTS;
+  const tableAt = z => { const f = clamp((BT0 - z) / BTS, 0, BTN), i = Math.floor(f); return lerp(baseTable[i], baseTable[i + 1], f - i); };
+  const BASE0 = tableAt(0);
+  const baseH = z => tableAt(z) - BASE0;
+
   const KICKERS = [
     { z: -190, x: -5, w: 9, len: 10, h: 2.2 },
     { z: -255, x: 4, w: 9, len: 10, h: 2.6 },
-    { z: -320, x: 0, w: 11, len: 12, h: 3.2 },
+    { z: -320, x: 0, w: 11, len: 12, h: 3.2, land: 36 },
     { z: -520, x: -12, w: 6, len: 7, h: 1.6 },
     { z: -580, x: 11, w: 6, len: 7, h: 1.8 },
     { z: -720, x: 0, w: 14, len: 16, h: 4.6, big: true },
     { z: -965, x: -6, w: 10, len: 11, h: 3.0 },
-    { z: -1030, x: 6, w: 10, len: 11, h: 3.4 },
+    { z: -1030, x: 6, w: 10, len: 11, h: 3.4, land: 30 },
   ];
+  // rails and boxes as polylines: [z, height above the snow] or [z, 'flat'] to hold the previous height (a flat section on a slope)
   const RAILS = [
-    { x: -8, z1: -382, z2: -414, h: 0.9, hw: 0.08, kind: 'Rail' },
-    { x: 7.5, z1: -380, z2: -410, h: 0.6, hw: 0.4, kind: 'Box' },
-    { x: 0, z1: -1078, z2: -1112, h: 1.0, hw: 0.08, kind: 'Rail' },
+    { kind: 'Box', x: -10, hw: 0.42, pts: [[-366, 0.02], [-371, 0.42], [-396, 0.42]] },                                // ride-on box
+    { kind: 'Rail', x: -3.5, hw: 0.06, pts: [[-370, 0.45], [-379, 'flat'], [-395, 0.9]] },                             // flat-down rail
+    { kind: 'Rail', x: 2.5, hw: 0.06, pts: [[-368, 0.45], [-394, 0.5]] },                                              // down rail
+    { kind: 'Rail', x: 8.5, hw: 0.06, pts: [[-367, 0.45], [-375, 'flat'], [-384, 0.6], [-390, 'flat'], [-398, 0.7]] },  // kinked rail
+    { kind: 'Box', x: -12, hw: 0.45, pts: [[-405, 0.4], [-440, 0.45]] },                                               // long box
+    { kind: 'Rail', x: 5, hw: 0.06, pts: [[-410, 0.45], [-418, 'flat'], [-436, 0.8]] },                                // flat-down rail
+    { kind: 'Rail', x: 0, hw: 0.06, pts: [[-1068, 0.45], [-1076, 'flat'], [-1084, 0.7], [-1100, 0.8]] },               // down-flat-down
+    { kind: 'Box', x: -8, hw: 0.42, pts: [[-1066, 0.02], [-1071, 0.42], [-1100, 0.45]] },                              // ride-on box
+    { kind: 'Rail', x: 8, hw: 0.06, pts: [[-1070, 0.45], [-1104, 0.5]] },                                              // down rail
   ];
   const CLIFF_Z = -860, CLIFF_DROP = 9;
-  const FEATURE_Z = [...KICKERS.map(k => k.z), ...RAILS.map(r => (r.z1 + r.z2) / 2), CLIFF_Z];
+  const FEATURE_Z = [...KICKERS.map(k => k.z), ...RAILS.map(r => (r.pts[0][0] + r.pts[r.pts.length - 1][0]) / 2), CLIFF_Z];
 
-  function baseH(z) {
-    let b = z * SLOPE * smooth(-z / 25);
-    const fz = FINISH_Z - 15;
-    if (z < fz) b = fz * SLOPE + (z - fz) * 0.04 - SLOPE * 12 * smooth((fz - z) / 30) * 0;  // gentle run-out
-    return b;
-  }
   function H(x, z) {
     let h = baseH(z);
-    // rolling snow, kept off the features
     let mask = 1;
-    for (const fz of FEATURE_Z) mask = Math.min(mask, smooth((Math.abs(z - fz) - 6) / 18));
+    for (const fz of FEATURE_Z) mask = Math.min(mask, smooth((Math.abs(z - fz) - 8) / 18));
     if (z > -40 || z < FINISH_Z + 20) mask *= 0.3;
     h += (0.55 * Math.sin(x * 0.13 + z * 0.045) + 0.4 * Math.sin(z * 0.09 - x * 0.06) + 0.25 * Math.sin(z * 0.21 + x * 0.17)) * mask;
-    // side banks keep you on the run
     const ax = Math.abs(x);
     if (ax > HALF_W) { const d = ax - HALF_W; h += d < 8 ? d * d * 0.12 : 7.68 + (d - 8) * 0.45; }
-    // kickers
     for (const k of KICKERS) {
       if (z <= k.z + k.len && z > k.z) {
         const t = (k.z + k.len - z) / k.len;
         const m = 1 - smooth((Math.abs(x - k.x) - k.w / 2) / 1.4);
         if (m > 0) h += k.h * Math.pow(t, 1.7) * m;
       }
-      if (k.big) h -= 6 * smooth((k.z - 6 - z) / 40);           // steeper landing below the big air
+      // every jump has a steep landing hill sized to it (the big air's is long and around 40 degrees)
+      h -= k.h * (k.big ? 7.8 : 3.2) * smooth((k.z - (k.big ? 25 : 6) - z) / (k.big ? 85 : k.land || 44));
     }
-    // cliff band: a sharp drop on the left, a ramp-around on the right
     const xf = smooth((x - 8) / 6);
-    const step = smooth((CLIFF_Z - z) / 0.7), ramp = smooth((CLIFF_Z - z) / 45);
-    h -= CLIFF_DROP * ((1 - xf) * step + xf * ramp);
+    h -= CLIFF_DROP * ((1 - xf) * smooth((CLIFF_Z - z) / 0.7) + xf * smooth((CLIFF_Z - z) / 45));
     return h;
   }
   const grad = (x, z) => [(H(x + 0.25, z) - H(x - 0.25, z)) / 0.5, (H(x, z + 0.25) - H(x, z - 0.25)) / 0.5];
-  const railTop = (r, z) => lerp(H(r.x, r.z1) + r.h, H(r.x, r.z2) + r.h, (r.z1 - z) / (r.z1 - r.z2));
+  for (const r of RAILS) {
+    r.p = []; let prev = 0;
+    for (const [z, h] of r.pts) { const y = h === 'flat' ? prev : H(r.x, z) + h; r.p.push({ z, y }); prev = y; }
+    r.z1 = r.p[0].z; r.z2 = r.p[r.p.length - 1].z;
+  }
+  // height and steepness of a rail at z (dy = rise per metre travelled downhill)
+  function railAt(r, z) {
+    const p = r.p;
+    for (let i = 0; i < p.length - 1; i++) if (z <= p[i].z && z >= p[i + 1].z) {
+      const t = (p[i].z - z) / (p[i].z - p[i + 1].z);
+      return { y: lerp(p[i].y, p[i + 1].y, t), dy: (p[i + 1].y - p[i].y) / (p[i].z - p[i + 1].z) };
+    }
+    return null;
+  }
 
   // =========================================================
   //  Renderer & scene
@@ -315,17 +344,22 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
 
   // ---------- rails, gates, gondola ----------
   const steel = new THREE.MeshStandardMaterial({ color: lin(0xb8c2cc), metalness: 0.8, roughness: 0.3 });
+  const boxTop = mat(0x3a6fd8);
   for (const r of RAILS) {
-    const a = new THREE.Vector3(r.x, railTop(r, r.z1), r.z1), b = new THREE.Vector3(r.x, railTop(r, r.z2), r.z2);
-    const len = a.distanceTo(b);
-    const geo = r.kind === 'Box' ? new THREE.BoxGeometry(r.hw * 2, 0.12, len) : new THREE.CylinderGeometry(r.hw, r.hw, len, 10).rotateX(Math.PI / 2);
-    const m = new THREE.Mesh(geo, r.kind === 'Box' ? mat(0x3a6fd8) : steel);
-    m.position.copy(a).add(b).multiplyScalar(0.5); m.lookAt(b); m.castShadow = true;
-    if (r.kind === 'Box') m.position.y -= 0.06;
-    scene.add(m);
-    for (const p of [a, b]) {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, r.h, 6), steel);
-      post.position.set(p.x, p.y - r.h / 2, p.z); scene.add(post);
+    for (let i = 0; i < r.p.length - 1; i++) {
+      const a = new THREE.Vector3(r.x, r.p[i].y, r.p[i].z), b = new THREE.Vector3(r.x, r.p[i + 1].y, r.p[i + 1].z);
+      const len = a.distanceTo(b);
+      const geo = r.kind === 'Box' ? new THREE.BoxGeometry(r.hw * 2, 0.12, len + 0.02) : new THREE.CylinderGeometry(r.hw, r.hw, len + 0.02, 10).rotateX(Math.PI / 2);
+      const m = new THREE.Mesh(geo, r.kind === 'Box' ? boxTop : steel);
+      m.position.copy(a).add(b).multiplyScalar(0.5); m.lookAt(b); m.castShadow = true;
+      if (r.kind === 'Box') m.position.y -= 0.06;
+      scene.add(m);
+    }
+    for (const q of r.p) {
+      const g = H(r.x, q.z), hh = q.y - g;
+      if (hh < 0.08) continue;
+      const post = new THREE.Mesh(r.kind === 'Box' ? new THREE.BoxGeometry(r.hw * 1.6, hh, 0.12) : new THREE.CylinderGeometry(0.05, 0.05, hh, 6), r.kind === 'Box' ? mat(0x2a3a55) : steel);
+      post.position.set(r.x, g + hh / 2, q.z); scene.add(post);
     }
   }
   function banner(text, z, color) {
@@ -465,7 +499,7 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
     const gp = navigator.getGamepads ? [...navigator.getGamepads()].find(g => g) : null;
     if (!gp) { pad = { x: 0, y: 0, rx: 0 }; return; }
     const dz = v => Math.abs(v) < 0.2 ? 0 : v, b = i => gp.buttons[i]?.pressed;
-    pad = { x: dz(gp.axes[0] || 0), y: dz(gp.axes[1] || 0), rx: dz(gp.axes[2] || 0), pop: b(0), grabA: b(2) || b(7), grabB: b(4), grabC: b(5) || b(6), restart: b(3), skip: b(1), start: b(9) };
+    pad = { x: dz(gp.axes[0] || 0), y: dz(gp.axes[1] || 0), rx: dz(gp.axes[2] || 0), pop: b(0), grabA: b(2) || b(7), grabB: b(4), grabC: b(5) || b(6), restart: b(3), skip: b(1), brake: b(1), start: b(9) };
     if (pad.start && !padStartPrev) { if (state === 'title') startRun(); else if (state === 'end') rideAgain(); else togglePause(); }
     if (pad.skip && state === 'lift') finishLift();
     padStartPrev = pad.start;
@@ -476,6 +510,8 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
     rollL: K('ArrowLeft') || pad.rx < -0.3, rollR: K('ArrowRight') || pad.rx > 0.3,
     steerL: K('KeyA') || K('ArrowLeft') || pad.x < -0.3, steerR: K('KeyD') || K('ArrowRight') || pad.x > 0.3,
     pop: K('Space') || pad.pop,
+    tuck: K('ShiftLeft') || K('ShiftRight') || pad.grabA,
+    brake: K('KeyX') || K('ControlLeft') || K('ControlRight') || pad.brake,
     grab: K('ShiftLeft') || K('ShiftRight') || pad.grabA ? 'Safety' : K('KeyQ') || pad.grabB ? 'Tail Grab' : K('KeyE') || pad.grabC ? 'Nose Grab' : null,
     restart: K('KeyR') || pad.restart,
   });
@@ -483,55 +519,72 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
   // =========================================================
   //  Rider state & physics
   // =========================================================
+  const V = THREE.Vector3;
   const START = { x: 0, z: 6 };
   let state = 'title', time = 0, runTime = 0, runStarted = false;
   let score = 0, line = 1, tricks = [], best = { score: 0, time: 0 };
   try { Object.assign(best, JSON.parse(localStorage.getItem('powderRidgeBest') || '{}')); } catch (e) {}
-  const R = {};   // rider
+  const R = { p: new V(), v: new V() };
+  const normalAt = (x, z, out = new V()) => { const [gx, gz] = grad(x, z); return out.set(-gx, 1, -gz).normalize(); };
+  const fwdOf = yaw => new V(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const speedOf = () => R.v.length();
   function resetRider() {
-    Object.assign(R, { x: START.x, z: START.z, y: H(START.x, START.z), heading: 0, s: 0, vy: 0, vx: 0, vz: 0, air: false, groundVy: null,
-      switch: false, crouch: 0, popHold: 0, popWasDown: false, bail: 0, bailMsg: '', grind: null, safe: { x: START.x, z: START.z, heading: 0 }, safeT: 0, tilt: 0, lean: 0,
-      t: null, restartHold: 0 });
+    R.p.set(START.x, H(START.x, START.z), START.z); R.v.set(0, 0, 0);
+    Object.assign(R, { yaw: 0, yaw0: 0, air: false, crouch: 0, popHold: 0, popWasDown: false, wind: 0, bail: 0, bailMsg: '', grind: null, butter: null, t: null,
+      safe: { x: START.x, z: START.z, yaw: 0 }, safeT: 0, lean: 0, restartHold: 0, skid: 0, tumble: null, braking: false });
   }
-  function newAir(switchTakeoff) {
-    return { spin: 0, spinRate: 0, pitch: 0, pitchRate: 0, roll: 0, rollRate: 0, maxPitch: 0, maxRoll: 0, airTime: 0, grabName: null, grabTime: 0, curGrab: null, curGrabT: 0, switchTakeoff };
-  }
+  // riding backwards = the skis point against the direction of travel
+  const isSwitch = () => { const h = new V(R.v.x, 0, R.v.z); return h.lengthSq() > 1 && h.dot(fwdOf(R.yaw)) < 0; };
+  // ground normal; a wall-steep reading means we're straddling a lip or drop, so keep the last real slope
+  const lastN = new V(0, 1, 0);
+  function groundN() { const n = normalAt(R.p.x, R.p.z); if (n.y >= 0.72) lastN.copy(n); return lastN.clone(); }
+  function projectV() { const n = groundN(); R.v.addScaledVector(n, -R.v.dot(n)); return n; }
 
+  function newAir(o = {}) {
+    return { spin: o.spin || 0, spin0: o.spin || 0, spinRate: o.spinRate || 0, pitch: 0, pitchRate: 0, roll: 0, rollRate: 0, maxPitch: 0, maxRoll: 0, airTime: 0,
+      grabName: null, grabTime: 0, curGrab: null, curGrabT: 0, switchTakeoff: !!o.switch, butter: o.butter || null, fromRail: !!o.fromRail, unwind: !!o.unwind };
+  }
   const SPIN_PTS = { 180: 500, 360: 1500, 540: 3000, 720: 6000, 900: 9000, 1080: 13000, 1260: 17000, 1440: 22000 };
+  const spinPts = deg => deg <= 0 ? 0 : SPIN_PTS[deg] ?? 22000 + (deg - 1440) / 180 * 5000;
+  const BUTTER_PTS = { 180: 400, 360: 1000, 540: 1800, 720: 3000, 900: 4200, 1080: 5600 };
+  const lvl = n => n >= 3 ? 'Triple ' : n === 2 ? 'Double ' : '';
   function describe(t) {
     const spinDeg = Math.round(Math.abs(t.spin) / Math.PI) * 180;
-    const flips = Math.round(Math.abs(t.pitch) / (2 * Math.PI));
+    const flips = Math.round(Math.abs(t.pitch) / (2 * Math.PI)), rolls = Math.round(Math.abs(t.roll) / (2 * Math.PI));
     const back = t.pitch > 0;
-    const cork = flips === 0 && t.maxPitch > 0.45 && spinDeg >= 360;
-    const bio = flips === 0 && !cork && t.maxRoll > 0.45 && spinDeg >= 360;
-    let name;
-    if (flips > 0 && spinDeg >= 360) name = `${flips > 1 ? 'Double ' : ''}${back ? 'Rodeo' : 'Misty'} ${spinDeg}`;
-    else if (flips > 0) name = `${flips > 2 ? 'Triple ' : flips > 1 ? 'Double ' : ''}${back ? 'Backflip' : 'Frontflip'}`;
-    else if (cork) name = `Cork ${spinDeg}`;
-    else if (bio) name = `Bio ${spinDeg}`;
+    // off-axis level: a tilt counts as a single cork/misty/bio, each full flip on top adds one (Double, Triple)
+    const offP = flips ? flips + 1 : (t.maxPitch > 0.45 ? 1 : 0);
+    const offR = rolls ? rolls + 1 : (t.maxRoll > 0.45 ? 1 : 0);
+    let name, off = 0;
+    if (spinDeg >= 360 && offP) { off = offP; name = `${lvl(offP)}${back ? 'Cork' : 'Misty'} ${spinDeg}`; }
+    else if (spinDeg >= 360 && offR) { off = offR; name = `${lvl(offR)}Bio ${spinDeg}`; }
+    else if (flips) name = `${lvl(flips)}${back ? 'Backflip' : 'Frontflip'}`;
+    else if (rolls) name = `${lvl(rolls)}Side Flip`;
+    else if (t.fromRail) { const out = Math.round(Math.abs(t.spin - t.spin0) / (Math.PI / 2)) * 90; name = out >= 180 ? `${out}` : 'Straight Air'; }
     else if (spinDeg >= 180) name = `${spinDeg}`;
-    else name = 'Straight Air';
-    if (t.switchTakeoff && (spinDeg >= 180 || flips)) name = 'Switch ' + name;
+    else name = t.butter ? 'Ollie' : 'Straight Air';
+    if (t.fromRail && name !== 'Straight Air') name += ' Out';
+    if (t.butter) name = `${t.butter} Butter ${name}`;
+    if (t.switchTakeoff && (spinDeg >= 180 || flips || rolls)) name = 'Switch ' + name;
     const grab = t.grabTime >= 0.25 ? t.grabName : null;
     if (grab) name += ' ' + grab;
-    return { name, spinDeg, flips, cork: cork || bio, grab };
+    return { name, spinDeg, flips: flips + rolls, off, grab };
   }
   function trickPoints(d, t) {
-    const sp = d.spinDeg <= 0 ? 0 : SPIN_PTS[d.spinDeg] ?? 22000 + (d.spinDeg - 1440) / 180 * 5000;
-    let pts = sp * (d.cork ? 1.3 : 1) + d.flips * 2500 + t.airTime * 120;
+    let pts = spinPts(d.spinDeg) * (1 + 0.3 * d.off) + d.flips * 2000 + (d.off ? 600 * d.off : 0) + t.airTime * 120;
     if (d.grab) pts *= 1.25;
+    if (t.butter) pts *= 1.2;
+    if (t.fromRail && d.spinDeg >= 180) pts *= 1.1;
     if (t.switchTakeoff && (d.spinDeg >= 180 || d.flips)) pts *= 1.15;
     return Math.round(pts);
   }
 
-  let popTimer = 0;
   function popup(name, pts, bad = false) {
     $('popName').textContent = name; $('popPts').textContent = pts;
     const el = $('pop'); el.className = 'hud pop' + (bad ? ' bad' : ''); void el.offsetWidth; el.classList.add('show');
   }
   let noteT = 0;
   function note(t) { $('muteNote').textContent = t; noteT = 1.5; }
-
   function award(name, base, clean) {
     const pts = Math.round(base * line) + (clean ? 450 : 0);
     score += pts;
@@ -542,152 +595,232 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
   }
   function bail(msg) {
     if (R.bail > 0) return;
-    R.bail = 1.7; R.bailMsg = msg; R.grind = null;
+    R.bail = 1.7; R.bailMsg = msg; R.grind = null; R.butter = null; R.t = null;
     line = 1;
     popup('BAIL', msg, true);
     Sound.bail();
     R.tumble = { rx: (Math.random() - .5) * 14, ry: (Math.random() - .5) * 10, rz: (Math.random() - .5) * 14 };
-    emitSpray(40, R.x, R.y + 0.4, R.z, 0, 2, 0, 6);
+    emitSpray(40, R.p.x, R.p.y + 0.4, R.p.z, 0, 2, 0, 6);
   }
   function respawn() {
-    R.x = R.safe.x; R.z = R.safe.z; R.y = H(R.x, R.z); R.heading = R.safe.heading; R.s = 9; R.air = false; R.vy = 0; R.groundVy = null;
-    R.bail = 0; R.t = null; R.switch = false; R.tumble = null;
-    pivot.rotation.set(0, 0, 0); model.rotation.set(0, 0, 0);
+    const s = R.safe; lastN.set(0, 1, 0);
+    if (s.z < -440 && s.z > -690) { s.x = clamp(s.x, -1.5, 1.5); s.yaw = 0; }   // in the glade, respawn on the clear middle line
+    else if (obstacles.some(o => o.z < s.z + 2 && o.z > s.z - 22 && Math.abs(o.x - s.x) < 3.5)) { s.x = 0; s.yaw = 0; }
+    R.p.set(s.x, H(s.x, s.z), s.z); R.yaw = s.yaw; R.v.copy(fwdOf(s.yaw)).multiplyScalar(9); projectV();
+    Object.assign(R, { air: false, bail: 0, t: null, butter: null, grind: null, tumble: null, popHold: 0, wind: 0 });
+    pivot.rotation.set(0, 0, 0);
   }
 
-  function launch(vy) {
-    const [gx, gz] = grad(R.x, R.z), dx = -Math.sin(R.heading), dz = -Math.cos(R.heading);
-    const ga = gx * dx + gz * dz, hv = R.s / Math.sqrt(1 + ga * ga);
-    R.vx = dx * hv; R.vz = dz * hv; R.vy = vy; R.air = true;
-    R.t = newAir(R.switch);
+  // leave the snow (a lip, a roller, or a pop)
+  function takeoff(popSpeed, o = {}) {
+    if (popSpeed) R.v.addScaledVector(groundN(), popSpeed);
+    R.air = true; R.yaw0 = R.yaw - (o.spin || 0);
+    R.t = newAir({ switch: isSwitch(), ...o });
+    R.p.y += 0.02;
   }
-
-  function landEval() {
+  function airOrientation() {
     const t = R.t;
-    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(t.pitch, t.spin, t.roll, 'YXZ'));
-    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q), fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(q);
-    const a = Math.abs(wrapPi(Math.atan2(-fwd.x, -fwd.z)));
-    const switchLand = a > Math.PI / 2, mis = switchLand ? Math.PI - a : a;
-    return { up: up.y, mis, switchLand };
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(t.pitch, R.yaw0 + t.spin, t.roll, 'YXZ'));
+    return { up: new V(0, 1, 0).applyQuaternion(q), fwd: new V(0, 0, -1).applyQuaternion(q) };
+  }
+  // how far the skis are from pointing along (or against) a direction, 0..90 degrees
+  function misalign(fwd, dir) {
+    const fh = new V(fwd.x, 0, fwd.z);
+    if (fh.lengthSq() < 0.04 || dir.lengthSq() < 0.01) return { mis: Math.PI / 2, back: false, fh };
+    fh.normalize(); const d = new V(dir.x, 0, dir.z).normalize();
+    const a = Math.acos(clamp(fh.dot(d), -1, 1));
+    return { mis: a > Math.PI / 2 ? Math.PI - a : a, back: a > Math.PI / 2, fh };
   }
 
   function land() {
-    const t = R.t;
-    const [gx, gz] = grad(R.x, R.z);
-    const hv = Math.hypot(R.vx, R.vz) || 0.001, mdx = R.vx / hv, mdz = R.vz / hv;
-    const downhill = -(gx * mdx + gz * mdz);
-    const align = clamp(downhill * 2, 0, 1);
-    const impact = -R.vy * (1 - align);
-    const e = landEval();
-    R.air = false; R.y = H(R.x, R.z);
-    R.s = Math.min(42, hv + Math.max(0, -R.vy) * clamp(downhill, 0, 0.6));
-    R.heading = Math.atan2(-mdx, -mdz);
-    R.groundVy = null;
-    Sound.land(clamp(-R.vy / 20, 0, 1));
-    emitSpray(14 + Math.min(30, -R.vy * 2), R.x, R.y + 0.1, R.z, mdx * 3, 1.5, mdz * 3, 4);
-    if (e.up < 0.62) return bail('Landed upside down');
-    if (e.mis > 0.85) return bail('Landed sideways');
-    if (impact > 13.5) return bail('Flat landing');
-    if (e.switchLand) R.switch = !R.switch;
-    const d = describe(t), base = trickPoints(d, t);
-    const clean = e.mis < 0.26 && e.up > 0.93 && impact < 9;
-    if (!clean) R.s *= 0.85;
-    if (d.name === 'Straight Air' && t.airTime < 0.7) { R.t = null; return; }
-    award(d.name, base, clean);
+    const t = R.t, n = normalAt(R.p.x, R.p.z);
+    if (n.y < 0.72) n.set(0, 1, 0);   // came down on the face of a drop
+    lastN.copy(n);
+    const vn = R.v.dot(n), impact = Math.max(0, -vn);
+    R.v.addScaledVector(n, -vn);                     // the slope soaks up the impact, the rest carries on
+    R.p.y = H(R.p.x, R.p.z); R.air = false;
+    const o = airOrientation(), m = misalign(o.fwd, R.v);
+    R.yaw = Math.atan2(-m.fh.x, -m.fh.z);
     R.t = null;
+    Sound.land(clamp(impact / 15, 0, 1));
+    emitSpray(14 + Math.min(30, impact * 2), R.p.x, R.p.y + 0.1, R.p.z, R.v.x * 0.15, 1.5, R.v.z * 0.15, 4);
+    if (o.up.y < 0.6) return bail(o.up.y < 0 ? 'Landed upside down' : 'Landed on your back');
+    if (m.mis > 0.95) return bail('Landed sideways');
+    if (impact > 17.5) return bail('Flat landing');
+    const d = describe(t), base = trickPoints(d, t);
+    const clean = m.mis < 0.26 && o.up.y > 0.93 && impact < 11;
+    if (!clean) R.v.multiplyScalar(0.86);
+    if (d.name === 'Straight Air' && t.airTime < 0.7) return;
+    award(d.name, base, clean);
   }
 
-  function startGrind(r) {
-    const e = landEval();
-    if (e.up < 0.62) return bail('Hit the rail upside down');
-    const slide = e.mis > 0.6;
-    R.grind = { r, time: 0, bal: (Math.random() - .5) * 0.2, drift: 0, slide, name: `${slide ? (r.kind === 'Box' ? 'Boardslide' : 'Lipslide') : (r.kind === 'Box' ? 'Box 50-50' : '50-50')}` };
-    if (e.switchLand) R.switch = !R.switch;
-    R.air = false; R.t = null;
-    R.heading = 0; R.x = r.x; R.y = railTop(r, R.z);
-    R.s = Math.max(6, Math.hypot(R.vx, R.vz));
+  // ---------- rails & boxes ----------
+  function tryGrind(fromAir) {
+    for (const r of RAILS) {
+      if (R.p.z > r.z1 + 0.2 || R.p.z < r.z2 + 0.3 || Math.abs(R.p.x - r.x) > r.hw + 0.38) continue;
+      const at = railAt(r, R.p.z); if (!at) continue;
+      const dy = R.p.y - at.y;
+      if (fromAir ? (dy > -0.35 && dy < 0.6 && R.v.y < 2.5) : (dy > -0.3 && dy < 0.35)) { startGrind(r, at, fromAir); return true; }
+    }
+    return false;
+  }
+  function startGrind(r, at, fromAir) {
+    let rel = wrapPi(R.yaw), entry = 0, up = 1, spinSign = 0;
+    if (fromAir && R.t) {
+      const o = airOrientation(); up = o.up.y;
+      const fh = new V(o.fwd.x, 0, o.fwd.z).normalize();
+      rel = Math.atan2(-fh.x, -fh.z);
+      entry = Math.round(Math.abs(R.t.spin) / (Math.PI / 2)) * 90;
+      spinSign = Math.sign(R.t.spin);
+    }
+    if (up < 0.6) return bail('Hit the rail upside down');
+    const a = Math.abs(wrapPi(rel));
+    const slide = a > 0.7 && a < Math.PI - 0.7;
+    const sw = !slide && a >= Math.PI / 2;
+    const side = slide ? ((spinSign || Math.sign(wrapPi(rel))) > 0 ? 'Boardslide' : 'Lipslide') : null;
+    R.grind = { r, time: 0, bal: (Math.random() - .5) * 0.15, drift: 0, slide, side, sw, entry: entry >= 180 ? entry : 0, press: null, pressT: 0, curPress: null,
+      s: Math.max(4, Math.hypot(R.v.x, R.v.z)), rel: slide ? Math.sign(wrapPi(rel) || 1) * Math.PI / 2 : (sw ? Math.PI : 0) };
+    R.air = false; R.t = null; R.butter = null;
+    R.p.set(r.x, at.y, R.p.z);
     Sound.land(0.3);
   }
+  const grindName = g => `${g.sw ? 'Switch ' : ''}${g.entry ? g.entry + ' on ' : ''}${g.slide ? g.side : (g.r.kind === 'Box' ? 'Box 50-50' : '50-50')}${g.press && g.pressT > 0.4 ? ' ' + g.press + ' Press' : ''}`;
+  const grindPts = g => Math.round(g.time * 600 * (g.slide ? 1.25 : 1) * (1 + 0.5 * Math.min(1, g.pressT / Math.max(0.1, g.time))) + (g.entry ? g.entry / 90 * 500 : 0));
   function endGrind(popped) {
     const g = R.grind; if (!g) return;
-    const pts = Math.round(g.time * 600 * (g.slide ? 1.3 : 1));
+    const r = g.r, a = r.p[r.p.length - 2], b = r.p[r.p.length - 1];
+    const at = railAt(r, clamp(R.p.z, r.z2, r.z1)) || { dy: (b.y - a.y) / (a.z - b.z) };
+    R.v.set(0, at.dy, -1).normalize().multiplyScalar(g.s);
+    if (popped) R.v.y += 4.2;
     R.grind = null;
-    if (g.time > 0.25) award(`${R.switch ? 'Switch ' : ''}${g.name} ${g.time.toFixed(1)}s`, pts, false);
-    launch(popped ? 5.5 : 1.5);
+    if (g.time > 0.25) award(`${grindName(g)} ${g.time.toFixed(1)}s`, grindPts(g), false);
+    // keep the ski angle you had on the rail; after a slide the skis swing back straight unless you spin out
+    R.air = true; R.yaw0 = 0;
+    R.t = newAir({ switch: g.sw, fromRail: true, spin: g.rel, unwind: g.slide });
+    R.p.y += 0.05;
+  }
+
+  // ---------- butters ----------
+  function endButter() {
+    const b = R.butter; R.butter = null;
+    // the skis settle onto the nearest straight line if you're close enough
+    const settle = Math.round(b.spin / Math.PI) * Math.PI - b.spin;
+    if (Math.abs(settle) < 1.05) { R.yaw += settle; b.spin += settle; }
+    const m = misalign(fwdOf(R.yaw), R.v), sp = Math.hypot(R.v.x, R.v.z);
+    const deg = Math.round(Math.abs(b.spin) / Math.PI) * 180;
+    if (m.mis < 0.5) { if (deg >= 180) award(`${b.sw ? 'Switch ' : ''}${b.kind} Butter ${deg}`, BUTTER_PTS[deg] ?? 5600 + (deg - 1080) * 8, m.mis < 0.2); }
+    else if (m.mis > 1.2 && sp > 8) bail('Caught an edge');
   }
 
   function rideStep(dt, I) {
     if (R.bail > 0) {
       R.bail -= dt;
-      const dx = -Math.sin(R.heading), dz = -Math.cos(R.heading);
-      R.s = Math.max(0, R.s - 14 * dt);
-      R.x += dx * R.s * dt; R.z += dz * R.s * dt; R.x = clamp(R.x, -40, 40);
-      if (R.air) { R.vy -= G * dt; R.y += R.vy * dt; if (R.y < H(R.x, R.z)) { R.y = H(R.x, R.z); R.air = false; } } else R.y = H(R.x, R.z);
+      const sp = Math.max(0, speedOf() - 14 * dt);
+      R.v.setLength(sp);
+      if (R.air) { R.v.y -= G * dt; }
+      R.p.addScaledVector(R.v, dt); R.p.x = clamp(R.p.x, -40, 40);
+      const gy = H(R.p.x, R.p.z);
+      if (R.p.y <= gy) { R.p.y = gy; R.air = false; projectV(); }
       pivot.rotation.x += R.tumble.rx * dt; pivot.rotation.y += R.tumble.ry * dt; pivot.rotation.z += R.tumble.rz * dt;
-      R.tumble.rx *= Math.exp(-2 * dt); R.tumble.ry *= Math.exp(-2 * dt); R.tumble.rz *= Math.exp(-2 * dt);
-      if (Math.random() < 0.5) emitSpray(2, R.x, R.y + 0.2, R.z, 0, 1, 0, 3);
+      for (const k of ['rx', 'ry', 'rz']) R.tumble[k] *= Math.exp(-2 * dt);
+      if (Math.random() < 0.5) emitSpray(2, R.p.x, R.p.y + 0.2, R.p.z, 0, 1, 0, 3);
       if (R.bail <= 0) respawn();
       return;
     }
 
+    // ---------- on a rail ----------
     if (R.grind) {
       const g = R.grind, r = g.r;
-      const slopeR = (railTop(r, r.z2) - railTop(r, r.z1)) / (r.z1 - r.z2);   // negative = downhill
-      R.s = clamp(R.s + (-G * slopeR - 0.6) * dt, 3, 40);
-      R.z -= R.s * dt; R.x = r.x; R.y = railTop(r, R.z); R.heading = 0;
+      const at = railAt(r, R.p.z); if (!at) return endGrind(false);
+      const len = Math.sqrt(1 + at.dy * at.dy), sinA = -at.dy / len, cosA = 1 / len;
+      g.s = clamp(g.s + (G * sinA - (r.kind === 'Box' ? 1.3 : 0.8)) * dt, 2.5, 40);
+      R.p.z -= g.s * cosA * dt; R.p.x = r.x;
+      if (R.p.z <= r.z2) return endGrind(false);
+      const at2 = railAt(r, R.p.z); if (!at2) return endGrind(false);
+      R.p.y = at2.y;
+      R.v.set(0, at2.dy, -1).normalize().multiplyScalar(g.s);
       g.time += dt;
-      // balance: drift grows the longer you hold it, A/D pushes you back
-      g.drift += (Math.random() - 0.5) * 6 * dt; g.drift = clamp(g.drift, -1.2, 1.2);
-      g.bal += (g.drift * (0.7 + g.time * 0.35) + ((I.steerR ? 1 : 0) - (I.steerL ? 1 : 0)) * 2.4) * dt;
-      if (Math.abs(g.bal) > 1) { R.grind = null; launch(0.5); R.x += Math.sign(g.bal) * 0.6; R.t = null; bail('Lost balance'); return; }
-      if (Math.random() < 0.4) emitSpray(1, R.x, R.y, R.z, 0, 0.5, 2, 1.5);
-      const popNow = I.pop && !R.popWasDown; R.popWasDown = I.pop;
+      g.curPress = I.up ? 'Nose' : I.downK ? 'Tail' : null;
+      if (g.curPress) { g.pressT += dt; g.press = g.curPress; }
+      // balance: drift grows with time and presses; A/D push back toward the middle
+      const diff = (0.7 + g.time * 0.3) * (g.curPress ? 1.5 : 1) * (r.kind === 'Box' ? 0.6 : 1);
+      g.drift = clamp(g.drift + (Math.random() - 0.5) * 7 * dt, -1.3, 1.3);
+      g.bal += (g.drift * diff + ((I.steerR ? 1 : 0) - (I.steerL ? 1 : 0)) * 2.6) * dt;
+      if (Math.abs(g.bal) > 1) {
+        R.grind = null; R.air = true; R.v.x += Math.sign(g.bal) * 2.5;
+        return bail('Lost balance');
+      }
+      if (Math.random() < 0.5) emitSpray(1, R.p.x, R.p.y, R.p.z, 0, 0.6, 2, 1.5);
+      const popNow = !I.pop && R.popWasDown; R.popWasDown = I.pop;
       if (popNow) { Sound.pop(); return endGrind(true); }
-      if (R.z <= r.z2) return endGrind(false);
       return;
     }
 
+    // ---------- on the snow ----------
     if (!R.air) {
-      // ---------- on snow ----------
-      const steer = (I.steerL ? 1 : 0) - (I.steerR ? 1 : 0);
-      R.heading += steer * (1.9 / (1 + Math.max(0, R.s) / 30)) * dt;
-      R.heading = clamp(wrapPi(R.heading), -1.5, 1.5);
-      const dx = -Math.sin(R.heading), dz = -Math.cos(R.heading);
-      const [gx, gz] = grad(R.x, R.z), ga = gx * dx + gz * dz;
-      const tuck = I.up, brake = I.downK;
-      let a = -G * ga / Math.sqrt(1 + ga * ga);
-      a -= Math.sign(R.s) * (0.35 + Math.abs(steer) * 1.4 + (brake ? 9 : 0));
-      a -= Math.sign(R.s) * R.s * R.s * (tuck ? 0.0028 : 0.006);
-      if (tuck && R.s < 4) a += 3;   // skate off the start
-      R.s = clamp(R.s + a * dt, -6, 42);
-      if (Math.abs(R.s) < 0.15 && !tuck && Math.abs(ga) < 0.05) R.s = 0;
-      const step = R.s * dt / Math.sqrt(1 + ga * ga);
-      const nx = clamp(R.x + dx * step, -44, 44), nz = R.z + dz * step;
-      const ny = H(nx, nz);
-      const vyNow = (ny - R.y) / dt;
-      R.x = nx; R.z = nz;
-      // crouch / pop
-      R.crouch = lerp(R.crouch, I.pop ? 1 : tuck ? 0.65 : brake ? 0.25 : 0.1, Math.min(1, dt * 10));
-      if (I.pop) R.popHold = Math.min(0.6, R.popHold + dt);
+      const n = projectV();
+      const gt = new V(0, -G, 0); gt.addScaledVector(n, -gt.dot(n));
+      R.v.addScaledVector(gt, dt);
+      const sIn = (I.left ? 1 : 0) - (I.right ? 1 : 0);
+      let sp = R.v.length();
+      // butters: press the nose (W) or tail (S), A/D spin the skis on the snow
+      const press = I.up ? 'Nose' : I.downK ? 'Tail' : null;
+      if (press && !R.butter) R.butter = { kind: press, spin: 0, rate: 0, sw: isSwitch() };
+      if (R.butter) {
+        const b = R.butter;
+        b.rate += (sIn * 4.8 - b.rate) * Math.min(1, dt * 10);
+        R.yaw += b.rate * dt; b.spin += b.rate * dt;
+        if (!press && !I.pop && !R.popWasDown) endButter();   // a pop on this same frame takes the butter with it
+        if (R.bail > 0) return;
+      } else {
+        const steer = (I.steerL ? 1 : 0) - (I.steerR ? 1 : 0);
+        R.yaw += steer * (2.3 / (1 + sp / 22)) * dt;
+        R.lean = lerp(R.lean, steer * Math.min(0.5, sp / 35), Math.min(1, dt * 8));
+      }
+      R.braking = I.brake && !R.butter;
+      // edges: the skis pull the direction of travel toward where they point; a big angle skids and scrubs speed
+      const f = fwdOf(R.yaw); f.addScaledVector(n, -f.dot(n)).normalize();
+      let ang = 0;
+      if (sp > 0.2) {
+        const vd = R.v.clone().divideScalar(sp);
+        const target = vd.dot(f) >= 0 ? f : f.clone().negate();
+        ang = Math.acos(clamp(vd.dot(target), -1, 1));
+        const grip = R.butter ? 0.35 : R.braking ? 0.6 : 5.5 * (1 + sp / 30);
+        if (ang > 1e-4) { const axis = new V().crossVectors(vd, target).normalize(); R.v.applyAxisAngle(axis, Math.min(ang, grip * dt)); }
+        const mu = 0.038 + (R.braking ? 0.95 : 0) + Math.max(0, Math.min(1.2, ang) - 0.22) * 0.55 + (R.butter ? 0.04 : 0);   // a clean carve costs almost nothing; skidding scrubs speed
+        const drag = I.tuck && !R.butter ? 0.0038 : 0.0055;
+        sp = Math.max(0, sp - (mu * G + drag * sp * sp) * dt);
+        R.v.setLength(sp);
+      }
+      R.skid = R.braking ? 1 : ang;
+      if (I.tuck && sp < 4 && !R.butter) R.v.addScaledVector(f, 4 * dt);   // skate / push off
+      // loading the pop; holding A/D while loading pre-winds the spin
+      R.crouch = lerp(R.crouch, I.pop ? 1 : I.tuck ? 0.65 : R.braking ? 0.3 : 0.12, Math.min(1, dt * 10));
+      if (I.pop) { R.popHold = Math.min(0.6, R.popHold + dt); if (!R.butter) R.wind = lerp(R.wind, sIn, Math.min(1, dt * 6)); }
       const released = !I.pop && R.popWasDown; R.popWasDown = I.pop;
       if (released && runStarted) {
-        const v = Math.max(R.groundVy ?? vyNow, vyNow) + 2.6 + R.popHold * 3.2; R.popHold = 0;
-        Sound.pop(); launch(v); R.y += 0.05; return;
+        const pop = 2.6 + R.popHold * 3.2; R.popHold = 0;
+        Sound.pop();
+        if (R.butter) { const b = R.butter; R.butter = null; takeoff(pop, { butter: b.kind, spin: b.spin, spinRate: b.rate * 1.3, switch: b.sw }); }
+        else { takeoff(pop, { spinRate: R.wind * 6.5 }); }
+        R.wind = 0;
+        return;
       }
-      if (!I.pop) R.popHold = 0;
-      // the ground drops away faster than gravity can follow: take off
-      if (R.groundVy !== null && vyNow < R.groundVy - G * dt * 1.1 - 0.3 && Math.abs(R.s) > 4) { launch(R.groundVy); R.y += R.vy * dt; return; }
-      R.y = ny; R.groundVy = vyNow;
-      R.tilt = lerp(R.tilt, Math.atan(ga), Math.min(1, dt * 12));
-      R.lean = lerp(R.lean, steer * Math.min(0.45, Math.abs(R.s) / 40), Math.min(1, dt * 8));
-      if (Math.abs(steer) > 0 && R.s > 8 && Math.random() < 0.8) emitSpray(2, R.x + dz * 0.3 * steer, R.y + 0.05, R.z, -dz * steer * 3, 1.2, dx * steer * 3, 2);
-      if (brake && R.s > 5) emitSpray(3, R.x, R.y + 0.05, R.z, dx * 2, 1.5, dz * 2, 3);
-      // trees
-      for (const o of obstacles) if (Math.abs(o.z - R.z) < 2 && Math.hypot(o.x - R.x, o.z - R.z) < o.r + 0.3) return bail('Tree!');
-      // remember a safe spot to respawn from
+      if (!I.pop) { R.popHold = 0; R.wind = lerp(R.wind, 0, Math.min(1, dt * 4)); }
+      // move along the slope; if the snow drops away faster than we follow (a lip, a roller), we're airborne
+      R.p.addScaledVector(R.v, dt);
+      R.p.x = clamp(R.p.x, -44, 44);
+      const gy = H(R.p.x, R.p.z);
+      if (R.p.y > gy + 0.05 && sp > 3) { if (R.butter) { const b = R.butter; R.butter = null; takeoff(0, { butter: b.kind, spin: b.spin, spinRate: b.rate, switch: b.sw }); } else takeoff(0); return; }
+      R.p.y = gy;
+      if (tryGrind(false)) return;
+      // spray from carving, skidding and braking
+      if (sp > 6 && (ang > 0.12 || R.braking) && Math.random() < 0.9) { const side = new V().crossVectors(n, f).multiplyScalar(Math.sign(R.lean || 1)); emitSpray(R.braking ? 4 : 2, R.p.x, R.p.y + 0.05, R.p.z, side.x * 3 + R.v.x * 0.2, 1.4, side.z * 3 + R.v.z * 0.2, 2.5); }
+      for (const o of obstacles) if (Math.abs(o.z - R.p.z) < 2 && Math.hypot(o.x - R.p.x, o.z - R.p.z) < o.r + 0.3) return bail('Tree!');
+      const near = KICKERS.some(k => R.p.z < k.z + k.len + 12 && R.p.z > k.z - 4) || (R.p.z < CLIFF_Z + 15 && R.p.z > CLIFF_Z - 4) || RAILS.some(r => R.p.z < r.z1 + 10 && R.p.z > r.z2 - 4);
       R.safeT += dt;
-      const nearFeature = KICKERS.some(k => R.z < k.z + k.len + 12 && R.z > k.z - 4) || (R.z < CLIFF_Z + 15 && R.z > CLIFF_Z - 4) || RAILS.some(r => R.z < r.z1 + 10 && R.z > r.z2 - 4);
-      if (R.safeT > 1 && R.s > 4 && Math.abs(R.heading) < 1 && !nearFeature) { R.safeT = 0; R.safe = { x: R.x, z: R.z, heading: R.heading }; }
+      const treeAhead = obstacles.some(o => o.z < R.p.z + 2 && o.z > R.p.z - 22 && Math.abs(o.x - R.p.x) < 3);
+      if (R.safeT > 1 && sp > 4 && !R.butter && !near && !treeAhead && !isSwitch() && Math.abs(R.p.x) < HALF_W - 2) { R.safeT = 0; R.safe = { x: R.p.x, z: R.p.z, yaw: clamp(wrapPi(R.yaw), -0.5, 0.5) }; }
       return;
     }
 
@@ -695,35 +828,33 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
     const t = R.t;
     t.airTime += dt;
     const sIn = (I.left ? 1 : 0) - (I.right ? 1 : 0);
-    if (sIn) t.spinRate += (sIn * 7.4 - t.spinRate) * Math.min(1, dt * 12);
-    else t.spinRate *= Math.exp(-9 * dt);
+    if (sIn) t.spinRate += (sIn * 9 - t.spinRate) * Math.min(1, dt * 14);
+    else if (t.unwind) {   // swing back straight after a slide
+      const target = Math.round((R.yaw0 + t.spin) / Math.PI) * Math.PI - R.yaw0;
+      t.spinRate = (target - t.spin) * 7;
+    } else t.spinRate *= Math.exp(-14 * dt);
+    if (sIn) t.unwind = false;
     t.spin += t.spinRate * dt;
-    const pIn = (I.downK ? 1 : 0) - (I.up ? 1 : 0);   // S = back, W = front
+    const pIn = (I.downK ? 1 : 0) - (I.up ? 1 : 0);   // S = back (cork), W = front (misty)
     if (pIn) t.pitchRate += (pIn * 5.4 - t.pitchRate) * Math.min(1, dt * 16);
-    else { const w = wrapPi(t.pitch); if (Math.abs(w) < 1.35) t.pitchRate = -w * 6.5; else t.pitchRate = Math.sign(t.pitchRate || w) * Math.max(Math.abs(t.pitchRate), 3.4); }
+    else { const w = wrapPi(t.pitch); t.pitchRate = Math.abs(w) < 1.35 ? -w * 6.5 : Math.sign(t.pitchRate || w) * Math.max(Math.abs(t.pitchRate), 3.4); }
     t.pitch += t.pitchRate * dt;
-    const rIn = (I.rollL ? 1 : 0) - (I.rollR ? 1 : 0);
-    if (rIn) t.rollRate += (rIn * 5 - t.rollRate) * Math.min(1, dt * 9);
-    else { const w = wrapPi(t.roll); t.rollRate = Math.abs(w) < 1.4 ? -w * 6 : Math.sign(t.rollRate || w) * 3.4; }
+    const rIn = (I.rollL ? 1 : 0) - (I.rollR ? 1 : 0);   // arrows roll off-axis (bio)
+    if (rIn) t.rollRate += (rIn * 5.2 - t.rollRate) * Math.min(1, dt * 14);
+    else { const w = wrapPi(t.roll); t.rollRate = Math.abs(w) < 1.4 ? -w * 6 : Math.sign(t.rollRate || w) * Math.max(Math.abs(t.rollRate), 3.4); }
     t.roll += t.rollRate * dt;
     if (Math.abs(t.pitch) < Math.PI) t.maxPitch = Math.max(t.maxPitch, Math.abs(t.pitch));
-    t.maxRoll = Math.max(t.maxRoll, Math.abs(wrapPi(t.roll)));
+    if (Math.abs(t.roll) < Math.PI) t.maxRoll = Math.max(t.maxRoll, Math.abs(t.roll));
     if (I.grab) { if (t.curGrab !== I.grab) { t.curGrab = I.grab; t.curGrabT = 0; } t.curGrabT += dt; if (t.curGrabT > t.grabTime) { t.grabTime = t.curGrabT; t.grabName = I.grab; } }
     else t.curGrab = null;
     R.crouch = lerp(R.crouch, I.grab ? 1 : 0.35, Math.min(1, dt * 10));
     R.popWasDown = I.pop;
-    R.vy -= G * dt;
-    R.vx *= Math.exp(-0.05 * dt); R.vz *= Math.exp(-0.05 * dt);
-    R.x = clamp(R.x + R.vx * dt, -44, 44); R.z += R.vz * dt; R.y += R.vy * dt;
-    for (const r of RAILS) {
-      if (R.vy <= 0.5 && R.z <= r.z1 && R.z >= r.z2 - 0.5 && Math.abs(R.x - r.x) < r.hw + 0.35) {
-        const top = railTop(r, R.z);
-        if (R.y >= top - 0.35 && R.y <= top + 0.6) return startGrind(r);
-      }
-    }
-    for (const o of obstacles) if (R.y - H(o.x, o.z) < 7 && Math.hypot(o.x - R.x, o.z - R.z) < o.r + 0.3) return bail('Tree!');
-    const gy = H(R.x, R.z);
-    if (R.y <= gy) land();
+    R.v.y -= G * dt;
+    R.v.multiplyScalar(Math.exp(-0.04 * dt));
+    R.p.addScaledVector(R.v, dt); R.p.x = clamp(R.p.x, -44, 44);
+    if (tryGrind(true)) return;
+    for (const o of obstacles) if (R.p.y - H(o.x, o.z) < 7 && Math.hypot(o.x - R.p.x, o.z - R.p.z) < o.r + 0.3) return bail('Tree!');
+    if (R.p.y <= H(R.p.x, R.p.z)) land();
   }
 
   // =========================================================
@@ -784,16 +915,21 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
   const setT = (id, v) => { if (hud[id] !== v) { hud[id] = v; $(id).textContent = v; } };
 
   function syncRider(dt) {
-    skier.position.set(R.x, R.y, R.z);
-    if (R.grind) {
-      skier.rotation.set(Math.atan((railTop(R.grind.r, R.grind.r.z2) - railTop(R.grind.r, R.grind.r.z1)) / (R.grind.r.z1 - R.grind.r.z2)), R.heading + (R.switch ? Math.PI : 0), R.grind.bal * 0.5);
-      pivot.rotation.set(0, R.grind.slide ? Math.PI / 2 : 0, 0);
-    } else if (R.bail <= 0) {
-      skier.rotation.set(R.air ? lerp(skier.rotation.x, 0, Math.min(1, dt * 3)) : R.tilt, R.heading + (R.switch ? Math.PI : 0), R.air ? 0 : R.lean);
-      if (R.t) pivot.rotation.set(R.t.pitch * (R.switch ? -1 : 1), R.t.spin, R.t.roll, 'YXZ');
-      else pivot.rotation.set(0, 0, 0);
+    skier.position.copy(R.p);
+    if (R.bail <= 0) {
+      if (R.grind) {
+        const g = R.grind, at = railAt(g.r, R.p.z);
+        skier.rotation.set(at ? Math.atan(at.dy) : 0, g.rel, g.bal * 0.45);
+        pivot.rotation.set(g.curPress === 'Nose' ? -0.3 : g.curPress === 'Tail' ? 0.3 : 0, 0, 0);
+      } else if (R.air && R.t) {
+        skier.rotation.set(lerp(skier.rotation.x, 0, Math.min(1, dt * 4)), R.yaw0, 0);
+        pivot.rotation.set(R.t.pitch, R.t.spin, R.t.roll);
+      } else {
+        const n = normalAt(R.p.x, R.p.z), f = fwdOf(R.yaw); f.addScaledVector(n, -f.dot(n)).normalize();
+        skier.rotation.set(Math.asin(clamp(f.y, -1, 1)), R.yaw + (R.braking ? 1.1 : 0), R.butter ? 0 : R.lean);
+        pivot.rotation.set(R.butter ? (R.butter.kind === 'Nose' ? -0.32 : 0.32) : 0, 0, 0);
+      }
     }
-    pivot.rotation.order = 'YXZ';
     const c = R.crouch;
     upper.position.y = 0.88 - c * 0.3; legs.scale.y = 1 - c * 0.3; legs.position.y = -c * 0.02;
     const grabbing = R.t && R.t.curGrab;
@@ -817,13 +953,14 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
       look = new THREE.Vector3(0, H(0, -60) + 1, -60);
       camPos.lerp(target, 1 - Math.exp(-dt * 2)); camLook.lerp(look, 1 - Math.exp(-dt * 2));
     } else {
-      let dx, dz;
-      if (R.air) { const hv = Math.hypot(R.vx, R.vz) || 1; dx = R.vx / hv; dz = R.vz / hv; }
-      else { dx = -Math.sin(R.heading); dz = -Math.cos(R.heading); }
-      const sp = Math.abs(R.air ? Math.hypot(R.vx, R.vz) : R.s);
-      const back = 6.5 + sp * 0.06, up = 2.6 + (R.air ? 1.2 : 0);
-      target = new THREE.Vector3(R.x - dx * back, Math.max(R.y + up, H(R.x - dx * back, R.z - dz * back) + 1.6), R.z - dz * back);
-      look = new THREE.Vector3(R.x + dx * 5, R.y + 0.8, R.z + dz * 5);
+      // follow the direction of travel, not the way the skis point, so spins and switch riding don't swing the camera
+      const hv = new V(R.v.x, 0, R.v.z);
+      if (hv.lengthSq() > 4) hv.normalize(); else hv.copy(fwdOf(R.yaw));
+      camDir.lerp(hv, 1 - Math.exp(-dt * 3)).normalize();
+      const sp = speedOf(), back = 6.5 + sp * 0.06, up = 2.6 + (R.air ? 1.2 : 0);
+      const bx = R.p.x - camDir.x * back, bz = R.p.z - camDir.z * back;
+      target = new THREE.Vector3(bx, Math.max(R.p.y + up, H(bx, bz) + 1.6), bz);
+      look = new THREE.Vector3(R.p.x + camDir.x * 5, R.p.y + 0.8, R.p.z + camDir.z * 5);
       camPos.lerp(target, 1 - Math.exp(-dt * 6)); camLook.lerp(look, 1 - Math.exp(-dt * 8));
       camera.fov = lerp(camera.fov, 68 + Math.min(14, sp * 0.35), Math.min(1, dt * 2)); camera.updateProjectionMatrix();
     }
@@ -832,17 +969,22 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
     const f = state === 'lift' ? cabin.position : skier.position;
     sun.position.set(f.x + SUN.x * 60, f.y + SUN.y * 60, f.z + SUN.z * 60); sun.target.position.copy(f);
   }
+  const camDir = new THREE.Vector3(0, 0, -1);
 
   function hudStep(I) {
     setT('hScore', score.toLocaleString('en-US'));
     setT('hMult', `LINE x${line.toFixed(1)}`);
     setT('hTime', fmt(runTime));
-    setT('hSpeed', `${Math.round(Math.abs(R.air ? Math.hypot(R.vx, R.vz) : R.s || 0) * 3.6)} km/h`);
+    setT('hSpeed', `${Math.round(speedOf() * 3.6)} km/h`);
     let tk = '';
-    if (state === 'ride' && R.air && R.t && R.t.airTime > 0.15 && R.bail <= 0) {
-      const d = describe(R.t);
-      if (d.name !== 'Straight Air' || R.t.curGrab) tk = `${d.name}<small>${trickPoints(d, R.t).toLocaleString('en-US')} pts</small>`;
-    } else if (R.grind) tk = `${R.grind.name}<small>${(R.grind.time * 600 * (R.grind.slide ? 1.3 : 1)).toFixed(0)} pts</small>`;
+    if (state === 'ride' && R.bail <= 0) {
+      if (R.air && R.t && R.t.airTime > 0.15) {
+        const d = describe(R.t);
+        if (d.name !== 'Straight Air' || R.t.curGrab) tk = `${d.name}<small>${trickPoints(d, R.t).toLocaleString('en-US')} pts</small>`;
+      } else if (R.grind) tk = `${grindName(R.grind)}<small>${grindPts(R.grind).toLocaleString('en-US')} pts</small>`;
+      else if (R.butter && Math.abs(R.butter.spin) > 0.3) { const deg = Math.round(Math.abs(R.butter.spin) / Math.PI) * 180; tk = `${R.butter.kind} Butter ${deg || ''}<small>${(BUTTER_PTS[deg] || 0).toLocaleString('en-US')} pts</small>`; }
+      else if (R.butter) tk = `${R.butter.kind} Press<small>A / D to butter</small>`;
+    }
     if (hud.trick !== tk) { hud.trick = tk; $('trick').innerHTML = tk; }
     $('balance').hidden = !R.grind;
     if (R.grind) $('balMark').style.left = `${50 + clamp(R.grind.bal, -1, 1) * 50}%`;
@@ -877,12 +1019,12 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
       if (R.restartHold >= 2) { startRun(); }
       const steps = Math.ceil(dt / 0.008);
       for (let i = 0; i < steps && state === 'ride'; i++) rideStep(dt / steps, I);
-      if (!runStarted && R.z < START.z - 3) runStarted = true;
+      if (!runStarted && R.p.z < START.z - 3) runStarted = true;
       if (runStarted) runTime += dt;
-      if (R.z < FINISH_Z && R.bail <= 0 && state === 'ride') finishRun();
+      if (R.p.z < FINISH_Z && R.bail <= 0 && state === 'ride') finishRun();
     } else if (state === 'end' && !R.air) {
-      R.s = Math.max(0, R.s - 10 * dt);
-      R.z -= R.s * dt; R.y = H(R.x, R.z); R.crouch = lerp(R.crouch, 0.2, dt * 4);
+      const sp = Math.max(0, speedOf() - 10 * dt); R.v.setLength(sp); R.v.y = 0;
+      R.p.addScaledVector(R.v, dt); R.p.y = H(R.p.x, R.p.z); R.crouch = lerp(R.crouch, 0.2, dt * 4); R.butter = null; R.braking = sp > 2;
     }
     if (state !== 'lift' && state !== 'title') syncRider(dt);
     // spray particles
@@ -893,13 +1035,12 @@ body { background: var(--ink); color: var(--snow); font-family: var(--ui); overf
     camStep(dt);
     hudStep(I);
     if (noteT > 0) { noteT -= dt; if (noteT <= 0) $('muteNote').textContent = ''; }
-    const turning = (I.steerL || I.steerR) ? 1 : I.downK ? 0.8 : 0.15;
-    Sound.update(state === 'ride' ? Math.abs(R.air ? Math.hypot(R.vx, R.vz) : R.s) : 0, turning, R.air, !!R.grind);
+    Sound.update(state === 'ride' ? speedOf() : 0, clamp(R.skid * 1.5 + 0.12, 0, 1.2), R.air, !!R.grind);
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
   resize();
-  skier.position.set(START.x, H(START.x, START.z), START.z);
+  skier.position.set(START.x, H(START.x, START.z), START.z); pivot.rotation.order = 'YXZ';
   requestAnimationFrame(frame);
 })();
 </script>
