@@ -42,6 +42,32 @@ body {
 .pop.hot { color: var(--amber); text-shadow: 0 2px 0 #000, 0 0 18px #ffb62788; font-size: 30px; }
 .pop.show { animation: pop 1s ease-out forwards; }
 @keyframes pop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }
+.tier { position: absolute; top: 66px; left: 50%; transform: translateX(-50%); font-family: var(--display); font-size: 13px; letter-spacing: .1em; color: var(--amber); text-shadow: 0 1px 0 #000, 0 0 10px #000a; pointer-events: none; white-space: nowrap; }
+.chain { position: absolute; top: 88px; left: 50%; transform: translateX(-50%) scale(.9); display: flex; flex-direction: column; align-items: center; gap: 0; pointer-events: none; opacity: 0; transition: opacity .15s, transform .15s; text-shadow: 0 2px 0 #000, 0 0 14px #000a; font-variant-numeric: tabular-nums; }
+.chain.on { opacity: 1; transform: translateX(-50%) scale(1); }
+.chain b { font-family: var(--display); font-weight: 400; font-size: 38px; line-height: 1; color: var(--cyan); }
+.chain span { font-size: 13px; color: var(--paint); }
+.chain em { font-style: normal; font-family: var(--display); color: var(--cyan); font-size: 16px; }
+.chain small { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #c3c7d6; }
+.feed { position: absolute; right: 12px; top: 74px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.fitem { display: flex; gap: 8px; align-items: baseline; background: #0b0d14b3; border-radius: 3px; padding: 3px 8px; font-size: 12px; letter-spacing: .06em; color: var(--paint); animation: fitem 2.4s ease-out forwards; }
+.fitem b { font-family: var(--display); font-weight: 400; font-size: 14px; color: var(--cyan); }
+.fitem.hot b, .fitem.hot span { color: var(--amber); }
+.fitem.bank b { color: #7be08a; }
+.fitem.bonus b { color: var(--amber); }
+.fitem.lost b, .fitem.lost span { color: var(--danger); }
+@keyframes fitem { 0% { opacity: 0; transform: translateX(16px); } 8% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.mute { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; border-radius: 4px; border: 1px solid #ffffff2a; background: #0b0d14cc; color: var(--paint); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+.mute:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.mute .cross { display: none; }
+.mute.off { color: var(--muted); }
+.mute.off .cross { display: inline; }
+.mute.off .wave { display: none; }
+.breakdown { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 13px; color: #c3c7d6; text-align: left; font-variant-numeric: tabular-nums; }
+.breakdown b { font-family: var(--display); font-weight: 400; color: var(--paint); text-align: right; }
+.breakdown .neg { color: var(--danger); }
+@media (max-width: 520px) { .feed { top: auto; bottom: 40px; right: 8px; } .chain b { font-size: 30px; } .gauge { min-width: 46px; padding: 3px 6px; } .gauge b { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { .fitem { animation-duration: .01s; animation-delay: 2.3s; opacity: 1; } }
 .flash { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px 20px #ff2a3dcc; opacity: 0; }
 .flash.on { animation: flash .5s ease-out; }
 @keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
@@ -72,7 +98,7 @@ body {
 .btn.ghost:hover { border-color: #ffffff80; }
 .btnrow { display: flex; gap: 8px; }
 .btnrow .btn { flex: 1; white-space: nowrap; }
-.stage:not([data-state=play]):not([data-state=wreck]) :is(.hud, .nosbar, .combobar) { display: none; }
+.stage:not([data-state=play]):not([data-state=wreck]) :is(.hud, .nosbar, .combobar, .tier, .chain, .feed) { display: none; }
 .cash { font-family: var(--display); color: #7be08a; font-variant-numeric: tabular-nums; }
 .earned { font-size: 15px; }
 .hs { display: flex; flex-direction: column; gap: 4px; text-align: left; }
@@ -131,9 +157,13 @@ body {
     <div class="hud">
       <div class="gauge speed"><b id="hSpeed">0</b><span>mph</span></div>
       <div class="gauge"><b id="hScore">0</b><span>score</span></div>
-      <div class="gauge combo"><b id="hCombo">x1</b><span>combo</span></div>
+      <div class="gauge combo"><b id="hCombo">x1</b><span>chain</span></div>
       <div class="gauge"><b id="hHull">100</b><span>hull %</span></div>
     </div>
+    <div class="tier" id="hTier"></div>
+    <div class="chain" id="chain"><b id="chainMult">x1</b><span><em id="chainPot">0</em> pts at stake</span><small id="chainCount"></small></div>
+    <div class="feed" id="feed" aria-live="polite"></div>
+    <button class="mute" id="muteBtn" aria-label="Sound" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="cross" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="flash" id="flash"></div>
     <div class="pop" id="pop"></div>
     <div class="combobar"><i id="comboBar"></i></div>
@@ -141,13 +171,14 @@ body {
     <div class="overlay" id="startOv">
       <div class="card">
         <h1>LANE <em>SPLITTER</em></h1>
-        <p>Weave through rush-hour traffic at full speed. Shave past cars for near-miss points, combo and nitro. Scrapes cost hull; a hard hit wrecks you.</p>
+        <p>Weave through rush-hour traffic at full speed. Shave past cars to build a near-miss chain, then let it bank for multiplied points. Get hit and the chain is lost.</p>
         <div class="keys desk-only">
           <kbd>← →</kbd><span>Steer (or A / D)</span>
           <kbd>↑</kbd><span>Throttle (or W)</span>
           <kbd>↓</kbd><span>Brake (or S)</span>
           <kbd>Shift</kbd><span>Nitro (or Space / N)</span>
           <kbd>R</kbd><span>Restart any time</span>
+          <kbd>M</kbd><span>Sound on / off</span>
         </div>
         <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
         <div class="btnrow"><button class="btn" id="startBtn">Drive</button><button class="btn ghost" id="garageBtn">Garage</button></div>
@@ -160,6 +191,7 @@ body {
         <h1 class="crash-title">WRECKED</h1>
         <div class="newhs" id="newHs" hidden>NEW HIGH SCORE!</div>
         <div><div class="stat" id="finalScore">0</div><div class="stat-label" id="finalBest">Best 0</div></div>
+        <div class="breakdown" id="breakdown"></div>
         <p id="finalStats"></p>
         <div class="hs"><ol id="hsOver"></ol></div>
         <p class="earned">Earned <span class="cash" id="earned">$0</span> · Total <span class="cash" id="cashOver">$0</span></p>
@@ -472,12 +504,12 @@ body {
   const paintFor = c => { if (!paintCache.has(c)) paintCache.set(c, paint(c)); return paintCache.get(c); };
 
   const CAR_SPECS = {
-    street: { w: 1.9, l: 4.4, h: 0.62, cabL: 2.2, cabZ: 0.2, cabH: 0.56, taper: 0.86, shrink: 0.72, mass: 1.3, mirrors: true, stripe: 1, playerExtra: { wing: 'small' } },
-    hatch: { w: 1.76, l: 3.8, h: 0.66, cabL: 2.3, cabZ: 0.45, cabH: 0.64, taper: 0.9, shrink: 0.86, mass: 1.1, mirrors: true },
-    muscle: { w: 2.0, l: 4.9, h: 0.64, cabL: 1.9, cabZ: 0.55, cabH: 0.5, taper: 0.84, shrink: 0.68, mass: 1.6, scoop: true, lip: true, stripe: 2 },
-    coupe: { w: 1.95, l: 4.5, h: 0.52, cabL: 1.9, cabZ: 0.35, cabH: 0.46, taper: 0.8, shrink: 0.6, mass: 1.25, wedge: 0.25, wing: 'small' },
-    super: { w: 2.05, l: 4.6, h: 0.46, cabL: 1.8, cabZ: -0.05, cabH: 0.42, taper: 0.7, shrink: 0.5, mass: 1.3, wedge: 0.45, wing: 'big', intakes: true },
-    suv: { w: 2.05, l: 4.9, h: 0.85, cabL: 3.0, cabZ: 0.3, cabH: 0.72, taper: 0.94, shrink: 0.9, mass: 2.0, rails: true, mirrors: true },
+    street: { pitch: 52, w: 1.9, l: 4.4, h: 0.62, cabL: 2.2, cabZ: 0.2, cabH: 0.56, taper: 0.86, shrink: 0.72, mass: 1.3, mirrors: true, stripe: 1, playerExtra: { wing: 'small' } },
+    hatch: { pitch: 64, w: 1.76, l: 3.8, h: 0.66, cabL: 2.3, cabZ: 0.45, cabH: 0.64, taper: 0.9, shrink: 0.86, mass: 1.1, mirrors: true },
+    muscle: { pitch: 38, w: 2.0, l: 4.9, h: 0.64, cabL: 1.9, cabZ: 0.55, cabH: 0.5, taper: 0.84, shrink: 0.68, mass: 1.6, scoop: true, lip: true, stripe: 2 },
+    coupe: { pitch: 58, w: 1.95, l: 4.5, h: 0.52, cabL: 1.9, cabZ: 0.35, cabH: 0.46, taper: 0.8, shrink: 0.6, mass: 1.25, wedge: 0.25, wing: 'small' },
+    super: { pitch: 70, w: 2.05, l: 4.6, h: 0.46, cabL: 1.8, cabZ: -0.05, cabH: 0.42, taper: 0.7, shrink: 0.5, mass: 1.3, wedge: 0.45, wing: 'big', intakes: true },
+    suv: { pitch: 44, w: 2.05, l: 4.9, h: 0.85, cabL: 3.0, cabZ: 0.3, cabH: 0.72, taper: 0.94, shrink: 0.9, mass: 2.0, rails: true, mirrors: true },
     truck: { w: 2.5, l: 12, mass: 5, truck: true },
   };
   const tireGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 14).rotateZ(Math.PI / 2);
@@ -602,6 +634,8 @@ body {
   const keys = { left: false, right: false, up: false, down: false, nitro: false };
   const keyMap = { ShiftLeft: 'nitro', ShiftRight: 'nitro', KeyN: 'nitro', Space: 'nitro', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down' };
   addEventListener('keydown', e => {
+    Sound.init();
+    if (e.code === 'KeyM' && !e.repeat) { Sound.toggle(); updateMuteBtn(); return; }
     if (state === 'garage' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { e.preventDefault(); viewCar(gView + (e.code === 'ArrowLeft' ? -1 : 1)); return; }
     if (e.code === 'KeyR' && !e.repeat) { e.preventDefault(); start(); return; }
     if ((e.code === 'Space' || e.code === 'Enter') && state !== 'play') { e.preventDefault(); start(); return; }
@@ -737,6 +771,7 @@ body {
     save.color = +col; persist(); applyLoadout(); renderGarage();
   });
   function openGarage() {
+    Sound.init();
     if (state !== 'menu') reset();
     state = 'garage';
     $('startOv').hidden = true; $('overOv').hidden = true; $('garageOv').hidden = false;
@@ -748,11 +783,98 @@ body {
   applyLoadout();
 
 
+  // ---------- sound: engine, wind and effects synthesised live (no audio files) ----------
+  const Sound = (() => {
+    let ac = null, master, eng, windGain, hissGain, noise;
+    let muted = false;
+    try { muted = localStorage.getItem('laneSplitterMute') === '1'; } catch (e) {}
+    const VOL = 0.7;
+    const curve = k => { const n = 512, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; };
+    function gainNode(v, to) { const g = ac.createGain(); g.gain.value = v; if (to) g.connect(to); return g; }
+    function loopNoise(filterType, freq, q, to) {
+      const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
+      const f = ac.createBiquadFilter(); f.type = filterType; f.frequency.value = freq; f.Q.value = q;
+      const g = gainNode(0, to); src.connect(f); f.connect(g); src.start(); return g;
+    }
+    function init() {
+      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try {
+        ac = new AC();
+        const comp = ac.createDynamicsCompressor(); comp.connect(ac.destination);
+        master = gainNode(muted ? 0 : VOL, comp);
+        noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+        const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        // engine: three detuned oscillators -> soft clip -> lowpass -> firing-pulse tremolo -> volume
+        const out = gainNode(0, master);
+        const trem = gainNode(0.75, out);
+        const filter = ac.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 600; filter.Q.value = 2.5; filter.connect(trem);
+        const shaper = ac.createWaveShaper(); shaper.curve = curve(5); shaper.connect(filter);
+        const osc = (type, g) => { const o = ac.createOscillator(); o.type = type; o.connect(gainNode(g, shaper)); o.start(); return o; };
+        const o1 = osc('sawtooth', 0.45), o2 = osc('square', 0.3), o3 = osc('sawtooth', 0.12);
+        const lfo = ac.createOscillator(); lfo.type = 'sine'; lfo.connect(gainNode(0.25, trem.gain)); lfo.start();
+        eng = { o1, o2, o3, lfo, filter, out };
+        windGain = loopNoise('bandpass', 700, 0.6, master);
+        hissGain = loopNoise('highpass', 3500, 0.7, master);
+      } catch (e) { ac = null; }
+    }
+    function update(o) {
+      if (!ac || !eng) return;
+      const t = ac.currentTime, f = o.pitch * (0.55 + o.rpm * 1.7);
+      eng.o1.frequency.setTargetAtTime(f, t, 0.03);
+      eng.o2.frequency.setTargetAtTime(f * 0.5, t, 0.03);
+      eng.o3.frequency.setTargetAtTime(f * 2.01, t, 0.03);
+      eng.lfo.frequency.setTargetAtTime(f * 0.5, t, 0.03);
+      eng.filter.frequency.setTargetAtTime(280 + o.throttle * 1500 + o.rpm * 1100, t, 0.05);
+      eng.out.gain.setTargetAtTime(o.on ? 0.09 + o.throttle * 0.11 : 0, t, o.on ? 0.06 : 0.12);
+      windGain.gain.setTargetAtTime(o.on ? Math.min(0.28, (o.speed / 95) ** 2 * 0.3) : 0, t, 0.2);
+      hissGain.gain.setTargetAtTime(o.boost ? 0.12 : 0, t, 0.05);
+    }
+    function burstNoise({ type = 'bandpass', from = 2000, to = 400, q = 1, peak = 0.3, dur = 0.35 }) {
+      if (!ac) return;
+      const t = ac.currentTime, src = ac.createBufferSource(); src.buffer = noise;
+      const f = ac.createBiquadFilter(); f.type = type; f.Q.value = q;
+      f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+      const g = gainNode(0, master); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      src.connect(f); f.connect(g); src.start(t, Math.random()); src.stop(t + dur + 0.05);
+    }
+    function tone(type, from, to, peak, dur, delay = 0) {
+      if (!ac) return;
+      const t = ac.currentTime + delay, o = ac.createOscillator(); o.type = type;
+      o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur);
+      const g = gainNode(0, master); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); o.start(t); o.stop(t + dur + 0.05);
+    }
+    return {
+      init, update,
+      whoosh: s => burstNoise({ from: 2600, to: 350, q: 1.2, peak: 0.22 * s, dur: 0.38 }),
+      scrape: () => burstNoise({ from: 3200, to: 1800, q: 3, peak: 0.25, dur: 0.18 }),
+      crash: big => { burstNoise({ type: 'lowpass', from: 2400, to: 200, q: 0.7, peak: big ? 0.9 : 0.5, dur: big ? 0.9 : 0.4 }); tone('sine', 90, 35, big ? 0.7 : 0.35, 0.45); },
+      ding: n => { tone('sine', 880 * (1 + Math.min(n, 10) * 0.06), 880 * (1 + Math.min(n, 10) * 0.06), 0.16, 0.25); tone('sine', 1320 * (1 + Math.min(n, 10) * 0.06), 1320, 0.1, 0.3, 0.06); },
+      lost: () => tone('sawtooth', 420, 110, 0.12, 0.45),
+      toggle() {
+        muted = !muted;
+        try { localStorage.setItem('laneSplitterMute', muted ? '1' : '0'); } catch (e) {}
+        if (ac) master.gain.setTargetAtTime(muted ? 0 : VOL, ac.currentTime, 0.02);
+        return muted;
+      },
+      get muted() { return muted; },
+      suspend(on) { if (ac) on ? ac.suspend() : ac.resume(); },
+    };
+  })();
+  document.addEventListener('visibilitychange', () => Sound.suspend(document.hidden));
+  function updateMuteBtn() { const b = $('muteBtn'); b.setAttribute('aria-pressed', Sound.muted); b.classList.toggle('off', Sound.muted); b.title = Sound.muted ? 'Sound off (M)' : 'Sound on (M)'; }
+  $('muteBtn').onclick = e => { Sound.init(); Sound.toggle(); updateMuteBtn(); e.currentTarget.blur(); };
+  addEventListener('pointerdown', () => Sound.init(), { once: true });
+  updateMuteBtn();
+
   // ---------- game state ----------
   const V_CRUISE = 33, V_MIN = 9;                     // m/s; top speed and crash tolerance come from upgrades (S)
   const BARRIER_X = ROAD_W / 2 + 2.05;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  let state = 'menu', player, cars = [], score, distance, combo, comboTimer, nearMisses, topSpeed, spawnAcc, time = 0, shake = 0, timeScale = 1, wreckTimer = 0;
+  let p_rpm = 0.2, p_throttle = 0;
+  let state = 'menu', player, cars = [], score, distance, nearMisses, topSpeed, spawnAcc, time = 0, shake = 0, timeScale = 1, wreckTimer = 0;
   const camPos = new THREE.Vector3(0, 3.4, 8.5), camLook = new THREE.Vector3(0, 1, -14);
 
   // debris pool
@@ -790,12 +912,13 @@ body {
     const spec = CAR_SPECS[save.car];
     player = { isPlayer: true, x: laneX(2), z: 0, vx: 0, v: 31, yaw: 0, yawRate: 0, steer: 0, w: spec.w, l: spec.l, mass: spec.mass,
       y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0 };
-    bestAnnounced = false; score = 0; distance = 0; combo = 1; comboTimer = 0; nearMisses = 0; topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
+    bestAnnounced = false; score = 0; distance = 0; nearMisses = 0; p_rpm = 0.2; p_throttle = 0; resetScoring(); topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
     updateHull();
     for (let i = 0; i < 7; i++) spawnCar(-25 - i * 32);
   }
 
   function start() {
+    Sound.init();
     ensurePlayerCar(); applyLoadout();
     reset();
     state = 'play';
@@ -831,6 +954,85 @@ body {
   const hudCache = {};
   const setText = (id, v) => { if (hudCache[id] !== v) { hudCache[id] = v; $(id).textContent = v; } };
   const setWidth = (id, f) => { const v = Math.round(f * 100) + '%'; if (hudCache[id] !== v) { hudCache[id] = v; $(id).style.width = v; } };
+  // ---------- scoring: chains of near misses, speed tiers and bonuses ----------
+  const chainMult = n => Math.min(10, 1 + 0.5 * Math.max(0, n - 1));
+  const chainTime = n => Math.max(2.2, 3.6 - n * 0.07);    // long chains get harder to keep alive
+  const SPEED_TIERS = [[190, 3, 'INSANE SPEED'], [150, 2, 'VERY HIGH SPEED'], [100, 1.5, 'HIGH SPEED']];
+  let chain, runStats;
+  function resetScoring() {
+    chain = { count: 0, pot: 0, timer: 0, lastT: -9, lastSide: 0 };
+    runStats = { drive: 0, chains: 0, bonus: 0, lost: 0, bestMult: 1, threads: 0, cleanTimer: 0, nextMile: 1 };
+    $('feed').innerHTML = '';
+  }
+  function feed(label, pts, kind = '') {
+    const el = document.createElement('div');
+    el.className = 'fitem ' + kind;
+    el.innerHTML = `<span></span><b></b>`;
+    el.firstChild.textContent = label;
+    el.lastChild.textContent = pts ? (pts > 0 ? '+' : '−') + Math.abs(Math.round(pts)).toLocaleString('en-US') : '';
+    const box = $('feed');
+    box.prepend(el);
+    while (box.children.length > 5) box.lastChild.remove();
+    setTimeout(() => el.remove(), 2400);
+  }
+  function addBonus(label, pts) { score += pts; runStats.bonus += pts; feed(label, pts, 'bonus'); checkBest(); }
+  function nearMiss(p, c, gap) {
+    const inches = gap < 0.35, side = Math.sign(c.x - p.x);
+    let pts = (inches ? 200 : 100) * (p.v / MPS / 100);
+    let label = inches ? 'INCHES' : 'NEAR MISS';
+    if (c.l > 8) { pts *= 1.3; label += ' · TRUCK'; }
+    if (p.boosting) { pts *= 1.5; label += ' · NITRO'; }
+    const threaded = chain.count > 0 && time - chain.lastT < 0.4 && side !== chain.lastSide;
+    if (threaded) { pts += 300; label = 'THREAD THE NEEDLE'; runStats.threads++; chain.count++; }
+    chain.count++; chain.pot += pts; chain.timer = chainTime(chain.count); chain.lastT = time; chain.lastSide = side;
+    nearMisses++;
+    p.nitro = Math.min(1, p.nitro + (inches ? 0.22 : 0.14) * S.nitroGain);
+    feed(label, pts, threaded || inches ? 'hot' : '');
+    if (threaded) { showPop('THREAD THE NEEDLE!', true); Sound.ding(chain.count); }
+    else if (inches) showPop('INCHES!', true);
+    Sound.whoosh(inches ? 1 : 0.7);
+  }
+  function bankChain() {
+    if (!chain.count) return;
+    const m = chainMult(chain.count), pts = Math.round(chain.pot * m);
+    score += pts; runStats.chains += pts; runStats.bestMult = Math.max(runStats.bestMult, m);
+    feed(`CHAIN x${m} BANKED`, pts, 'bank');
+    if (chain.count >= 3) showPop(`CHAIN x${m}  +${pts.toLocaleString('en-US')}`, m >= 4);
+    Sound.ding(chain.count);
+    chain.count = 0; chain.pot = 0; chain.timer = 0;
+    checkBest();
+  }
+  function loseChain() {
+    runStats.cleanTimer = 0;
+    if (!chain.count) return;
+    const lostPts = Math.round(chain.pot * chainMult(chain.count));
+    runStats.lost += lostPts;
+    feed('CHAIN LOST', -lostPts, 'lost');
+    Sound.lost();
+    chain.count = 0; chain.pot = 0; chain.timer = 0;
+  }
+  function scoreTick(p, dt) {
+    const mph = p.v / MPS;
+    const tier = SPEED_TIERS.find(t => mph >= t[0]);
+    const drive = mph * 0.3 * (tier ? tier[1] : 1) * dt;
+    score += drive; runStats.drive += drive;
+    setText('hTier', tier ? `${tier[2]} ×${tier[1]}` : '');
+    if (mph > 100) {
+      runStats.cleanTimer += dt;
+      if (runStats.cleanTimer >= 20) { runStats.cleanTimer = 0; addBonus('CLEAN DRIVING', 500); }
+    }
+    if (distance >= runStats.nextMile * 1609) { addBonus(`MILE ${runStats.nextMile}`, 1000 * runStats.nextMile); runStats.nextMile++; }
+    if (chain.timer > 0) { chain.timer -= dt; if (chain.timer <= 0) bankChain(); }
+    checkBest();
+  }
+  function updateChainHud() {
+    const on = chain.count > 0;
+    $('chain').classList.toggle('on', on);
+    setText('hCombo', 'x' + chainMult(chain.count));
+    if (on) { setText('chainMult', 'x' + chainMult(chain.count)); setText('chainPot', Math.round(chain.pot).toLocaleString('en-US')); setText('chainCount', chain.count + (chain.count === 1 ? ' near miss' : ' near misses')); }
+    setWidth('comboBar', on ? chain.timer / chainTime(chain.count) : 0);
+  }
+
   let popTimer;
   function showPop(text, hot) {
     const el = $('pop');
@@ -965,6 +1167,7 @@ body {
       if (into > 3) {
         shake = Math.max(shake, Math.min(0.5, into * 0.04));
         burst(side * BARRIER_X, 0.6, 0, 25, 8);
+        if (!p.wrecked) { Sound.scrape(); loseChain(); }
         if (!p.wrecked) { damage(into * 2.2); flash(); p.slide = 0.4; }
       }
     }
@@ -1020,7 +1223,7 @@ body {
     if (!p.wrecked) topSpeed = Math.max(topSpeed, p.v / MPS);
 
     distance += Math.max(0, p.v) * dt;
-    if (!p.wrecked) { score += (p.v / MPS) * dt * 0.5 * combo; checkBest(); }
+    if (!p.wrecked) scoreTick(p, dt);
 
     const bodies = [...cars, p];
     for (const c of cars) {
@@ -1031,15 +1234,7 @@ body {
       if (!p.wrecked && !c.passed && c.z >= 0) {
         c.passed = true;
         const gap = Math.abs(c.x - p.x) - (c.w + p.w) / 2;
-        if (gap < 0.9 && gap > -0.05 && p.v > c.v + 6.7) {
-          nearMisses++;
-          combo = Math.min(combo + 1, 10); comboTimer = 3;
-          p.nitro = Math.min(1, p.nitro + (gap < 0.35 ? 0.22 : 0.14) * S.nitroGain);
-          const bonus = Math.round(50 * combo * (p.v / MPS / 100));
-          score += bonus;
-          checkBest();
-          showPop((gap < 0.35 ? 'INCHES! +' : 'CUT UP +') + bonus, gap < 0.35);
-        }
+        if (gap < 0.9 && gap > -0.05 && p.v > c.v + 6.7) nearMiss(p, c, gap);
       }
     }
 
@@ -1051,11 +1246,12 @@ body {
         if (Math.random() < 0.8) burst(hit.cx, 0.7, hit.cz, Math.min(40, 6 + hit.impact * 2), 6 + hit.impact * 0.4);
         if (hit.impact > 4) knockLoose(c);
         if (!p.wrecked) {
-          combo = 1; comboTimer = 0;
+          loseChain();
           if (hit.impact > S.wreck) { wreck(hit.impact, hit, c); }
           else {
             shake = Math.max(shake, Math.min(0.6, hit.impact * 0.05));
             p.slide = 0.15 + hit.impact * 0.025;
+            Sound.scrape();
             flash();
             throwDebris(hit.cx, hit.cz, Math.min(4, Math.floor(hit.impact / 3)), c.color, 4);
             damage(hit.impact * 4.5);
@@ -1077,13 +1273,11 @@ body {
       spawnAcc += Math.max(0, p.v - 22) * dt + 1.5 * dt;
       const gap = 24 - difficulty * 11;
       if (spawnAcc > gap) spawnAcc = spawnCar(SPAWN_Z - Math.random() * 20) ? 0 : gap * 0.7;
-      if (comboTimer > 0) { comboTimer -= dt; if (comboTimer <= 0) combo = 1; }
     }
 
     setText('hSpeed', Math.round(Math.max(0, Math.hypot(p.v, p.vx)) / MPS));
     setText('hScore', Math.round(score));
-    setText('hCombo', 'x' + combo);
-    setWidth('comboBar', combo > 1 ? comboTimer / 3 : 0);
+    updateChainHud();
   }
 
   function wreck(impact, hit, c) {
@@ -1092,6 +1286,8 @@ body {
     p.wrecked = true; state = 'wreck'; wreckTimer = 0;
     timeScale = 0.55; shake = 0.9; flash();
     p.hull = 0; updateHull();
+    loseChain(); updateChainHud();
+    Sound.crash(impact > 16 || !hit);
     const cx = hit ? hit.cx : p.x, cz = hit ? hit.cz : 0;
     burst(cx, 0.8, cz, 80, 14);
     throwDebris(cx, cz, 16, save.color, 9);
@@ -1099,7 +1295,6 @@ body {
     if (impact > 20) { p.vy = 5 + Math.random() * 3; p.rollRate = (Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 3); }
     else { p.vy = 1.5 + impact * 0.08; p.rollRate = (Math.random() - 0.5) * 3; }
     p.yawRate += (Math.random() - 0.5) * 2;
-    $('comboBar').style.width = '0%';
   }
 
   function gameOver() {
@@ -1116,7 +1311,11 @@ body {
     $('finalBest').textContent = rank >= 0 ? `#${rank + 1} on your board · Best ${best.toLocaleString('en-US')}` : 'Best ' + best.toLocaleString('en-US');
     $('finalScore').textContent = score;
     $('bestStart').textContent = best;
-    $('finalStats').textContent = `${(distance / 1609).toFixed(2)} miles · ${nearMisses} near misses · top speed ${Math.round(topSpeed)} mph`;
+    const row = (k, v, cls = '') => `<span>${k}</span><b class="${cls}">${v}</b>`;
+    const n = v => Math.round(v).toLocaleString('en-US');
+    $('breakdown').innerHTML = row('Driving', n(runStats.drive)) + row('Banked chains', n(runStats.chains)) + row('Bonuses', n(runStats.bonus))
+      + (runStats.lost ? row('Chains lost', '−' + n(runStats.lost), 'neg') : '');
+    $('finalStats').textContent = `${(distance / 1609).toFixed(2)} miles · ${nearMisses} near misses · best chain x${runStats.bestMult}` + (runStats.threads ? ` · ${runStats.threads} needle threads` : '') + ` · top ${Math.round(topSpeed)} mph`;
     const earned = Math.round(score / 6);
     save.cash += earned; persist(); applyLoadout();
     $('earned').textContent = '+' + money(earned);
@@ -1205,6 +1404,23 @@ body {
     else if (frameAvg < 1 / 57) next = Math.min(DPR_CAP, resScale + 0.1);
     if (Math.abs(next - resScale) > 0.01) { resScale = next; renderer.setPixelRatio(resScale); resize(); }
   }
+  // gears and revs for the engine note
+  function engineSound(dt) {
+    const p = player, playing = state === 'play', idle = state === 'garage' || state === 'menu';
+    let rpmTarget = 0.18, thr = 0.08;
+    if (playing) {
+      const mph = Math.max(0, p.v) / MPS, top = S.vmax / MPS + 22;
+      const gears = [0.16, 0.3, 0.46, 0.63, 0.81, 1].map(f => f * top);
+      let g = gears.findIndex(t => mph < t); if (g < 0) g = gears.length - 1;
+      const lo = g ? gears[g - 1] : 0, frac = clamp((mph - lo) / (gears[g] - lo), 0, 1);
+      rpmTarget = g === 0 ? 0.2 + frac * 0.8 : 0.42 + frac * 0.58;
+      thr = keys.down ? 0.02 : (keys.up || p.boosting) ? 1 : 0.25;
+    }
+    p_rpm += (rpmTarget - p_rpm) * Math.min(1, dt * 12);
+    p_throttle += (thr - p_throttle) * Math.min(1, dt * 8);
+    const id = playerMesh ? playerMesh.userData.id : save.car;
+    Sound.update({ rpm: p_rpm, throttle: p_throttle, speed: playing ? p.v : 0, boost: playing && p.boosting, on: playing || (idle && state === 'garage'), pitch: CAR_SPECS[id].pitch });
+  }
   let last = performance.now();
   function frame(now) {
     const rawDt = (now - last) / 1000;
@@ -1231,6 +1447,7 @@ body {
       if (cars.length < 6) spawnCar(SPAWN_Z);
     }
     if (stage.dataset.state !== state) stage.dataset.state = state;
+    engineSound(realDt);
     updateSparks(dt);
     updateDebris(dt);
     if (shake > 0) shake = Math.max(0, shake - 1.2 * realDt);
