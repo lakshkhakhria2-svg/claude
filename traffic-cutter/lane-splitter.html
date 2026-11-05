@@ -1027,7 +1027,7 @@ body {
   const setWidth = (id, f) => { const v = Math.round(f * 100) + '%'; if (hudCache[id] !== v) { hudCache[id] = v; $(id).style.width = v; } };
   // ---------- chase mode: you're the cop, take down the getaway car ----------
   let suspect = null, chaseLevel = 1, chaseTimer = 0, farTimer = 0, arrestT = 0, caught = 0, nextSuspectT = 0;
-  const CHASE_TIME = 75, ARREST_TIME = 1.5;
+  const CHASE_TIME = 75, ARREST_TIME = 5, ARREST_RANGE = 12;
   const markerMat = new THREE.MeshBasicMaterial({ color: 0xff3040, fog: false, depthTest: false, transparent: true, opacity: 0.9 });
   const markerGeo = new THREE.ConeGeometry(0.55, 1.1, 4).rotateX(Math.PI);
   const SUSPECT_CARS = [['coupe', 0xc81e1e], ['muscle', 0xf2c200], ['super', 0x15171c], ['coupe', 0xff7a00], ['super', 0xd62828]];
@@ -1110,8 +1110,8 @@ body {
       const s = suspect, ahead = -s.z;
       chaseTimer -= dt;
       farTimer = ahead > 320 ? farTimer + dt : 0;
-      const close = Math.abs(s.z) < 7 && Math.abs(s.x - p.x) < 4.5;
-      arrestT = close && s.v < 14 ? arrestT + dt : Math.max(0, arrestT - dt * 0.7);
+      const close = Math.hypot(s.z, s.x - p.x) < ARREST_RANGE;     // stay on it for 5 s at any speed
+      arrestT = close ? arrestT + dt : Math.max(0, arrestT - dt * 0.5);
       if (s.health <= 0) takedown(s, false);
       else if (arrestT >= ARREST_TIME) takedown(s, true);
       else if (chaseTimer <= 0 || farTimer > 5) gotAway();
@@ -1145,7 +1145,7 @@ body {
   }
   const MODE_DESC = {
     endless: 'Weave through traffic for points. Drive fast enough and the police come after you.',
-    chase: "You're the cop. Ram the getaway car until it's wrecked, or box it in until it crawls to a stop. Don't let it get away.",
+    chase: "You're the cop. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
   };
   function setMode(m) {
     mode = m; save.mode = m; persist();
