@@ -66,6 +66,17 @@ body {
 .gauge.heat span { white-space: nowrap; }
 .bustbar { position: absolute; left: 50%; bottom: 40px; width: 40%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; pointer-events: none; opacity: 0; transition: opacity .2s; }
 .bustbar.on { opacity: 1; }
+.bustbar.evade { bottom: 58px; }
+.bustbar.evade span { color: #7be08a; }
+.bustbar.evade i { background: #7be08a33; }
+.bustbar.evade b { background: #7be08a; }
+.coparrows { position: absolute; left: 0; right: 0; bottom: 78px; height: 34px; pointer-events: none; }
+.coparrow { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000; }
+.coparrow i { width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 11px solid var(--danger); filter: drop-shadow(0 0 4px #ff2a3d); animation: copflash .5s steps(2) infinite; }
+.coparrow.close i { border-top-width: 15px; border-left-width: 12px; border-right-width: 12px; }
+.coparrow.pit span { color: var(--amber); }
+@keyframes copflash { 50% { border-top-color: #2a6bff; filter: drop-shadow(0 0 4px #2a6bff); } }
+.stage:not([data-state=play]):not([data-state=wreck]) .coparrows, .stage[data-mode=chase] .coparrows, .stage[data-mode=chase] #evadeWrap { display: none; }
 .bustbar span { font-family: var(--display); font-size: 12px; color: var(--danger); letter-spacing: .08em; }
 .bustbar i { flex: 1; height: 8px; background: #ff4d5e33; border-radius: 4px; overflow: hidden; }
 .bustbar b { display: block; height: 100%; width: 0; background: var(--danger); }
@@ -203,6 +214,8 @@ body {
     <div class="flash" id="flash"></div>
     <div class="pop" id="pop"></div>
     <div class="combobar"><i id="comboBar"></i></div>
+    <div class="bustbar evade" id="evadeWrap"><span>EVADING</span><i><b id="evadeBar"></b></i></div>
+    <div class="coparrows" id="copArrows"></div>
     <div class="bustbar" id="bustWrap"><span id="bustLabel">BUSTED</span><i><b id="bustBar"></b></i></div>
     <div class="nosbar"><span>NOS</span><i id="nosBar"></i></div>
     <div class="overlay" id="startOv">
@@ -559,6 +572,7 @@ body {
     super: { pitch: 70, w: 2.05, l: 4.6, h: 0.46, cabL: 1.8, cabZ: -0.05, cabH: 0.42, taper: 0.7, shrink: 0.5, mass: 1.3, wedge: 0.45, wing: 'big', intakes: true },
     suv: { pitch: 44, w: 2.05, l: 4.9, h: 0.85, cabL: 3.0, cabZ: 0.3, cabH: 0.72, taper: 0.94, shrink: 0.9, mass: 2.0, rails: true, mirrors: true },
     police: { pitch: 50, w: 1.95, l: 4.6, h: 0.62, cabL: 2.2, cabZ: 0.25, cabH: 0.56, taper: 0.86, shrink: 0.72, mass: 1.6, mirrors: true, police: true },
+    interceptor: { pitch: 58, w: 1.95, l: 4.5, h: 0.52, cabL: 1.9, cabZ: 0.35, cabH: 0.46, taper: 0.8, shrink: 0.6, mass: 1.5, wedge: 0.25, police: true },
     truck: { w: 2.5, l: 12, mass: 5, truck: true },
   };
   const tireGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 14).rotateZ(Math.PI / 2);
@@ -638,15 +652,19 @@ body {
         wh.add(new THREE.Mesh(hubGeo, rimMat)); g.add(wh); wheels.push(wh); if (z < 0) front.push(wh);
       }
     } else g.add(new THREE.Mesh(G.tires, wheelMat));
-    if (id === 'police') {
-      const spec = CAR_SPECS.police, y = 0.31 + spec.h + spec.cabH + 0.13;
+    if (CAR_SPECS[id] && CAR_SPECS[id].police && !isPlayer) {
+      const spec = CAR_SPECS[id], y = 0.31 + spec.h + spec.cabH + 0.13;
       for (const [x, m] of [[-0.33, copRed], [0.33, copBlue]]) { const l = new THREE.Mesh(copLightGeo, m); l.position.set(x, y, spec.cabZ + 0.05); b.add(l); }
+      for (const [x, m] of [[-1.3, copGlowR], [1.3, copGlowB]]) { const gl = new THREE.Mesh(copGlowGeo, m); gl.rotation.x = -Math.PI / 2; gl.position.set(x, 0.04, 0); g.add(gl); }   // light spilling onto the road
     }
     g.userData = { id, w: G.w, l: G.l, mass: G.mass, top: G.top, tails, blinkers, body: b, wheels, front, paint: body };
     return g;
   }
 
   const copLightGeo = new THREE.BoxGeometry(0.58, 0.14, 0.3);
+  const copGlowGeo = new THREE.PlaneGeometry(3.4, 7);
+  const glowMat = c => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+  const copGlowR = glowMat(0xff2a3d), copGlowB = glowMat(0x2a6bff);
   const copRed = mat(0xff2a3d, { emissive: 0xff1a2d, emissiveIntensity: 2 }), copBlue = mat(0x2a6bff, { emissive: 0x1a5bff, emissiveIntensity: 2 });
   const CAR_COLORS = [0xe8e8ec, 0xb3221a, 0x1f4fb8, 0x2a2d33, 0xd8a21b, 0x1f6e44, 0x6a2f8e, 0xa4abb6, 0xd65a12, 0x0e0e10];
 
@@ -1168,87 +1186,268 @@ body {
     if (state === 'menu') { ensurePlayerCar(); applyLoadout(); }
   }
 
-  // ---------- police: heat level, chasing cruisers, busts and escapes ----------
+  // ---------- police: heat, team tactics, PITs, spike strips, roadblocks and a helicopter ----------
   let heat = 0, policeTimer = 0, bust = 0, escapeTimer = 0, chased = false, endReason = 'wrecked';
+  let hazards = [], spikeTimer = 0, blockTimer = 0, flatT = 0, heli = null, roleT = 0, roadblock = null;
   const heatStars = () => Math.min(5, Math.floor(heat));
-  const activeCops = () => cars.filter(c => c.police && !c.loose);
-  function resetPolice() { heat = 0; policeTimer = 0; bust = 0; escapeTimer = 0; chased = false; endReason = 'wrecked'; }
-  function raiseHeat(n) { const before = heatStars(); heat = Math.min(5.99, heat + n); if (heatStars() > before && heatStars() >= 1) feed(`HEAT LEVEL ${heatStars()}`, 0, 'lost'); }
+  const activeCops = () => cars.filter(c => c.police && !c.loose && !c.parked);
+  function resetPolice() {
+    heat = 0; policeTimer = 0; bust = 0; escapeTimer = 0; chased = false; endReason = 'wrecked';
+    hazards.forEach(h => scene.remove(h.mesh)); hazards = []; spikeTimer = 10; blockTimer = 18; flatT = 0; roadblock = null;
+    if (heli) { scene.remove(heli.mesh); heli = null; }
+  }
+  function raiseHeat(n) {
+    const before = heatStars(); heat = Math.min(5.99, heat + n);
+    const s = heatStars();
+    if (s > before && s >= 1) feed(`HEAT ${s}★ · score x${(1 + s * 0.1).toFixed(1)}`, 0, 'lost');
+  }
+  const showMsg = t => showPop(t, false);
+  const copScoreMult = () => (mode !== 'chase' && chased ? 1 + heatStars() * 0.1 : 1);
+
   function spawnPolice() {
-    const p = player, z = 55 + Math.random() * 25;
+    const p = player, z = 55 + Math.random() * 25, stars = heatStars();
     const lanes = [0, 1, 2, 3, 4].filter(i => !cars.some(c => Math.abs(c.x - laneX(i)) < 2.5 && Math.abs(c.z - z) < 14));
     if (!lanes.length) return;
     const lane = lanes[Math.floor(Math.random() * lanes.length)];
-    const mesh = makeCar('police', 0xf4f4f4, false);
+    const interceptor = stars >= 3 && Math.random() < 0.5;
+    const color = interceptor ? 0x15171c : 0xf4f4f4;
+    const mesh = makeCar(interceptor ? 'interceptor' : 'police', color, false);
     scene.add(mesh);
-    cars.push({ mesh, color: 0xf4f4f4, police: true, lane, target: lane, x: laneX(lane), z, vx: 0, v: p.v + 6, cruise: p.v, yaw: 0, yawRate: 0,
-      w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: true, spin: 0 });
+    cars.push({ mesh, color, police: true, interceptor, lane, target: lane, x: laneX(lane), z, vx: 0, v: p.v + 6, cruise: p.v, yaw: 0, yawRate: 0,
+      w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: true, spin: 0, role: 'tail', pit: null, pitCd: 3 + Math.random() * 3 });
     if (!chased) feed('POLICE ON YOUR TAIL', 0, 'lost');
+    else if (interceptor) feed('INTERCEPTOR INCOMING', 0, 'lost');
     chased = true;
   }
+  // give each cop a job: one tails you, two flank, and at 3★+ one gets ahead to block
+  function assignRoles() {
+    const p = player, cops = activeCops().sort((a, b) => Math.hypot(a.z, a.x - p.x) - Math.hypot(b.z, b.x - p.x));
+    const stars = heatStars(), jobs = ['tail'];
+    if (stars >= 2) jobs.push(p.x > 0 ? 'flankL' : 'flankR');
+    if (stars >= 3) jobs.push('block');
+    jobs.push(jobs.includes('flankL') ? 'flankR' : 'flankL');
+    cops.forEach((c, i) => { const r = jobs[i] || 'tail'; if (c.pit && r !== c.role) c.pit = null; c.role = r; });
+  }
+
   function policeDrive(c, dt, bodies) {
-    const p = player, maxV = 66 + heatStars() * 7;
+    if (c.parked) { c.v = 0; c.vx = 0; return; }
+    const p = player, stars = heatStars();
+    const maxV = 64 + stars * 7 + (c.interceptor ? 12 : 0);
+    const side = c.role === 'flankL' ? -1 : c.role === 'flankR' ? 1 : 0;
     let wantV, wantX = p.x, maxVx = 7;
+    c.pitCd -= dt;
     if (p.wrecked) wantV = 0;
-    else if (c.z > 7) wantV = Math.min(maxV, p.v + 16);                 // behind: close the gap
-    else if (c.z > -7) {                                                  // alongside: shove at speed, box you in when slow
-      wantV = p.v + (c.z > 0 ? 2 : -1); maxVx = 4;
-      if (p.v < 25) { wantV = p.v - c.z * 0.8; wantX = p.x + Math.sign(c.x - p.x || 1) * 2.5; maxVx = 1.5; }
-    }
-    else wantV = Math.max(12, p.v - 7);                                   // ahead: brake-check you
-    for (const o of bodies) {                                             // steer around traffic in the way
-      if (o === c || o.isPlayer) continue;
-      const gap = c.z - o.z - (c.l + o.l) / 2;
-      if (gap > 0 && gap < 12 + c.v * 0.45 && Math.abs(o.x - c.x) < (c.w + o.w) / 2 + 0.6) {
-        wantX = o.x + (c.x >= o.x ? 1 : -1) * LANE_W;
-        if (gap < 6) wantV = Math.min(wantV, o.v);
+    else {
+      // where this cop wants to sit relative to you (+z = behind you)
+      let wantZ = 7;
+      if (c.role === 'block') { wantZ = -15; wantX = p.x; }
+      else if (side) { wantZ = 1.5; wantX = clamp(p.x + side * 3.3, -ROAD_W / 2 + 1.1, ROAD_W / 2 - 1.1); }
+      // PIT manoeuvre: line up on your rear corner, wind up, then swerve into it
+      if (!c.pit && c.role !== 'block' && stars >= 2 && c.pitCd <= 0 && p.v > 18 && c.z > 0 && c.z < 14) {
+        const room = s => Math.abs(p.x + s * 2.6) < ROAD_W / 2 - 0.8;
+        const s = side || (room(1) && (p.x < 0 || !room(-1)) ? 1 : -1);
+        if (room(s)) c.pit = { phase: 'line', side: s, t: 0, hit: false };
       }
+      if (c.pit) {
+        const pt = c.pit; pt.t += dt;
+        wantZ = 3.4; wantX = p.x + pt.side * 2.6;
+        if (pt.phase === 'line' && Math.abs(c.z - 3.4) < 1.3 && Math.abs(c.x - wantX) < 0.9) { pt.phase = 'wind'; pt.t = 0; feed('PIT INCOMING!', 0, 'lost'); c.warn = 0.9; }
+        else if (pt.phase === 'wind') { wantX = p.x + pt.side * 3.2; if (pt.t > 0.55) { pt.phase = 'strike'; pt.t = 0; } }
+        else if (pt.phase === 'strike') { wantX = p.x - pt.side * 0.5; maxVx = 11; wantZ = 2.6; if (pt.t > 0.5) { if (!pt.hit) addBonus('PIT DODGED', 400); c.pit = null; c.pitCd = 5 + Math.random() * 3; } }
+        if (pt.phase === 'line' && pt.t > 4) { c.pit = null; c.pitCd = 2; }
+      }
+      wantV = clamp(p.v + (c.z - wantZ) * 0.9, 8, maxV);
+      if (c.z > 30) wantV = maxV;
+      if (c.role === 'block' && c.z < -9) { wantV = Math.max(10, p.v - 4); wantX = p.x; maxVx = 3.5; }   // rolling block in your lane
+      // flankers squeeze in once they're level with you
+      if (side && !c.pit && stars >= 2 && Math.abs(c.z - 1.5) < 3) { c.squeeze = (c.squeeze || 0) + dt; if (c.squeeze > 1.4) { wantX = p.x + side * 1.7; maxVx = 3.2; } if (c.squeeze > 2.6) c.squeeze = -1.5; }
+      else if (side) c.squeeze = Math.min(c.squeeze || 0, 0) + dt;
+      // box you in when you're crawling
+      if (p.v < 25 && Math.abs(c.z) < 10) { wantV = p.v - c.z * 0.8; wantX = p.x + Math.sign(c.x - p.x || 1) * 2.5; maxVx = 1.5; c.pit = null; }
+    }
+    // siren: traffic ahead pulls over; anything still in the way gets steered around
+    for (const o of bodies) {
+      if (o === c || o.isPlayer) continue;
+      const gap = c.z - o.z - (c.l + o.l) / 2, inPath = Math.abs(o.x - c.x) < (c.w + o.w) / 2 + 0.6;
+      if (gap > 0 && gap < 45 && inPath && !o.police && !o.suspect && !o.loose && !o.yieldFrom) o.yieldFrom = Math.sign(o.x - c.x) || (Math.random() < 0.5 ? -1 : 1);
+      if (gap > 0 && gap < 12 + c.v * 0.45 && inPath) { wantX = o.x + (c.x >= o.x ? 1 : -1) * LANE_W; if (gap < 6) wantV = Math.min(wantV, o.v); }
     }
     wantX = clamp(wantX, -ROAD_W / 2 + 1.1, ROAD_W / 2 - 1.1);
-    c.v += clamp(wantV - c.v, -28 * dt, 10 * dt);
-    c.vx += (clamp((wantX - c.x) * 2.2, -maxVx, maxVx) - c.vx) * Math.min(1, dt * 5);
+    c.v += clamp(wantV - c.v, -28 * dt, (c.interceptor ? 14 : 10) * dt);
+    c.vx += (clamp((wantX - c.x) * 2.4, -maxVx, maxVx) - c.vx) * Math.min(1, dt * 6);
     c.x += c.vx * dt;
     c.yaw = -Math.atan2(c.vx, Math.max(c.v, 3)); c.yawRate = 0;
+    if (c.warn) c.warn = Math.max(0, c.warn - dt);
     if (c.z < -6) c.passed = false;   // so you can score a near miss on it again
   }
   function copDown(c) {
     if (c.down) return;
-    c.down = true;
-    addBonus('COP TAKEN DOWN', 1500);
-    showPop('COP TAKEN DOWN!', true);
+    c.down = true; c.pit = null;
+    addBonus(c.parked ? 'ROADBLOCK SMASHED' : 'COP TAKEN DOWN', c.interceptor ? 2500 : 1500);
+    showPop(c.interceptor ? 'INTERCEPTOR DOWN!' : 'COP TAKEN DOWN!', true);
     raiseHeat(0.4);
   }
+
+  // ---------- spike strips and roadblocks ----------
+  const hazardTex = (() => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 16; const g = c.getContext('2d');
+    for (let i = 0; i < 16; i++) { g.fillStyle = i % 2 ? '#111' : '#f2c200'; g.beginPath(); g.moveTo(i * 8, 0); g.lineTo(i * 8 + 8, 0); g.lineTo(i * 8, 16); g.lineTo(i * 8 - 8, 16); g.fill(); }
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = THREE.RepeatWrapping; return t;
+  })();
+  const spikeGeo = new THREE.ConeGeometry(0.05, 0.16, 4);
+  const beaconOn = mat(0xff8a00, { emissive: 0xff7000, emissiveIntensity: 2.5 }), beaconOff = mat(0x7a4a10);
+  function spawnSpikes() {
+    const p = player, n = heatStars() >= 4 ? 3 : 2;
+    const myLane = clamp(Math.round(p.x / LANE_W + 2), 0, LANES - 1);
+    let start = clamp(myLane - Math.floor(Math.random() * n), 0, LANES - n);   // always covers the lane you're in
+    const x1 = laneX(start) - LANE_W / 2 + 0.25, x2 = laneX(start + n - 1) + LANE_W / 2 - 0.25, z = -175;
+    const g = new THREE.Group();
+    const tex = hazardTex.clone(); tex.needsUpdate = true; tex.repeat.set((x2 - x1) / 2, 1);
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(x2 - x1, 0.06, 0.6), [mat(0x222222), mat(0x222222), new THREE.MeshLambertMaterial({ map: tex }), mat(0x222222), mat(0x222222), mat(0x222222)]);
+    strip.position.y = 0.03; g.add(strip);
+    const spikes = new THREE.InstancedMesh(spikeGeo, mat(0xd0d4da), Math.ceil((x2 - x1) / 0.3) * 2);
+    let k = 0; const d = new THREE.Object3D();
+    for (let x = x1 + 0.15; x < x2 - 0.1; x += 0.3) for (const dz of [-0.15, 0.15]) { d.position.set(x - (x1 + x2) / 2, 0.13, dz); d.updateMatrix(); spikes.setMatrixAt(k++, d.matrix); }
+    spikes.count = k; g.add(spikes);
+    const beacons = [];
+    for (const bx of [x1 - 0.4, x2 + 0.4]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), beaconOff); b.position.set(bx - (x1 + x2) / 2, 0.45, 0); g.add(b); beacons.push(b); }
+    g.position.set((x1 + x2) / 2, 0, z); scene.add(g);
+    hazards.push({ type: 'spike', x1, x2, z, mesh: g, beacons, hit: false });
+    feed('SPIKE STRIP AHEAD', 0, 'lost'); showMsg('Spike strip ahead!', 1.8);
+  }
+  function spawnRoadblock() {
+    const p = player, z = -235;
+    const myLane = clamp(Math.round(p.x / LANE_W + 2), 0, LANES - 1);
+    let gap = Math.floor(Math.random() * LANES); if (gap === myLane && Math.random() < 0.6) gap = (gap + 2) % LANES;
+    cars.forEach(c => { if (!c.police && c.z < -130 && c.z > -290) c.z = 999; });   // clear traffic out of the way
+    const cops = [];
+    for (let i = 0; i < LANES; i++) {
+      if (i === gap) continue;
+      const mesh = makeCar('police', 0xf4f4f4, false); scene.add(mesh);
+      const push = Math.abs(i - gap) === 1 ? Math.sign(i - gap) * 1.0 : 0;   // cars beside the gap sit back so it's passable
+      const c = { mesh, color: 0xf4f4f4, police: true, parked: true, lane: i, target: i, x: laneX(i) + push, z: z + (Math.random() - 0.5) * 1.5, vx: 0, v: 0, cruise: 0,
+        yaw: Math.PI / 2 + (Math.random() - 0.5) * 0.12, yawRate: 0, w: mesh.userData.w, l: mesh.userData.l, mass: 4, loose: false, blink: 0, passed: true, spin: 0, role: 'parked' };
+      cars.push(c); cops.push(c);
+    }
+    roadblock = { z, gap, cops, done: false };
+    feed('ROADBLOCK AHEAD', 0, 'lost'); showMsg(`Roadblock ahead! Gap in lane ${gap + 1}`, 2.5); showPop('ROADBLOCK!', true);
+  }
+  function updateHazards(dt) {
+    const p = player, blink = Math.floor(time * 5) % 2 === 0;
+    for (const h of hazards) {
+      h.z += p.v * dt; h.mesh.position.z = h.z;
+      h.beacons.forEach((b, i) => b.material = (blink ^ i) ? beaconOn : beaconOff);
+      if (!h.hit && !p.wrecked && Math.abs(h.z) < p.l / 2 + 0.3 && p.x + p.w / 2 > h.x1 && p.x - p.w / 2 < h.x2) {
+        h.hit = true; flatT = 9; damage(12, 'car'); loseChain(); raiseHeat(0.2);
+        feed('TYRES BLOWN', 0, 'lost'); showMsg('Tyres blown! Slower and twitchy for a while', 2.2); flash(); Sound.scrape(); burst(p.x, 0.3, 0, 30, 6);
+      }
+      if (!h.hit && !h.scored && h.z > p.l) { h.scored = true; addBonus('SPIKES DODGED', 400); }
+    }
+    hazards = hazards.filter(h => { const keep = h.z < DESPAWN_Z; if (!keep) scene.remove(h.mesh); return keep; });
+    if (roadblock && !roadblock.done) {
+      roadblock.z += p.v * dt;
+      if (roadblock.z > 6) { roadblock.done = true; if (!p.wrecked) { addBonus('ROADBLOCK BUSTED', 1200); showPop('ROADBLOCK BUSTED!', true); } }
+    }
+    if (roadblock && roadblock.z > 230) roadblock = null;
+    if (flatT > 0) { flatT -= dt; if (Math.random() < 0.6) burst(p.x + (Math.random() - 0.5) * p.w, 0.15, p.l * 0.3, 1, 3); }
+  }
+
+  // ---------- helicopter (5★): spotlight on you, and you have to stay hidden longer to escape ----------
+  function makeHeli() {
+    const g = new THREE.Group();
+    const dark = mat(0x1d2a44), white = mat(0xf2f2f2);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 8), dark); body.scale.set(1, 0.8, 1.6); g.add(body);
+    const band = new THREE.Mesh(new THREE.SphereGeometry(1.22, 12, 8, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.12), white); band.scale.copy(body.scale); g.add(band);
+    const boom = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 3.6), dark); boom.position.set(0, 0.2, 3); g.add(boom);
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.9, 0.6), dark); fin.position.set(0, 0.6, 4.7); g.add(fin);
+    for (const x of [-0.7, 0.7]) { const sk = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.6), dark); sk.position.set(x, -1.05, 0); g.add(sk); }
+    const rotor = new THREE.Mesh(new THREE.BoxGeometry(8, 0.05, 0.25), mat(0x111111)); rotor.position.y = 1.05; g.add(rotor);
+    const rotor2 = rotor.clone(); rotor2.rotation.y = Math.PI / 2; g.add(rotor2);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 4, 1, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    scene.add(beam);
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(4.2, 32), new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false }));
+    spot.rotation.x = -Math.PI / 2; scene.add(spot);
+    scene.add(g);
+    return { mesh: g, rotor, rotor2, beam, spot, x: player.x + 10, z: -60, y: 26, leave: false };
+  }
+  function updateHeli(dt) {
+    const p = player, stars = heatStars();
+    if (!heli && stars >= 5 && chased && !p.wrecked) { heli = makeHeli(); feed('HELICOPTER INBOUND', 0, 'lost'); showMsg('Police helicopter! Escaping takes longer', 2.2); }
+    if (!heli) return;
+    if (stars < 4 || !chased) heli.leave = true;
+    const tx = heli.leave ? p.x + 60 : p.x + Math.sin(time * 0.4) * 6, tz = heli.leave ? -200 : -14 + Math.cos(time * 0.3) * 6, ty = heli.leave ? 40 : 24;
+    heli.x += (tx - heli.x) * Math.min(1, dt * 0.8); heli.z += (tz - heli.z) * Math.min(1, dt * 0.8); heli.y += (ty - heli.y) * Math.min(1, dt * 0.5);
+    heli.mesh.position.set(heli.x, heli.y, heli.z);
+    heli.mesh.rotation.set(-0.12, Math.atan2(heli.x - p.x, heli.z - 0) * 0.3, Math.sin(time * 0.7) * 0.05);
+    heli.rotor.rotation.y += dt * 30; heli.rotor2.rotation.y += dt * 30;
+    // spotlight beam from the helicopter onto the ground at your position
+    const gx = heli.leave ? heli.x : p.x + p.vx * 0.15, gz = heli.leave ? heli.z : 0.5;
+    const h = heli.y - 0.5, dx = gx - heli.x, dz = gz - heli.z, len = Math.hypot(dx, h, dz);
+    heli.beam.scale.set(1, len, 1); heli.beam.position.set((heli.x + gx) / 2, (heli.y + 0.3) / 2, (heli.z + gz) / 2);
+    heli.beam.lookAt(gx, 0.3, gz); heli.beam.rotateX(Math.PI / 2);
+    heli.spot.position.set(gx, 0.04, gz); heli.spot.visible = heli.beam.visible = !heli.leave;
+    if (heli.leave && heli.z < -180) { scene.remove(heli.mesh, heli.beam, heli.spot); heli = null; }
+  }
+
   function updatePolice(dt) {
     const p = player, mph = p.v / MPS, cops = activeCops();
     if (!p.wrecked) {
       if (mph > 130) heat += 0.035 * dt * (mph / 130);
       if (p.boosting) heat += 0.05 * dt;
-      if (!cops.length && mph < 110) heat -= 0.05 * dt;
+      if (!cops.length && mph < 110 && !heli) heat -= 0.05 * dt;
+      if (heli && !heli.leave) heat = Math.max(heat, 4.6);
       heat = clamp(heat, 0, 5.99);
       const stars = heatStars();
       policeTimer -= dt;
-      if (stars >= 1 && cops.length < Math.min(4, stars) && policeTimer <= 0) { spawnPolice(); policeTimer = 9 - stars; }
+      if (stars >= 1 && cops.length < Math.min(4, stars) && policeTimer <= 0) { spawnPolice(); policeTimer = 8 - stars; }
+      roleT -= dt; if (roleT <= 0) { roleT = 0.5; assignRoles(); }
+      // spike strips from 2★, roadblocks from 4★
+      if (chased && stars >= 2) { spikeTimer -= dt; if (spikeTimer <= 0 && !roadblock) { spawnSpikes(); spikeTimer = 22 - stars * 2 + Math.random() * 8; } }
+      if (chased && stars >= 4) { blockTimer -= dt; if (blockTimer <= 0 && !roadblock && !hazards.some(h => h.z < -60)) { spawnRoadblock(); blockTimer = 30 + Math.random() * 10; } }
       // busted: a cop right on you while you're crawling
       const near = cops.some(c => Math.abs(c.z) < 7 && Math.abs(c.x - p.x) < 4.5);
       bust = clamp(bust + (near && p.v < 25 ? 0.7 : -0.35) * dt, 0, 1);
       if (bust >= 1) busted();
-      // escape: every cop left far behind (or taken out) for a few seconds
+      // escape: every cop left far behind (or taken out); the helicopter makes you hold it longer
+      const need = heli && !heli.leave ? 12 : 5;
       if (chased && !cops.some(c => c.z < 130)) {
         escapeTimer += dt;
-        if (escapeTimer > 5) {
-          addBonus(`ESCAPED · ${Math.max(1, stars)}★`, 750 * Math.max(1, stars));
+        if (escapeTimer > need) {
+          addBonus(`ESCAPED · ${Math.max(1, stars)}★`, 750 * Math.max(1, stars) * (heli ? 2 : 1));
           showPop('ESCAPED!', true);
           heat = Math.min(heat, 0.6); chased = false; escapeTimer = 0;
-          cars.filter(c => c.police && c.z > 60).forEach(c => c.z = 999);
+          if (heli) heli.leave = true;
+          cars.filter(c => c.police && !c.parked && c.z > 60).forEach(c => c.z = 999);
         }
-      } else escapeTimer = 0;
+      } else escapeTimer = Math.max(0, escapeTimer - dt * 2);
+      $('evadeWrap').classList.toggle('on', chased && escapeTimer > 0.05);
+      setWidth('evadeBar', escapeTimer / need);
     }
+    updateHazards(dt);
+    updateHeli(dt);
     const stars = heatStars();
     setText('hHeat', '★'.repeat(stars) + '☆'.repeat(5 - stars));
     const nearest = cops.reduce((m, c) => Math.min(m, Math.hypot(c.z, c.x - p.x)), Infinity);
     setText('hCops', cops.length ? (cops.some(c => c.z > 7) ? `${cops.length} cop${cops.length > 1 ? 's' : ''} · ${Math.round(nearest)} m` : `${cops.length} cop${cops.length > 1 ? 's' : ''} on you`) : 'heat');
     $('bustWrap').classList.toggle('on', bust > 0.02);
     setWidth('bustBar', bust);
+    updateCopArrows(cops);
+  }
+  // arrows along the bottom of the screen for cops coming up behind you
+  const arrowPool = [];
+  function updateCopArrows(cops) {
+    const box = $('copArrows'), p = player;
+    const behind = mode === 'chase' ? [] : cops.filter(c => c.z > 9 && c.z < 160).slice(0, 5);
+    while (arrowPool.length < behind.length) { const el = document.createElement('div'); el.className = 'coparrow'; el.innerHTML = '<i></i><span></span>'; box.append(el); arrowPool.push(el); }
+    arrowPool.forEach((el, i) => {
+      const c = behind[i];
+      if (!c) { el.hidden = true; return; }
+      el.hidden = false;
+      el.style.left = `${50 + clamp((c.x - p.x) / ROAD_W, -0.5, 0.5) * 70}%`;
+      el.lastChild.textContent = `${Math.round(c.z)} m`;
+      el.classList.toggle('close', c.z < 25);
+      el.classList.toggle('pit', !!(c.pit && c.pit.phase !== 'line'));
+    });
   }
   function busted() {
     const p = player;
@@ -1321,7 +1520,7 @@ body {
   function scoreTick(p, dt) {
     const mph = p.v / MPS;
     const tier = SPEED_TIERS.find(t => mph >= t[0]);
-    const drive = mph * 0.3 * (tier ? tier[1] : 1) * dt;
+    const drive = mph * 0.3 * (tier ? tier[1] : 1) * copScoreMult() * dt;
     score += drive; runStats.drive += drive;
     setText('hTier', tier ? `${tier[2]} ×${tier[1]}` : '');
     if (mph > 100) {
@@ -1422,6 +1621,7 @@ body {
     else if (keys.up) a = 15 * S.accel * (1 - (p.v / S.vmax) ** 2);
     else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);   // engine braking
     if (!boosting && p.v > S.vmax) a = Math.min(a, -6);           // bleed off nitro overspeed
+    if (flatT > 0 && p.v > S.vmax * 0.68) a = Math.min(a, -8);    // blown tyres cap your speed
     p.v = clamp(p.v + a * dt, V_MIN, V_NITRO);
     p.accel += (a - p.accel) * Math.min(1, dt * 4);
     p.boosting = boosting;
@@ -1432,6 +1632,7 @@ body {
     const prevVx = p.vx;
     const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat;
     p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
+    if (flatT > 0) p.vx += (Math.sin(time * 9) * 6 + (Math.random() - 0.5) * 18) * dt;   // flat tyres pull and shimmy
     p.x += p.vx * dt;
     p.latA += ((p.vx - prevVx) / dt - p.latA) * Math.min(1, dt * 10);
 
@@ -1499,6 +1700,8 @@ body {
       if (Math.abs(c.x) > BARRIER_X - half) { c.x = Math.sign(c.x) * (BARRIER_X - half); c.vx *= -0.3; }
       return;
     }
+    // pull over for a siren behind
+    if (c.yieldFrom && c.blink <= 0 && c.lane === c.target) { const t = c.lane + c.yieldFrom, t2 = c.lane - c.yieldFrom; const go = t >= 0 && t < LANES && laneClear(t, c) ? t : t2 >= 0 && t2 < LANES && laneClear(t2, c) ? t2 : -1; if (go >= 0) { c.target = go; c.lane = go; } c.yieldFrom = 0; }
     // brake for anything slower ahead in this lane
     let want = c.cruise;
     for (const o of bodies) {
@@ -1555,11 +1758,12 @@ body {
       if (c.wasSuspect) continue;   // bumping the wreck you just took down is free
       if (hit.impact > 1.5) {
         if (Math.random() < 0.8) burst(hit.cx, 0.7, hit.cz, Math.min(40, 6 + hit.impact * 2), 6 + hit.impact * 0.4);
+        if (c.police && c.pit && c.pit.phase === 'strike' && !p.wrecked && !c.pit.hit) { c.pit.hit = true; p.yawRate += c.pit.side * 2.6; p.slide = Math.max(p.slide, 1.1); feed('PIT!', 0, 'lost'); showPop('PIT!', true); }
         if (c.police) { if (hit.impact > 9) { knockLoose(c); copDown(c); } }   // cops shrug off their own shoves
         else if (hit.impact > 4) knockLoose(c);
         if (!p.wrecked) {
           loseChain();
-          raiseHeat(c.police ? 0.6 : 0.35);
+          raiseHeat(c.police ? 0.1 : 0.35);   // being rammed by a cop isn't your fault
           if (hit.impact > S.wreck) { wreck(hit.impact, hit, c); }
           else {
             shake = Math.max(shake, Math.min(0.6, hit.impact * 0.05));
@@ -1590,6 +1794,7 @@ body {
     if (!p.wrecked) {
       spawnAcc += Math.max(0, p.v - 22) * dt + 1.5 * dt;
       const gap = 24 - difficulty * 11;
+      if (spawnAcc > gap && roadblock && !roadblock.done) spawnAcc = 0;
       if (spawnAcc > gap) spawnAcc = spawnCar(SPAWN_Z - Math.random() * 20) ? 0 : gap * 0.7;
     }
 
@@ -1683,6 +1888,7 @@ body {
     const blinkPhase = Math.floor(time * 6) % 2 === 0;
     const copPhase = Math.floor(time * 7) % 2 === 0;
     copRed.emissiveIntensity = copPhase ? 3 : 0.15; copBlue.emissiveIntensity = copPhase ? 0.15 : 3;
+    copGlowR.opacity = copPhase ? 0.32 : 0.04; copGlowB.opacity = copPhase ? 0.04 : 0.32;
     for (const c of cars) {
       c.mesh.position.set(c.x, 0, c.z);
       c.mesh.rotation.y = c.yaw;
