@@ -1338,41 +1338,73 @@ body {
     if (flatT > 0) { flatT -= dt; if (Math.random() < 0.6) burst(p.x + (Math.random() - 0.5) * p.w, 0.15, p.l * 0.3, 1, 3); }
   }
 
-  // ---------- helicopter (5★): spotlight on you, and you have to stay hidden longer to escape ----------
+  // ---------- helicopter (5★): a soft spotlight on you, and you have to stay hidden longer to escape ----------
+  const spotTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    r.addColorStop(0, 'rgba(255,246,214,0.55)'); r.addColorStop(0.55, 'rgba(255,246,214,0.22)'); r.addColorStop(1, 'rgba(255,246,214,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  })();
   function makeHeli() {
     const g = new THREE.Group();
-    const dark = mat(0x1d2a44), white = mat(0xf2f2f2);
-    const body = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 8), dark); body.scale.set(1, 0.8, 1.6); g.add(body);
-    const band = new THREE.Mesh(new THREE.SphereGeometry(1.22, 12, 8, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.12), white); band.scale.copy(body.scale); g.add(band);
-    const boom = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 3.6), dark); boom.position.set(0, 0.2, 3); g.add(boom);
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.9, 0.6), dark); fin.position.set(0, 0.6, 4.7); g.add(fin);
-    for (const x of [-0.7, 0.7]) { const sk = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.6), dark); sk.position.set(x, -1.05, 0); g.add(sk); }
-    const rotor = new THREE.Mesh(new THREE.BoxGeometry(8, 0.05, 0.25), mat(0x111111)); rotor.position.y = 1.05; g.add(rotor);
-    const rotor2 = rotor.clone(); rotor2.rotation.y = Math.PI / 2; g.add(rotor2);
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 4, 1, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    scene.add(beam);
-    const spot = new THREE.Mesh(new THREE.CircleGeometry(4.2, 32), new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const paintM = mat(0x1d2a44, { metalness: 0.4, roughness: 0.35 }), white = mat(0xf2f4f7, { roughness: 0.4 }), dark = mat(0x15181d, { roughness: 0.6 });
+    const glass = mat(0x2a4a6a, { metalness: 0.8, roughness: 0.1 });
+    const add = (geo, m, x, y, z, rx = 0, ry = 0, rz = 0, parent = g) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); parent.add(o); return o; };
+    // fuselage: rounded cabin, white belly stripe, glass nose
+    add(new THREE.SphereGeometry(1, 20, 14), paintM, 0, 0, 0).scale.set(1.05, 0.95, 1.9);
+    add(new THREE.SphereGeometry(1.01, 20, 14, 0, Math.PI * 2, Math.PI * 0.55, Math.PI * 0.18), white, 0, 0, 0).scale.set(1.05, 0.95, 1.9);
+    add(new THREE.SphereGeometry(0.98, 20, 14, Math.PI * 0.62, Math.PI * 0.76, 0.25, 1.25), glass, 0, 0.05, -0.25).scale.set(1.04, 0.95, 1.9);
+    // tail boom, fins and stabiliser
+    add(new THREE.CylinderGeometry(0.16, 0.34, 4.4, 10), paintM, 0, 0.25, 3.6, Math.PI / 2 - 0.06);
+    add(new THREE.BoxGeometry(0.08, 1.1, 0.7), paintM, 0, 0.75, 5.7, 0, 0, 0).rotation.x = -0.35;
+    add(new THREE.BoxGeometry(1.5, 0.06, 0.45), paintM, 0, 0.32, 5.3);
+    // skids
+    for (const x of [-0.75, 0.75]) {
+      add(new THREE.CylinderGeometry(0.05, 0.05, 3, 8), dark, x, -1.15, 0.1, Math.PI / 2);
+      for (const z of [-0.6, 0.8]) add(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 6), dark, x * 0.85, -0.9, z, 0, 0, x * 0.35);
+    }
+    // police strobes on the belly
+    add(new THREE.BoxGeometry(0.25, 0.1, 0.25), copRed, -0.35, -0.9, 0.3);
+    add(new THREE.BoxGeometry(0.25, 0.1, 0.25), copBlue, 0.35, -0.9, 0.3);
+    // rotor: mast, hub, slim blades plus a faint blurred disc that sells the spin
+    add(new THREE.CylinderGeometry(0.1, 0.12, 0.45, 8), dark, 0, 1.05, 0.1);
+    const rotor = new THREE.Group(); rotor.position.set(0, 1.3, 0.1); g.add(rotor);
+    for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(0.22, 0.03, 4.6), dark, 0, 0, 0, 0, i * Math.PI / 2, 0, rotor).position.set(Math.sin(i * Math.PI / 2) * 2.3, 0, Math.cos(i * Math.PI / 2) * 2.3);
+    const blur = new THREE.MeshBasicMaterial({ color: 0x20242a, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide });
+    add(new THREE.CircleGeometry(4.7, 40), blur, 0, 1.3, 0.1, -Math.PI / 2);
+    const tail = new THREE.Group(); tail.position.set(0.12, 0.85, 5.8); g.add(tail);
+    add(new THREE.BoxGeometry(0.03, 1.1, 0.12), dark, 0, 0, 0, 0, 0, 0, tail);
+    add(new THREE.CircleGeometry(0.6, 20), blur, 0.02, 0, 0, 0, Math.PI / 2, 0, tail);
+    g.traverse(o => { if (o.isMesh) o.castShadow = false; });
+    g.scale.setScalar(1.15);
+    const spot = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.MeshBasicMaterial({ map: spotTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     spot.rotation.x = -Math.PI / 2; scene.add(spot);
     scene.add(g);
-    return { mesh: g, rotor, rotor2, beam, spot, x: player.x + 10, z: -60, y: 26, leave: false };
+    return { mesh: g, rotor, tail, spot, x: player.x + 30, z: -120, y: 40, side: Math.random() < 0.5 ? -1 : 1, leave: false, fade: 0 };
   }
   function updateHeli(dt) {
     const p = player, stars = heatStars();
     if (!heli && stars >= 5 && chased && !p.wrecked) { heli = makeHeli(); feed('HELICOPTER INBOUND', 0, 'lost'); showMsg('Police helicopter! Escaping takes longer', 2.2); }
     if (!heli) return;
     if (stars < 4 || !chased) heli.leave = true;
-    const tx = heli.leave ? p.x + 60 : p.x + Math.sin(time * 0.4) * 6, tz = heli.leave ? -200 : -14 + Math.cos(time * 0.3) * 6, ty = heli.leave ? 40 : 24;
-    heli.x += (tx - heli.x) * Math.min(1, dt * 0.8); heli.z += (tz - heli.z) * Math.min(1, dt * 0.8); heli.y += (ty - heli.y) * Math.min(1, dt * 0.5);
-    heli.mesh.position.set(heli.x, heli.y, heli.z);
-    heli.mesh.rotation.set(-0.12, Math.atan2(heli.x - p.x, heli.z - 0) * 0.3, Math.sin(time * 0.7) * 0.05);
-    heli.rotor.rotation.y += dt * 30; heli.rotor2.rotation.y += dt * 30;
-    // spotlight beam from the helicopter onto the ground at your position
-    const gx = heli.leave ? heli.x : p.x + p.vx * 0.15, gz = heli.leave ? heli.z : 0.5;
-    const h = heli.y - 0.5, dx = gx - heli.x, dz = gz - heli.z, len = Math.hypot(dx, h, dz);
-    heli.beam.scale.set(1, len, 1); heli.beam.position.set((heli.x + gx) / 2, (heli.y + 0.3) / 2, (heli.z + gz) / 2);
-    heli.beam.lookAt(gx, 0.3, gz); heli.beam.rotateX(Math.PI / 2);
-    heli.spot.position.set(gx, 0.04, gz); heli.spot.visible = heli.beam.visible = !heli.leave;
-    if (heli.leave && heli.z < -180) { scene.remove(heli.mesh, heli.beam, heli.spot); heli = null; }
+    // hold station high, ahead and off to one side, so it's in the sky rather than over the road
+    const tx = heli.leave ? p.x + heli.side * 80 : heli.side * 13 + Math.sin(time * 0.35) * 3;
+    const tz = heli.leave ? -260 : -66 + Math.cos(time * 0.27) * 5;
+    const ty = heli.leave ? 50 : 17;
+    const k = Math.min(1, dt * 0.6);
+    const vx = (tx - heli.x) * k / Math.max(dt, 1e-4);
+    heli.x += (tx - heli.x) * k; heli.z += (tz - heli.z) * k; heli.y += (ty - heli.y) * Math.min(1, dt * 0.4);
+    heli.mesh.position.set(heli.x, heli.y + Math.sin(time * 1.3) * 0.25, heli.z);
+    // nose points down the road, banks gently into its drift
+    heli.mesh.rotation.set(0.08, Math.PI, clamp(-vx * 0.02, -0.25, 0.25));
+    heli.rotor.rotation.y += dt * 24; heli.tail.rotation.x += dt * 40;
+    // soft pool of light around your car that fades in and out
+    heli.fade = clamp(heli.fade + (heli.leave ? -dt : dt) * 0.8, 0, 1);
+    heli.spot.material.opacity = heli.fade * 0.85;
+    heli.spot.position.set(p.x + p.vx * 0.1, 0.05, 0.6);
+    heli.spot.visible = heli.fade > 0.01;
+    if (heli.leave && heli.z < -240) { scene.remove(heli.mesh, heli.spot); heli = null; }
   }
 
   function updatePolice(dt) {
