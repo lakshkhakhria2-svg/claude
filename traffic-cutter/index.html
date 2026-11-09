@@ -566,6 +566,7 @@ body {
     police: { pitch: 50, w: 1.95, l: 4.6, h: 0.62, cabL: 2.2, cabZ: 0.25, cabH: 0.56, taper: 0.86, shrink: 0.72, mass: 1.6, mirrors: true, police: true },
     interceptor: { pitch: 58, w: 1.95, l: 4.5, h: 0.52, cabL: 1.9, cabZ: 0.35, cabH: 0.46, taper: 0.8, shrink: 0.6, mass: 1.5, wedge: 0.25, police: true },
     truck: { w: 2.5, l: 12, mass: 5, truck: true },
+    ramptruck: { w: 2.5, l: 12, mass: 5, truck: true, ramp: true },
     sprite: { pitch: 128, w: 0.8, l: 2.0, mass: 0.55, bike: true },
     viper: { pitch: 112, w: 0.82, l: 2.1, mass: 0.6, bike: true, fairing: true },
     comet: { pitch: 96, w: 0.85, l: 2.2, mass: 0.65, bike: true, fairing: true },
@@ -629,6 +630,7 @@ body {
 
   function makeCar(id, color, isPlayer) {
     if (CAR_SPECS[id].bike) return makeBike(id, color, isPlayer);
+    if (CAR_SPECS[id].ramp) return makeRampTruck(color);
     const G = carGeo(id, isPlayer);
     const g = new THREE.Group();
     g.rotation.order = 'YXZ';
@@ -800,6 +802,104 @@ body {
     ragdoll.head.position.copy(ragdoll.named.head.p);
   }
   function ragdollSpeed() { if (!ragdoll) return 0; const p = ragdoll.named.pelvis; return Math.hypot(p.p.x - p.q.x, p.p.z - p.q.z, p.p.y - p.q.y) / ragdoll.last; }
+
+  // ---------- ramp trucks: a stunt ramp on a flatbed that launches you over the cab ----------
+  const RAMP_LEN = 9;
+  const rampH = u => u < 0 ? 0 : u < 3 ? u * 0.4 : u <= RAMP_LEN ? 1.2 + 1.5 * Math.pow((u - 3) / 6, 1.6) : 2.7;
+  const rampSlope = u => u < 3 ? 0.4 : 0.4 * Math.pow(Math.max(0.05, (u - 3) / 6), 0.6);
+  const rampTex = (() => {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d');
+    g.fillStyle = '#f2c200'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#16181c';
+    g.beginPath(); g.moveTo(0, 40); g.lineTo(32, 16); g.lineTo(64, 40); g.lineTo(64, 56); g.lineTo(32, 32); g.lineTo(0, 56); g.fill();   // chevrons pointing up the ramp
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+  })();
+  const rampGeo = (() => {
+    const W = 2.5, pos = [], uv = [], idx = [], N = 24;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N * RAMP_LEN, y = rampH(u) + 0.03, z = 6 - u;
+      pos.push(-W / 2, y, z, W / 2, y, z); uv.push(0, u / 2, 2, u / 2);
+      if (i) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals(); return g;
+  })();
+  const rampSideGeo = (() => {   // solid side walls under the ramp
+    const W = 2.5, pos = [], idx = [], N = 24;
+    for (const s of [-1, 1]) {
+      const base = pos.length / 3;
+      for (let i = 0; i <= N; i++) { const u = i / N * RAMP_LEN, z = 6 - u; pos.push(s * W / 2, 0.45, z, s * W / 2, rampH(u), z); if (i) { const a = base + (i - 1) * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+  })();
+  function makeRampTruck(color) {
+    const g = new THREE.Group(); g.rotation.order = 'YXZ';
+    const b = new THREE.Group(); g.add(b);
+    const body = paintFor(color), W = 2.5;
+    const add = (geo, m, x, y, z, shadow = true) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = shadow; b.add(o); return o; };
+    add(new THREE.BoxGeometry(W, 2.3, 2.7), body, 0, 1.55, -4.65);                       // cab, low enough to clear from the lip
+    add(new THREE.BoxGeometry(W - 0.3, 0.8, 0.05), glassMat, 0, 2.05, -6.02, false);
+    add(new THREE.BoxGeometry(W - 0.4, 0.4, 11.6), trimMat, 0, 0.55, 0);                  // chassis
+    const ramp = new THREE.Mesh(rampGeo, new THREE.MeshLambertMaterial({ map: rampTex, side: THREE.DoubleSide })); ramp.receiveShadow = true; ramp.castShadow = true; b.add(ramp);
+    const sides = new THREE.Mesh(rampSideGeo, new THREE.MeshLambertMaterial({ color: lin(0x3a3f48), side: THREE.DoubleSide })); sides.castShadow = true; b.add(sides);
+    const lamp = new THREE.BoxGeometry(0.4, 0.16, 0.05);
+    for (const x of [-1, 1]) add(lamp, headMat, x * 0.9, 1.0, -6.02, false);
+    const tails = [-1, 1].map(x => add(lamp, tailMat, x * 0.95, 0.5, 6.02, false));
+    const blinkers = [-1, 1].map(x => add(blinkGeo, blinkOff, x * (W / 2 + 0.02), 0.6, 5.7, false));
+    for (const z of [-4.6, 2.5, 4.6]) for (const x of [-1, 1]) { const t = new THREE.Mesh(tireGeo, wheelMat); t.position.set(x * (W / 2 - 0.1), 0.36, z); g.add(t); }
+    g.userData = { id: 'ramptruck', w: W, l: 12, mass: 5, top: 2.7, tails, blinkers, body: b, wheels: [], front: [], paint: body, ramp: true };
+    return g;
+  }
+  // the ramp truck under you, if any (u = how far up the ramp you are, measured from the truck's tail)
+  function rampUnder(p) {
+    for (const c of cars) {
+      if (!c.ramp || c.loose || Math.abs(c.yaw) > 0.3) continue;
+      if (Math.abs(p.x - c.x) > 1.25 - p.w * 0.2) continue;
+      const u = c.z + c.l / 2 + p.l * 0.4;   // measured at your front wheels
+      if (u >= -0.3 && u <= RAMP_LEN + 0.15) return { c, u };
+    }
+    return null;
+  }
+  // height of whatever vehicle is under you (0 = road)
+  function roofUnder(p) {
+    let h = 0, car = null;
+    for (const c of cars) {
+      if (Math.abs(c.z) > c.l / 2 || Math.abs(p.x - c.x) > (c.w + p.w) / 2 - 0.2) continue;
+      const top = c.ramp ? rampH(c.z + c.l / 2) : c.l > 8 ? 3.6 : 1.45;
+      if (top > h) { h = top; car = c; }
+    }
+    return { h, car };
+  }
+  function airborneStep(p, dt) {
+    p.airT += dt; p.vy -= 18 * dt; p.y += p.vy * dt;
+    const sIn = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);   // A/D spin you in the air
+    if (sIn) p.airSpinRate += (sIn * 7.5 - p.airSpinRate) * Math.min(1, dt * 10); else p.airSpinRate *= Math.exp(-9 * dt);
+    p.airSpin += p.airSpinRate * dt;
+    const roof = roofUnder(p);
+    if (p.y > roof.h) return;
+    if (roof.car && roof.car.ramp && roof.h < 2.65) { p.air = false; p.y = roof.h; return; }   // back down onto the ramp
+    if (roof.h > 0.3) { p.air = false; return wreck(14, null, roof.car); }                     // came down on a roof or the cab
+    landJump(p);
+  }
+  function landJump(p) {
+    const impact = -p.vy;
+    p.air = false; p.y = 0; p.vy = 0;
+    const mis = Math.abs(wrapAngle(p.airSpin)) > Math.PI / 2 ? Math.PI - Math.abs(wrapAngle(p.airSpin)) : Math.abs(wrapAngle(p.airSpin));
+    if (mis > 0.6) { p.airSpin = 0; return wreck(16, null, null); }
+    const deg = Math.round(Math.abs(p.airSpin) / Math.PI) * 180;
+    p.landSpin = p.airSpin; p.airSpin = 0;   // whip back straight after a 180
+    shake = Math.max(shake, Math.min(0.5, impact * 0.03)); burst(p.x, 0.3, 0.5, 20, 7); Sound.scrape();
+    if (impact > 15) damage((impact - 15) * (p.bike ? 6 : 3), 'car');
+    const clean = mis < 0.2;
+    let pts = 300 + p.airT * 500 + p.jumped * 400 + (deg ? spinBonus(deg) : 0);
+    if (clean) pts += 200;
+    const label = `${deg ? deg + ' ' : ''}TRUCK JUMP${p.jumped ? ` · OVER ${p.jumped} CAR${p.jumped > 1 ? 'S' : ''}` : ''}${clean ? ' · CLEAN' : ''}`;
+    addChainStep(label, pts * (p.v / MPS / 100 + 0.5));
+    showPop(`${deg ? deg + ' ' : ''}TRUCK JUMP!`, true);
+    runStats.jumps = (runStats.jumps || 0) + 1;
+  }
+  const spinBonus = deg => ({ 180: 600, 360: 1800, 540: 3200, 720: 5000 })[deg] || 5000 + (deg - 720) * 10;
+  const wrapAngle = a => Math.atan2(Math.sin(a), Math.cos(a));
 
   // player car (rebuilt when you pick another car in the garage)
   let playerMesh = null, flame = null;
@@ -1158,7 +1258,7 @@ body {
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
     const spec = CAR_SPECS[save.car];
     player = { isPlayer: true, x: laneX(2), z: 0, vx: 0, v: 31, yaw: 0, yawRate: 0, steer: 0, w: spec.w, l: spec.l, mass: spec.mass,
-      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, wheelie: 0, wheelieT: 0 };
+      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, wheelie: 0, wheelieT: 0, air: false, onRamp: null, airT: 0, airSpin: 0, airSpinRate: 0, landSpin: 0, jumped: 0, closeRide: 0 };
     clearRagdoll(); if (playerMesh && playerMesh.userData.rider) playerMesh.userData.rider.visible = true;
     bestAnnounced = false; score = 0; distance = 0; nearMisses = 0; p_rpm = 0.2; p_throttle = 0; resetScoring(); resetPolice(); resetChase(); topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
     updateHull();
@@ -1176,6 +1276,7 @@ body {
   function spawnCar(z) {
     const r = Math.random();
     const type = r < 0.15 ? 'truck' : r < 0.45 ? 'street' : r < 0.65 ? 'hatch' : r < 0.82 ? 'suv' : r < 0.92 ? 'muscle' : 'coupe';
+    const rampT = type === 'truck' && Math.random() < 0.45;
     const truck = type === 'truck';
     const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     const len = CAR_SPECS[type].l;
@@ -1185,11 +1286,11 @@ body {
     for (let i = 0; i < LANES; i++) if (!cars.some(c => (c.lane === i || c.target === i) && Math.abs(c.z - z) < (c.l + len) / 2 + 10)) free.push(i);
     if (!free.length) return false;
     const lane = free[Math.floor(Math.random() * free.length)];
-    const mesh = makeCar(type, color, false);
+    const mesh = makeCar(rampT ? 'ramptruck' : type, color, false);
     scene.add(mesh);
-    const v = (truck ? 42 + Math.random() * 14 : 48 + Math.random() * 38) * MPS;
+    const v = (rampT ? 38 + Math.random() * 8 : truck ? 42 + Math.random() * 14 : 48 + Math.random() * 38) * MPS;
     cars.push({ mesh, color, lane, target: lane, x: laneX(lane), z, vx: 0, v, cruise: v, yaw: 0, yawRate: 0,
-      w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: z > 0, spin: 0 });
+      w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: z > 0, spin: 0, ramp: rampT });
     return true;
   }
 
@@ -1667,9 +1768,14 @@ body {
   }
   function addBonus(label, pts) { score += pts; runStats.bonus += pts; feed(label, pts, 'bonus'); checkBest(); }
   function nearMiss(p, c, gap) {
-    const inches = gap < 0.35, side = Math.sign(c.x - p.x);
-    let pts = (inches ? 200 : 100) * (p.v / MPS / 100);
-    let label = inches ? 'INCHES' : 'NEAR MISS';
+    // the closer you shave it and the faster you blast past, the more it's worth
+    const g = Math.max(0, gap), close = 1 - g / 0.9, side = Math.sign(c.x - p.x);
+    const tier = g < 0.15 ? 'PAINT TRADE' : g < 0.35 ? 'INCHES' : g < 0.6 ? 'CLOSE' : 'NEAR MISS';
+    const inches = g < 0.35;
+    const rel = clamp((p.v - c.v) / 20, 0.5, 2);
+    let pts = (60 + 340 * close * close) * (p.v / MPS / 100) * rel;
+    let label = `${tier} ${g.toFixed(2)}m`;
+    if (rel >= 1.6) label += ' · BLUR';
     if (c.l > 8) { pts *= 1.3; label += ' · TRUCK'; }
     if (c.police) { pts *= 2; label += ' · COP'; }
     if (p.boosting) { pts *= 1.5; label += ' · NITRO'; }
@@ -1677,9 +1783,10 @@ body {
     if (threaded) { pts += 300; label = 'THREAD THE NEEDLE'; runStats.threads++; chain.count++; }
     chain.count++; chain.pot += pts; chain.timer = chainTime(chain.count); chain.lastT = time; chain.lastSide = side;
     nearMisses++;
-    p.nitro = Math.min(1, p.nitro + (inches ? 0.22 : 0.14) * S.nitroGain);
+    p.nitro = Math.min(1, p.nitro + (0.1 + 0.15 * close) * S.nitroGain);
     feed(label, pts, threaded || inches ? 'hot' : '');
     if (threaded) { showPop('THREAD THE NEEDLE!', true); Sound.ding(chain.count); }
+    else if (g < 0.15) showPop('PAINT TRADE!', true);
     else if (inches) showPop('INCHES!', true);
     Sound.whoosh(inches ? 1 : 0.7);
   }
@@ -1799,7 +1906,7 @@ body {
   // ---------- simulation ----------
   // Arcade highway handling: steering sets a sideways speed, the car's angle just follows it.
   function drivePlayer(p, dt) {
-    const steerIn = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    const steerIn = p.air ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     p.steer += clamp(steerIn - p.steer, -(steerIn ? 7 : 12) * dt, (steerIn ? 7 : 12) * dt);
 
     const boosting = keys.nitro && p.nitro > 0 && !keys.down;
@@ -1836,6 +1943,17 @@ body {
     else p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 16);
     p.yawRate = p.slide > 0 ? p.yawRate * Math.exp(-4 * dt) : (p.yaw - prevYaw) / dt;
     p.slide = Math.max(0, p.slide - dt);
+    p.landSpin *= Math.exp(-7 * dt);
+    // ramp trucks: ride up the ramp, launch off the lip
+    if (p.air) return airborneStep(p, dt);
+    const r = rampUnder(p);
+    if (r) {
+      const rel = Math.max(0, p.v - r.c.v);
+      p.y = rampH(r.u); p.vy = rampSlope(r.u) * rel; p.onRamp = r.c;
+    } else if (p.onRamp || p.y > 0.05) {
+      p.onRamp = null; p.air = true; p.airT = 0; p.airSpin = 0; p.airSpinRate = 0; p.jumped = 0;
+      if (p.vy > 2) Sound.whoosh(1);
+    } else { p.y = 0; p.vy = 0; }
   }
 
   function slidePlayer(p, dt) {
@@ -1939,12 +2057,32 @@ body {
       if (!p.wrecked && !c.passed && c.z >= 0) {
         c.passed = true;
         const gap = Math.abs(c.x - p.x) - (c.w + p.w) / 2;
-        if (gap < 0.9 && gap > -0.05 && p.v > c.v + 6.7) nearMiss(p, c, gap);
+        if (p.air && p.y > 1.2) p.jumped++;
+        else if (gap < 0.9 && gap > -0.05 && p.v > c.v + 6.7) nearMiss(p, c, gap);
       }
     }
 
+    // close ride: shaving along a car you're overtaking keeps feeding the chain
+    if (!p.wrecked && !p.air) {
+      let bestGap = 9;
+      for (const c of cars) {
+        if (c.loose || c.parked || Math.abs(c.z) > (c.l + p.l) / 2) continue;
+        const gap = Math.abs(c.x - p.x) - (c.w + p.w) / 2;
+        if (gap > 0 && gap < bestGap && p.v > c.v + 4) bestGap = gap;
+      }
+      if (bestGap < 0.7) {
+        const pts = dt * 110 * (1 - bestGap / 0.7) * (p.v / MPS / 100);
+        p.closeRide += pts; chain.pot += pts; if (!chain.count) chain.count = 1;
+        chain.timer = Math.max(chain.timer, 1.4);
+        setText('hTier', `CLOSE RIDE ${bestGap.toFixed(2)} m`);
+      } else if (p.closeRide > 0) { if (p.closeRide > 25) feed('CLOSE RIDE', p.closeRide, ''); p.closeRide = 0; }
+    }
+    if (p.air) setText('hTier', `AIR ${p.airT.toFixed(1)}s${Math.abs(p.airSpin) > 2.6 ? ' · ' + Math.round(Math.abs(p.airSpin) / Math.PI) * 180 : ''}${p.jumped ? ' · OVER ' + p.jumped : ''}`);
     // player vs traffic
     for (const c of cars) {
+      if (p.onRamp === c) continue;
+      if (c.ramp && !p.air && Math.abs(p.x - c.x) <= 1.25 - p.w * 0.2) { const u = c.z + c.l / 2 + p.l * 0.4; if (u > -0.6 && u <= RAMP_LEN + 0.15) continue; }   // driving onto the ramp, not into the truck
+      if (p.air || p.y > 0.05) { const top = c.ramp ? (Math.abs(c.z + c.l / 2 - RAMP_LEN / 2) < RAMP_LEN / 2 + 0.3 ? rampH(c.z + c.l / 2) : 2.5) : c.l > 8 ? 3.6 : 1.45; if (p.y > top - 0.25) continue; }
       const hit = collide(p, c);
       if (!hit) continue;
       if (c.suspect) { ramSuspect(c, hit); continue; }
@@ -2074,7 +2212,8 @@ body {
     const p = player;
     const ud = playerMesh.userData;
     playerMesh.position.set(p.x, p.y, 0);
-    playerMesh.rotation.set(0, p.yaw, p.roll);
+    const jumpPitch = p.wrecked ? 0 : p.onRamp || p.air ? Math.atan2(p.vy, Math.max(p.v, 5)) * (p.air ? 0.6 : 1) : 0;
+    playerMesh.rotation.set(jumpPitch, p.yaw + (p.wrecked ? 0 : p.airSpin + p.landSpin), p.roll);
     // suspension: lean out of turns, squat under throttle, dive under braking
     const vt = Math.hypot(p.vx, p.v);
     p.bodyRoll += (clamp((p.wrecked ? 0 : p.latA) * 0.0016, -0.045, 0.045) - p.bodyRoll) * Math.min(1, dt * 14);
@@ -2111,7 +2250,7 @@ body {
     setWidth('nosBar', p.nitro);
     camera.updateProjectionMatrix();
     const rp = ragdoll && wrecked ? ragdoll.named.pelvis.p : null;
-    const tPos = rp ? new THREE.Vector3(rp.x + 4, Math.max(rp.y + 3.5, 4.5), rp.z + 9) : wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * 0.8 - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4, 8.4 - speedT * 1.2);
+    const tPos = rp ? new THREE.Vector3(rp.x + 4, Math.max(rp.y + 3.5, 4.5), rp.z + 9) : wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * 0.8 - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4 + p.y * 0.8, 8.4 - speedT * 1.2 + p.y * 0.5);
     const tLook = rp ? new THREE.Vector3(rp.x, rp.y + 0.3, rp.z) : wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * 0.9 - Math.sin(p.yaw) * 3, 1.0, -14);
     camPos.lerp(tPos, 1 - Math.exp(-dt * (wrecked ? 2 : 14)));
     camLook.lerp(tLook, 1 - Math.exp(-dt * (wrecked ? 3 : 16)));
