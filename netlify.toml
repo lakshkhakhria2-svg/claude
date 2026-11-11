@@ -1,6 +1,6 @@
 # Netlify: publish only the website files (not the skill, design notes or tooling).
 [build]
-  command = "rm -rf dist && mkdir dist && cp -r index.html assets brand work dist/"
+  command = "rm -rf dist && mkdir dist && cp -r index.html assets brand work movember dist/"
   publish = "dist"
 
 [[headers]]
