@@ -6,6 +6,14 @@
 <title>Johnson's 525,600kg</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#fa8072">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Johnson's Movember Challenge: 525,600kg">
+<meta property="og:description" content="We're lifting 525,600kg in the gym for the 525,600 men who lose their lives to suicide each year. Watch the total climb and back the challenge.">
+<meta property="og:url" content="https://jladsmovemberchallenge.vercel.app/">
+<meta property="og:image" content="https://jladsmovemberchallenge.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Johnson's Movember Challenge: 525,600kg lifted in the gym for the 525,600 men who lose their lives to suicide each year.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,10 +119,21 @@ button:active { transform: scale(.97); }
 .day { font: 600 12px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 16px 0 4px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
 .day span { font-family: var(--mono); letter-spacing: 0; }
 
+.paceline { margin: 0; font-size: 14px; color: var(--muted); }
+.paceline b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.you { margin: 12px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; }
+.you b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sync { margin: 10px 0 0; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex: none; }
+.sync.wait::before { background: var(--plate); }
+.more { margin-top: 12px; width: 100%; background: transparent; border-color: var(--line); color: var(--ink); font-size: 14px; }
+.share { background: transparent; border: 1px solid currentColor; color: inherit; padding: 12px 18px; }
+
 /* Squad */
 .squad { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .squad li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; }
 .squad li b { font-weight: 600; overflow-wrap: anywhere; }
+.squad li.me b::after { content: " (you)"; font-weight: 400; color: var(--muted); }
 .squad li .kg { font: 700 15px var(--mono); font-variant-numeric: tabular-nums; }
 .squad li i { grid-column: 1 / -1; display: block; height: 6px; border-radius: 3px; background: var(--plate); }
 .squad li.empty { display: block; color: var(--muted); }
@@ -159,6 +178,7 @@ footer p { margin: 0 0 6px; }
     </div>
     <div class="bar" aria-hidden="true"><svg id="meter" viewBox="0 0 1000 34" preserveAspectRatio="none"></svg></div>
     <div class="ticks" aria-hidden="true"><span>0</span><span>131,400</span><span>262,800</span><span>394,200</span><span>525,600</span></div>
+    <p class="paceline" id="paceLine" hidden></p>
     <div class="stats">
       <div class="stat"><b id="left">525,600</b><span>kg to go</span></div>
       <div class="stat"><b id="today">0</b><span>kg today</span></div>
@@ -175,26 +195,33 @@ footer p { margin: 0 0 6px; }
   <section aria-labelledby="log-h">
     <h2 id="log-h">Log a lift</h2>
     <form class="log" id="logForm" autocomplete="off">
-      <label class="who">Your name<input id="name" type="text" maxlength="30" autocomplete="nickname" placeholder="Johnson" required></label>
+      <label class="who">Your name<input id="name" type="text" maxlength="30" autocomplete="nickname" placeholder="Johnson" list="names" required><datalist id="names"></datalist></label>
       <label>Weight (kg)<input id="weight" type="number" inputmode="decimal" min="0" max="1000" step="0.5" placeholder="100" required></label>
       <label>Reps<input id="reps" type="number" inputmode="numeric" min="1" max="500" step="1" placeholder="10" required></label>
       <div class="formfoot">
         <span class="calc" id="calc">kg × reps = <b>0 kg</b></span>
         <button class="primary" type="submit" id="addBtn" disabled>Add to total</button>
       </div>
+      <div class="formfoot" id="againRow" hidden>
+        <button class="ghost" type="button" id="againBtn"></button>
+      </div>
     </form>
     <p class="note" id="storeNote">Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg.</p>
+    <p class="sync" id="sync" role="status" hidden></p>
+    <p class="you" id="you" hidden></p>
     <p class="readonly" id="readonly" hidden>You're viewing the squad's live total. To add your own lifts, ask the organiser to share this page with you with "can use" access.</p>
   </section>
 
   <aside class="donate">
     <p><strong>Back the challenge</strong>Every kilo is for someone's son, brother, dad or mate. Donations go to Movember's men's mental health and suicide prevention work.</p>
     <a href="https://movember.com/m/15352332?mc=60" target="_blank" rel="noopener">Donate on Movember</a>
+    <button type="button" class="share" id="shareBtn" hidden>Share the challenge</button>
   </aside>
 
   <section aria-labelledby="hist-h">
     <h2 id="hist-h">Logbook</h2>
     <ul class="history" id="history"><li class="empty">Loading the logbook…</li></ul>
+    <button type="button" class="more" id="moreBtn" hidden></button>
     <div class="drive" id="drivePanel" hidden>
       <p><strong>Google Drive log</strong><span id="driveStatus">Checking Google Drive…</span></p>
       <div class="drive-actions">
@@ -267,6 +294,46 @@ footer p { margin: 0 0 6px; }
     $("meter").innerHTML = html;
   }
 
+  const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+  function board() {
+    const by = {};
+    for (const l of [...lifts].sort((a, b) => a.at - b.at)) {
+      const k = l.name ? "n:" + l.name.toLowerCase() : "u:" + (l.by || "");
+      if (!by[k]) by[k] = { key: k, label: "", id: l.by, kg: 0, lifts: 0 };
+      by[k].kg += l.kg; by[k].lifts++;
+      if (l.name && !by[k].label) by[k].label = l.name;
+    }
+    return Object.values(by).sort((a, b) => b.kg - a.kg);
+  }
+  const myKey = () => { const n = cleanName($("name").value); return n ? "n:" + n.toLowerCase() : ""; };
+
+  function renderPace(total) {
+    const el = $("paceLine"), now = new Date();
+    if (total >= GOAL) { el.hidden = false; el.innerHTML = "<b>Goal smashed.</b> All 525,600 kg lifted."; return; }
+    if (now.getMonth() !== 10) { el.hidden = true; return; }
+    const elapsed = Math.min(1, (now - new Date(now.getFullYear(), 10, 1)) / (30 * 86400000));
+    const diff = total - GOAL * elapsed;
+    el.hidden = false;
+    el.innerHTML = diff >= 0
+      ? "<b>" + fmt(diff) + " kg ahead</b> of an even pace through November."
+      : "<b>" + fmt(-diff) + " kg behind</b> an even pace through November. Every set closes the gap.";
+  }
+
+  function renderYou(rows) {
+    const el = $("you"), k = myKey();
+    const i = k ? rows.findIndex((r) => r.key === k) : -1;
+    el.hidden = i < 0;
+    if (i < 0) return;
+    el.textContent = "";
+    const a = document.createElement("span"); a.textContent = `${rows[i].label}: ${ordinal(i + 1)} of ${rows.length} in the squad · ${rows[i].lifts} ${rows[i].lifts === 1 ? "lift" : "lifts"}`;
+    const b = document.createElement("b"); b.textContent = fmt(rows[i].kg) + " kg";
+    el.append(a, b);
+  }
+
+  let showAll = false;
+  const PAGE = 25;
+  $("moreBtn").addEventListener("click", () => { showAll = true; renderHistory(); });
+
   let lastTotal = null;
   function render() {
     const total = sum(lifts);
@@ -280,6 +347,7 @@ footer p { margin: 0 0 6px; }
     $("days").textContent = dl;
     $("pace").textContent = total >= GOAL ? "0" : dl > 0 ? fmt((GOAL - total) / dl) : "–";
     drawMeter(frac);
+    renderPace(total);
     if (lastTotal !== null && total > lastTotal) { const n = $("total"); n.classList.remove("bump"); void n.offsetWidth; n.classList.add("bump"); }
     lastTotal = total;
     renderSquad();
@@ -290,22 +358,20 @@ footer p { margin: 0 0 6px; }
     const ol = $("squad");
     $("squadSec").hidden = false;
     ol.textContent = "";
-    const by = {};
-    for (const l of [...lifts].sort((a, b) => a.at - b.at)) {
-      const k = l.name ? "n:" + l.name.toLowerCase() : "u:" + (l.by || "");
-      if (!by[k]) by[k] = { label: "", id: l.by, kg: 0 };
-      by[k].kg += l.kg;
-      if (l.name && !by[k].label) by[k].label = l.name;
-    }
-    const rows = Object.values(by).sort((a, b) => b.kg - a.kg);
+    const rows = board();
+    renderYou(rows);
+    const dl = $("names"); dl.textContent = "";
+    for (const r of rows) if (r.label) { const o = document.createElement("option"); o.value = r.label; dl.append(o); }
     if (!rows.length) {
       const li = document.createElement("li"); li.className = "empty";
       li.textContent = "Nobody's on the board yet. The first lift logged puts its lifter at the top.";
       ol.append(li); return;
     }
     const top = rows[0].kg || 1;
-    for (const { label, id, kg } of rows) {
+    const mk = myKey();
+    for (const { key, label, id, kg } of rows) {
       const li = document.createElement("li");
+      if (key === mk) li.className = "me";
       const name = document.createElement("b"); name.textContent = label || who(id);
       const val = document.createElement("span"); val.className = "kg"; val.textContent = fmt(kg) + " kg";
       const bar = document.createElement("i"); bar.style.width = Math.max(2, (kg / top) * 100) + "%";
@@ -321,13 +387,17 @@ footer p { margin: 0 0 6px; }
     if (!lifts.length) {
       const li = document.createElement("li"); li.className = "empty";
       li.textContent = canWrite ? "No lifts yet. Log the first one above and the barbell starts loading." : "No lifts logged yet. Check back after the next session.";
-      ul.append(li); return;
+      ul.append(li); $("moreBtn").hidden = true; return;
     }
     const sorted = [...lifts].sort((a, b) => b.at - a.at);
+    const more = $("moreBtn");
+    more.hidden = showAll || sorted.length <= PAGE;
+    more.textContent = "Show all " + sorted.length + " lifts";
+    const shown = showAll ? sorted : sorted.slice(0, PAGE);
     const dayTotals = {};
     for (const l of sorted) dayTotals[dayKey(l.at)] = (dayTotals[dayKey(l.at)] || 0) + l.kg;
     let currentDay = null;
-    for (const l of sorted) {
+    for (const l of shown) {
       const k = dayKey(l.at);
       if (k !== currentDay) {
         currentDay = k;
@@ -394,18 +464,37 @@ footer p { margin: 0 0 6px; }
   $("name").addEventListener("change", () => { try { localStorage.setItem(NAME_KEY, cleanName($("name").value)); } catch (_) {} });
   ["name", "weight", "reps"].forEach((id) => $(id).addEventListener("input", updateCalc));
 
-  $("logForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const v = vol();
-    if (!v || !store) return;
+  const LAST_KEY = "johnson-movember-last";
+  let last = null;
+  try { last = JSON.parse(localStorage.getItem(LAST_KEY) || "null"); } catch (_) {}
+  function showAgain() {
+    const ok = last && last.weight > 0 && last.reps > 0;
+    $("againRow").hidden = !ok;
+    if (ok) $("againBtn").textContent = `Same again: ${last.weight}kg × ${last.reps} reps (+${fmt(last.weight * last.reps)} kg)`;
+  }
+  function logLift(weight, reps) {
     const name = cleanName($("name").value);
-    if (!name) { $("name").focus(); return; }
+    if (!name) { $("name").focus(); toast("Add your name first."); return; }
+    if (!store) return;
     try { localStorage.setItem(NAME_KEY, name); } catch (_) {}
-    const lift = { name, weight: parseFloat($("weight").value), reps: parseInt($("reps").value, 10), kg: v, at: Date.now() };
+    const v = weight * reps;
+    last = { weight, reps };
+    try { localStorage.setItem(LAST_KEY, JSON.stringify(last)); } catch (_) {}
+    showAgain();
+    const lift = { name, weight, reps, kg: v, at: Date.now() };
     store.add(lift)
       .then(() => { toast("+" + fmt(v) + " kg. Keep going!"); syncDrive(true); })
       .catch((e) => toast((e && e.message) || "Couldn't save that lift. Check your connection and try again."));
-    $("reps").value = ""; updateCalc(); $("reps").focus();
+  }
+  $("againBtn").addEventListener("click", () => { if (last) logLift(last.weight, last.reps); });
+  $("name").addEventListener("input", () => renderYou(board()));
+  showAgain();
+
+  $("logForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!vol()) return;
+    logLift(parseFloat($("weight").value), parseInt($("reps").value, 10));
+    $("reps").value = ""; updateCalc();
   });
 
   function setWritable(on) {
@@ -514,55 +603,138 @@ footer p { margin: 0 0 6px; }
   }
 
   // ---------- cloud (Vercel) ----------
+  // Lifts go into an outbox on this phone first, then save to the squad log.
+  // With no signal (gym basements) they wait here and save when it returns.
   async function bootCloud() {
     const API = "/api/lifts";
-    const getLifts = async () => {
+    const KEY = "johnson-movember-device", MINE = "johnson-movember-mine", OUTBOX = "johnson-movember-outbox";
+    const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") || d; } catch (_) { return d; } };
+    const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+    const hex = (n) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (x) => x.toString(16).padStart(2, "0")).join("");
+
+    const fetchLifts = async () => {
       const r = await fetch(API, { cache: "no-store" });
       const d = await r.json();
       if (!r.ok || !Array.isArray(d.lifts)) throw new Error("no cloud");
       return d.lifts;
     };
-    let first;
-    try { first = await getLifts(); } catch (_) { useLocal(); return; }
-
-    const KEY = "johnson-movember-device", MINE = "johnson-movember-mine";
-    let key = "";
-    try { key = localStorage.getItem(KEY) || ""; } catch (_) {}
-    if (key.length < 16) {
-      key = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
-      try { localStorage.setItem(KEY, key); } catch (_) {}
-    }
-    let mine = new Set();
-    try { mine = new Set(JSON.parse(localStorage.getItem(MINE) || "[]")); } catch (_) {}
-    const saveMine = () => { try { localStorage.setItem(MINE, JSON.stringify([...mine])); } catch (_) {} };
-
-    const apply = (arr) => { lifts = arr.map((d) => ({ id: d.id, ...clean(d) })); render(); };
-    const refresh = () => getLifts().then(apply).catch(() => {});
+    const hasApi = async () => { try { return (await fetch(API, { cache: "no-store" })).status !== 404; } catch (_) { return true; } };
     const call = async (method, body) => {
       const r = await fetch(API, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || "Couldn't reach the squad log. Try again.");
+      if (!r.ok) { const e = new Error(d.error || "Couldn't reach the squad log."); e.status = r.status; throw e; }
       return d;
     };
 
+    let pending = load(OUTBOX, []);
+    if (!Array.isArray(pending)) pending = [];
+    let server;
+    try { server = await fetchLifts(); }
+    catch (_) {
+      // No squad log on this host: keep lifts on this device. Otherwise carry on and retry.
+      if (location.protocol === "file:" || !(await hasApi())) { useLocal(); return; }
+      server = [];
+    }
+
+    let key = load(KEY, "");
+    if (typeof key !== "string" || key.length < 16) { key = hex(16); save(KEY, key); }
+    const mine = new Set(load(MINE, []));
+    // The squad log is cached for up to a minute, so this phone remembers what it just
+    // saved or removed (even across a reload) until the cached copy catches up.
+    const HELD = "johnson-movember-held", HOLD = 150000;
+    const held = load(HELD, {});
+    const recent = new Map((held.recent || []).filter((r) => r && r.until > Date.now()).map((r) => [r.lift.id, r]));
+    const gone = new Map((held.gone || []).filter((g) => g[1] > Date.now()));
+    const saveHeld = () => save(HELD, { recent: [...recent.values()], gone: [...gone] });
+    let flushing = false, failed = false, timer = null;
+
+    function status() {
+      const el = $("sync"); el.hidden = false;
+      const n = pending.length;
+      el.classList.toggle("wait", n > 0);
+      if (!n) el.textContent = "All lifts saved to the cloud.";
+      else if (failed || navigator.onLine === false) el.textContent = `${n} ${n === 1 ? "lift is" : "lifts are"} kept on this phone and will save when you're back online.`;
+      else el.textContent = "Saving to the cloud…";
+    }
+
+    function compose() {
+      const now = Date.now(), ids = new Set(), out = [];
+      for (const l of server) { if ((gone.get(l.id) || 0) > now) continue; ids.add(l.id); out.push(l); }
+      for (const [id, r] of recent) {
+        if (r.until < now || ids.has(id)) { if (r.until < now) recent.delete(id); continue; }
+        ids.add(id); out.push(r.lift);
+      }
+      const before = pending.length;
+      pending = pending.filter((l) => !ids.has(l.id));   // already in the squad log
+      if (pending.length !== before) save(OUTBOX, pending);
+      for (const l of pending) out.push({ ...l, kg: l.weight * l.reps });
+      lifts = out.map((d) => ({ id: d.id, ...clean(d) }));
+      render(); status();
+    }
+
+    const schedule = (ms) => { clearTimeout(timer); timer = setTimeout(flush, ms); };
+    async function flush() {
+      if (flushing || !pending.length) return;
+      flushing = true; status();
+      const batch = pending.slice(0, 50), sent = new Set(batch.map((l) => l.id));
+      try {
+        const d = await call("POST", { key, lifts: batch });
+        for (const l of batch) recent.set(l.id, { lift: { ...l, kg: l.weight * l.reps }, until: Date.now() + HOLD });
+        pending = pending.filter((l) => !sent.has(l.id)); save(OUTBOX, pending); saveHeld();
+        server = d.lifts; failed = false;
+      } catch (e) {
+        if (e.status === 400) { pending = pending.filter((l) => !sent.has(l.id)); save(OUTBOX, pending); toast(e.message); }
+        else failed = true;
+      }
+      flushing = false; compose();
+      if (pending.length) schedule(failed ? 5000 + Math.random() * 6000 : 500);
+    }
+
     store = {
-      add: async (l) => {
-        const d = await call("POST", { name: l.name, weight: l.weight, reps: l.reps, key });
-        mine.add(d.lift.id); saveMine();
-        lifts.push({ id: d.lift.id, ...clean(d.lift) }); render();
+      add: (l) => {
+        const lift = { id: hex(10), name: l.name, weight: l.weight, reps: l.reps, at: l.at };
+        pending.push(lift); save(OUTBOX, pending);
+        mine.add(lift.id); save(MINE, [...mine]);
+        compose(); schedule(2500);
+        return Promise.resolve();
       },
       remove: async (id) => {
-        await call("DELETE", { id, key });
-        mine.delete(id); saveMine();
-        lifts = lifts.filter((l) => l.id !== id); render();
+        if (pending.some((l) => l.id === id)) { pending = pending.filter((l) => l.id !== id); save(OUTBOX, pending); }
+        else { const d = await call("DELETE", { id, key }); server = d.lifts; }
+        gone.set(id, Date.now() + HOLD); recent.delete(id);
+        mine.delete(id); save(MINE, [...mine]); saveHeld();
+        compose();
       },
     };
     canRemove = (l) => mine.has(l.id);
     $("storeNote").textContent = "Every lift saves to the cloud automatically and adds to one squad total. A 100kg lift for 10 reps adds 1,000kg.";
     setWritable(true);
-    apply(first);
-    setInterval(() => { if (!document.hidden) refresh(); }, 15000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+    compose();
+    if (pending.length) schedule(300);
+
+    const refresh = () => fetchLifts().then((l) => { server = l; compose(); }).catch(() => {});
+    setInterval(() => { if (!document.hidden) refresh(); }, 30000);
+    window.addEventListener("online", () => { failed = false; status(); flush(); refresh(); });
+    window.addEventListener("offline", status);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) { refresh(); flush(); return; }
+      // Leaving the page with lifts still queued: hand them to the browser to send.
+      if (pending.length && navigator.sendBeacon) {
+        clearTimeout(timer);
+        navigator.sendBeacon(API, new Blob([JSON.stringify({ key, lifts: pending.slice(0, 50) })], { type: "application/json" }));
+      }
+    });
+
+    const share = $("shareBtn");
+    share.hidden = false;
+    share.addEventListener("click", async () => {
+      const url = location.origin + "/";
+      const text = "We're lifting 525,600kg for the 525,600 men who lose their lives to suicide each year. Watch the total climb and back the challenge:";
+      try {
+        if (navigator.share) await navigator.share({ title: "Johnson's Movember Challenge", text, url });
+        else { await navigator.clipboard.writeText(text + " " + url); toast("Link copied. Paste it to the squad."); }
+      } catch (_) {}
+    });
   }
 
   updateCalc();
