@@ -1,0 +1,8 @@
+{
+  "name": "jladsmovemberchallenge",
+  "private": true,
+  "description": "Johnson's Movember Challenge squad kg counter",
+  "dependencies": {
+    "@vercel/blob": "2.9.0"
+  }
+}

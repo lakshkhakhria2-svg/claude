@@ -224,6 +224,7 @@ footer p { margin: 0 0 6px; }
   let lifts = [];          // active entries: {id, weight, reps, kg, at, by}
   let store = null;        // {add(lift), remove(id)}
   let canWrite = true;
+  let canRemove = () => true; // which logbook entries this viewer may remove
   let shared = false;      // true when entries sync through the shared database
   let userApi = null, myId = null;
   const names = {};
@@ -343,7 +344,7 @@ footer p { margin: 0 0 6px; }
       what.append(name, detail);
       const kg = document.createElement("span"); kg.className = "kg"; kg.textContent = fmt(l.kg) + " kg";
       li.append(what, kg);
-      if (canWrite) {
+      if (canWrite && canRemove(l)) {
         const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Remove";
         del.setAttribute("aria-label", "Remove " + name.textContent + " " + kg.textContent);
         del.addEventListener("click", () => {
@@ -352,7 +353,7 @@ footer p { margin: 0 0 6px; }
             setTimeout(() => { del.classList.remove("confirm"); del.textContent = "Remove"; }, 3000);
             return;
           }
-          store.remove(l.id).then(() => { toast("Removed " + fmt(l.kg) + " kg"); syncDrive(true); }).catch(() => toast("Couldn't remove that entry. Try again."));
+          store.remove(l.id).then(() => { toast("Removed " + fmt(l.kg) + " kg"); syncDrive(true); }).catch((e) => toast((e && e.message) || "Couldn't remove that entry. Try again."));
         });
         li.append(del);
       } else {
@@ -403,7 +404,7 @@ footer p { margin: 0 0 6px; }
     const lift = { name, weight: parseFloat($("weight").value), reps: parseInt($("reps").value, 10), kg: v, at: Date.now() };
     store.add(lift)
       .then(() => { toast("+" + fmt(v) + " kg. Keep going!"); syncDrive(true); })
-      .catch(() => toast("Couldn't save that lift. Check your connection and try again."));
+      .catch((e) => toast((e && e.message) || "Couldn't save that lift. Check your connection and try again."));
     $("reps").value = ""; updateCalc(); $("reps").focus();
   });
 
@@ -512,8 +513,60 @@ footer p { margin: 0 0 6px; }
     });
   }
 
+  // ---------- cloud (Vercel) ----------
+  async function bootCloud() {
+    const API = "/api/lifts";
+    const getLifts = async () => {
+      const r = await fetch(API, { cache: "no-store" });
+      const d = await r.json();
+      if (!r.ok || !Array.isArray(d.lifts)) throw new Error("no cloud");
+      return d.lifts;
+    };
+    let first;
+    try { first = await getLifts(); } catch (_) { useLocal(); return; }
+
+    const KEY = "johnson-movember-device", MINE = "johnson-movember-mine";
+    let key = "";
+    try { key = localStorage.getItem(KEY) || ""; } catch (_) {}
+    if (key.length < 16) {
+      key = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+      try { localStorage.setItem(KEY, key); } catch (_) {}
+    }
+    let mine = new Set();
+    try { mine = new Set(JSON.parse(localStorage.getItem(MINE) || "[]")); } catch (_) {}
+    const saveMine = () => { try { localStorage.setItem(MINE, JSON.stringify([...mine])); } catch (_) {} };
+
+    const apply = (arr) => { lifts = arr.map((d) => ({ id: d.id, ...clean(d) })); render(); };
+    const refresh = () => getLifts().then(apply).catch(() => {});
+    const call = async (method, body) => {
+      const r = await fetch(API, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Couldn't reach the squad log. Try again.");
+      return d;
+    };
+
+    store = {
+      add: async (l) => {
+        const d = await call("POST", { name: l.name, weight: l.weight, reps: l.reps, key });
+        mine.add(d.lift.id); saveMine();
+        lifts.push({ id: d.lift.id, ...clean(d.lift) }); render();
+      },
+      remove: async (id) => {
+        await call("DELETE", { id, key });
+        mine.delete(id); saveMine();
+        lifts = lifts.filter((l) => l.id !== id); render();
+      },
+    };
+    canRemove = (l) => mine.has(l.id);
+    $("storeNote").textContent = "Every lift saves to the cloud automatically and adds to one squad total. A 100kg lift for 10 reps adds 1,000kg.";
+    setWritable(true);
+    apply(first);
+    setInterval(() => { if (!document.hidden) refresh(); }, 15000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  }
+
   updateCalc();
-  if (window.claude && window.claude.use) { drawMeter(0); boot(); } else useLocal();
+  if (window.claude && window.claude.use) { drawMeter(0); boot(); } else { drawMeter(0); bootCloud(); }
 })();
 </script>
 </body>
