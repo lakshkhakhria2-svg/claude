@@ -108,6 +108,22 @@ button:active { transform: scale(.97); }
 .day { font: 600 12px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 16px 0 4px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
 .day span { font-family: var(--mono); letter-spacing: 0; }
 
+/* Squad */
+.squad { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.squad li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; }
+.squad li b { font-weight: 600; overflow-wrap: anywhere; }
+.squad li .kg { font: 700 15px var(--mono); font-variant-numeric: tabular-nums; }
+.squad li i { grid-column: 1 / -1; display: block; height: 6px; border-radius: 3px; background: var(--plate); }
+.squad li.empty { display: block; color: var(--muted); }
+
+/* Drive log */
+.drive { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.drive p { margin: 0; flex: 1 1 240px; min-width: 0; font-size: 14px; color: var(--muted); }
+.drive p strong { display: block; color: var(--ink); font-size: 15px; }
+.drive-actions { display: flex; gap: 12px; align-items: center; }
+.drive-actions a { font-weight: 600; font-size: 14px; }
+.drive-actions button { padding: 8px 14px; font-size: 14px; }
+
 /* Donate */
 .donate { background: var(--iron); color: var(--bg); border-radius: 14px; padding: 22px; display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: center; }
 .donate p { margin: 0; flex: 1 1 260px; min-width: 0; }
@@ -129,7 +145,7 @@ footer p { margin: 0 0 6px; }
     <h1>Johnson's Movember Challenge
       <svg class="tash" viewBox="0 0 64 24" aria-hidden="true"><path fill="currentColor" d="M32 9c-3-5-9-7-14-5-4 2-6 6-10 6-3 0-5-2-6-4-1 5 2 11 9 12 7 1 13-2 17-6 1 0 3 0 4 0 4 4 10 7 17 6 7-1 10-7 9-12-1 2-3 4-6 4-4 0-6-4-10-6-5-2-11 0-14 5z"/></svg>
     </h1>
-    <p class="lede"><strong>525,600kg lifted in the gym</strong> for the 525,600 men who lose their lives to suicide each year. One kilo for every one of them.</p>
+    <p class="lede"><strong>525,600kg lifted in the gym</strong> for the 525,600 men who lose their lives to suicide each year. One kilo for every one of them, lifted together as a squad.</p>
   </header>
 
   <section class="counter" aria-label="Progress">
@@ -148,6 +164,11 @@ footer p { margin: 0 0 6px; }
     </div>
   </section>
 
+  <section id="squadSec" aria-labelledby="squad-h" hidden>
+    <h2 id="squad-h">The squad</h2>
+    <ol class="squad" id="squad"></ol>
+  </section>
+
   <section aria-labelledby="log-h">
     <h2 id="log-h">Log a lift</h2>
     <form class="log" id="logForm" autocomplete="off">
@@ -159,7 +180,7 @@ footer p { margin: 0 0 6px; }
       </div>
     </form>
     <p class="note" id="storeNote">Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg.</p>
-    <p class="readonly" id="readonly" hidden>You're viewing Johnson's live total. Only Johnson can add lifts here, but you can back the challenge below.</p>
+    <p class="readonly" id="readonly" hidden>You're viewing the squad's live total. To add your own lifts, ask the organiser to share this page with you with "can use" access.</p>
   </section>
 
   <aside class="donate">
@@ -170,6 +191,13 @@ footer p { margin: 0 0 6px; }
   <section aria-labelledby="hist-h">
     <h2 id="hist-h">Logbook</h2>
     <ul class="history" id="history"><li class="empty">Loading the logbook…</li></ul>
+    <div class="drive" id="drivePanel" hidden>
+      <p><strong>Google Drive log</strong><span id="driveStatus">Checking Google Drive…</span></p>
+      <div class="drive-actions">
+        <a href="https://docs.google.com/document/d/1fJmf3TsH-qT6Z6YZQ4zgl0-yc6Q5iUYR7xs-gYT6s8w/edit" target="_blank" rel="noopener">Open the log</a>
+        <button type="button" class="ghost" id="driveBtn">Save to Drive</button>
+      </div>
+    </div>
   </section>
 
   <footer>
@@ -182,16 +210,31 @@ footer p { margin: 0 0 6px; }
 (() => {
   const GOAL = 525600;
   const LOCAL_KEY = "johnson-movember-lifts";
+  const DOC_ID = "1fJmf3TsH-qT6Z6YZQ4zgl0-yc6Q5iUYR7xs-gYT6s8w";
+  const DOCS = "Google Docs";
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => Math.round(n).toLocaleString("en-GB");
 
-  let lifts = [];          // {id, weight, reps, kg, at}
+  let all = [];            // every stored entry, removed ones included
+  let lifts = [];          // active entries: {id, weight, reps, kg, at, by}
   let store = null;        // {add(lift), remove(id)}
   let canWrite = true;
+  let shared = false;      // true when entries sync through the shared database
+  let userApi = null, myId = null;
+  const names = {};
 
-  // ---------- rendering ----------
+  // ---------- helpers ----------
   const dayKey = (ms) => { const d = new Date(ms); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
   const dayLabel = (ms) => new Date(ms).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  const clock = (ms) => new Date(ms).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const stamp = (ms) => dayLabel(ms) + " " + clock(ms);
+  const sum = (arr) => arr.reduce((s, l) => s + l.kg, 0);
+  const who = (id) => {
+    if (!id) return "Someone";
+    const n = names[id] || "";
+    if (id === myId) return n ? n + " (you)" : "You";
+    return n || "Someone";
+  };
 
   function daysLeft() {
     const now = new Date();
@@ -201,8 +244,8 @@ footer p { margin: 0 0 6px; }
     return Math.floor((end - start) / 86400000) + 1; // includes today
   }
 
+  // ---------- rendering ----------
   function drawMeter(frac) {
-    const svg = $("meter");
     const w = 1000, plates = 40, gap = 4;
     const pw = (w - gap * (plates - 1)) / plates;
     const filled = frac * plates;
@@ -213,25 +256,51 @@ footer p { margin: 0 0 6px; }
       html += `<rect x="${x}" y="2" width="${pw}" height="30" rx="3" fill="var(--line)" opacity=".55"/>`;
       if (f > 0) html += `<rect x="${x}" y="2" width="${pw * f}" height="30" rx="3" fill="var(--plate)"/>`;
     }
-    svg.innerHTML = html;
+    $("meter").innerHTML = html;
   }
 
   let lastTotal = null;
   function render() {
-    const total = lifts.reduce((s, l) => s + (Number(l.kg) || 0), 0);
+    const total = sum(lifts);
     const frac = Math.min(1, total / GOAL);
     $("total").textContent = fmt(total);
     $("pct").textContent = (frac * 100).toFixed(1) + "%";
     $("left").textContent = total >= GOAL ? "Done!" : fmt(GOAL - total);
     const today = dayKey(Date.now());
-    $("today").textContent = fmt(lifts.filter((l) => dayKey(l.at) === today).reduce((s, l) => s + l.kg, 0));
+    $("today").textContent = fmt(sum(lifts.filter((l) => dayKey(l.at) === today)));
     const dl = daysLeft();
     $("days").textContent = dl;
     $("pace").textContent = total >= GOAL ? "0" : dl > 0 ? fmt((GOAL - total) / dl) : "–";
     drawMeter(frac);
     if (lastTotal !== null && total > lastTotal) { const n = $("total"); n.classList.remove("bump"); void n.offsetWidth; n.classList.add("bump"); }
     lastTotal = total;
+    renderSquad();
     renderHistory();
+  }
+
+  function renderSquad() {
+    const ol = $("squad");
+    $("squadSec").hidden = !shared;
+    if (!shared) return;
+    ol.textContent = "";
+    const by = {};
+    for (const l of lifts) { const k = l.by || ""; by[k] = (by[k] || 0) + l.kg; }
+    const rows = Object.entries(by).sort((a, b) => b[1] - a[1]);
+    if (!rows.length) {
+      const li = document.createElement("li"); li.className = "empty";
+      li.textContent = "Nobody's on the board yet. The first lift logged puts its lifter at the top.";
+      ol.append(li); return;
+    }
+    const top = rows[0][1] || 1;
+    for (const [id, kg] of rows) {
+      const li = document.createElement("li");
+      const name = document.createElement("b"); name.textContent = who(id);
+      const val = document.createElement("span"); val.className = "kg"; val.textContent = fmt(kg) + " kg";
+      const bar = document.createElement("i"); bar.style.width = Math.max(2, (kg / top) * 100) + "%";
+      li.append(name, val, bar);
+      ol.append(li);
+    }
+    resolveNames(rows.map((r) => r[0]).filter(Boolean));
   }
 
   function renderHistory() {
@@ -243,9 +312,9 @@ footer p { margin: 0 0 6px; }
       ul.append(li); return;
     }
     const sorted = [...lifts].sort((a, b) => b.at - a.at);
-    let currentDay = null;
     const dayTotals = {};
     for (const l of sorted) dayTotals[dayKey(l.at)] = (dayTotals[dayKey(l.at)] || 0) + l.kg;
+    let currentDay = null;
     for (const l of sorted) {
       const k = dayKey(l.at);
       if (k !== currentDay) {
@@ -259,7 +328,7 @@ footer p { margin: 0 0 6px; }
       const what = document.createElement("div"); what.className = "what";
       const name = document.createElement("b"); name.textContent = l.weight ? `${l.weight}kg × ${l.reps} reps` : "Lift";
       const detail = document.createElement("span");
-      detail.textContent = new Date(l.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+      detail.textContent = (shared ? who(l.by) + " · " : "") + clock(l.at);
       what.append(name, detail);
       const kg = document.createElement("span"); kg.className = "kg"; kg.textContent = fmt(l.kg) + " kg";
       li.append(what, kg);
@@ -272,7 +341,7 @@ footer p { margin: 0 0 6px; }
             setTimeout(() => { del.classList.remove("confirm"); del.textContent = "Remove"; }, 3000);
             return;
           }
-          store.remove(l.id).then(() => toast("Removed " + fmt(l.kg) + " kg")).catch(() => toast("Couldn't remove that entry. Try again."));
+          store.remove(l.id).then(() => { toast("Removed " + fmt(l.kg) + " kg"); syncDrive(true); }).catch(() => toast("Couldn't remove that entry. Try again."));
         });
         li.append(del);
       } else {
@@ -280,6 +349,17 @@ footer p { margin: 0 0 6px; }
       }
       ul.append(li);
     }
+  }
+
+  let resolving = false;
+  function resolveNames(ids) {
+    const missing = ids.filter((id) => !(id in names));
+    if (!userApi || !missing.length || resolving) return;
+    resolving = true;
+    userApi.profiles(missing).then((ps) => {
+      for (const id of missing) names[id] = (ps[id] && ps[id].name) || "";
+    }).catch(() => { for (const id of missing) names[id] = ""; })
+      .finally(() => { resolving = false; render(); });
   }
 
   let toastTimer;
@@ -300,14 +380,14 @@ footer p { margin: 0 0 6px; }
   }
   ["weight", "reps"].forEach((id) => $(id).addEventListener("input", updateCalc));
 
-  function addLift(lift) {
-    return store.add(lift).then(() => toast("+" + fmt(lift.kg) + " kg. Keep going!")).catch(() => toast("Couldn't save that lift. Check your connection and try again."));
-  }
   $("logForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const v = vol();
     if (!v || !store) return;
-    addLift({ weight: parseFloat($("weight").value), reps: parseInt($("reps").value, 10), kg: v, at: Date.now() });
+    const lift = { weight: parseFloat($("weight").value), reps: parseInt($("reps").value, 10), kg: v, at: Date.now() };
+    store.add(lift)
+      .then(() => { toast("+" + fmt(v) + " kg. Keep going!"); syncDrive(true); })
+      .catch(() => toast("Couldn't save that lift. Check your connection and try again."));
     $("reps").value = ""; updateCalc(); $("reps").focus();
   });
 
@@ -317,8 +397,47 @@ footer p { margin: 0 0 6px; }
     $("readonly").hidden = on;
   }
 
-  // ---------- storage: shared live db when available, else this browser ----------
-  const clean = (d) => ({ weight: Number(d.weight) || 0, reps: Number(d.reps) || 0, kg: Math.max(0, Number(d.kg) || 0), at: Number(d.at) || 0 });
+  // ---------- Google Drive log (the organiser's copy) ----------
+  let mcpApi = null, colRef = null, isOwner = false, syncing = false, again = false, autoSync = false;
+  const setDrive = (msg) => { $("driveStatus").textContent = msg; };
+
+  async function syncDrive(fromAction) {
+    if (!mcpApi || !isOwner || !colRef) return;
+    if (!fromAction && !autoSync) return;
+    if (syncing) { again = true; return; }
+    const toAdd = all.filter((l) => !l.removed && !l.drive).sort((a, b) => a.at - b.at);
+    const toRemove = all.filter((l) => l.removed && l.drive && !l.driveRemoved);
+    if (!toAdd.length && !toRemove.length && !fromAction) return;
+    syncing = true; again = false;
+    setDrive("Saving to Google Drive…");
+    let text = "";
+    for (const l of toAdd) text += `\n${stamp(l.at)} | ${who(l.by)} | ${l.weight}kg × ${l.reps} reps | +${fmt(l.kg)} kg`;
+    for (const l of toRemove) text += `\n${stamp(Date.now())} | Removed: ${who(l.by)}'s ${l.weight}kg × ${l.reps} reps from ${stamp(l.at)} | −${fmt(l.kg)} kg`;
+    const requests = [];
+    if (text) requests.push({ insertText: { text, endOfSegmentLocation: {} } });
+    requests.push({ replaceAllText: { replaceText: `Group total: ${fmt(sum(lifts))} kg of 525,600 kg`, containsText: { text: "Group total: [0-9,.]+ kg of 525,600 kg", searchByRegex: true } } });
+    try {
+      await mcpApi.callTool(DOCS, "update_doc", { documentId: DOC_ID, requests });
+      for (const l of toAdd) await colRef.doc(l.id).update({ drive: true });
+      for (const l of toRemove) await colRef.doc(l.id).update({ driveRemoved: true });
+      autoSync = true;
+      setDrive("Up to date. Last saved " + clock(Date.now()) + ".");
+    } catch (e) {
+      const code = e && e.code;
+      if (code === "needs_reauth" || code === "server_not_connected" || code === "server_not_found") setDrive("Google Docs isn't connected. Connect it in claude.ai Settings → Connectors, then press Save to Drive.");
+      else if (code === "not_granted" || code === "consent_required") setDrive("Drive saving is off for this page. Press Save to Drive and allow Google Docs to turn it on.");
+      else setDrive("Couldn't reach Google Drive just now. Lifts are safe here; press Save to Drive to try again.");
+    }
+    syncing = false;
+    if (again) syncDrive(false);
+  }
+  $("driveBtn").addEventListener("click", () => syncDrive(true));
+
+  // ---------- storage ----------
+  const clean = (d) => ({
+    weight: Number(d.weight) || 0, reps: Number(d.reps) || 0, kg: Math.max(0, Number(d.kg) || 0), at: Number(d.at) || 0,
+    by: typeof d.by === "string" ? d.by : "", removed: d.removed === true, drive: d.drive === true, driveRemoved: d.driveRemoved === true,
+  });
 
   function useLocal() {
     let saved = [];
@@ -335,20 +454,42 @@ footer p { margin: 0 0 6px; }
   }
 
   async function boot() {
-    const db = window.claude && window.claude.use ? await window.claude.use("db").catch(() => null) : null;
+    const db = await window.claude.use("db").catch(() => null);
     if (!db) { useLocal(); return; }
-    const user = await window.claude.use("user").catch(() => null);
-    const may = user && user.can ? user.can("data.write") : null;
+    shared = true;
+    userApi = await window.claude.use("user").catch(() => null);
+    if (userApi) {
+      myId = await userApi.id().catch(() => null);
+      isOwner = userApi.isOwner ? await Promise.resolve(userApi.isOwner()).catch(() => false) : false;
+    }
+    const may = userApi && userApi.can ? await Promise.resolve(userApi.can("data.write")).catch(() => null) : null;
     setWritable(may !== false);
-    $("storeNote").textContent = "Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg. The total is live for everyone with the link.";
-    const col = db.collection("lifts");
-    store = { add: (l) => col.add(l), remove: (id) => col.doc(id).delete() };
+    $("storeNote").textContent = "Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg. Everyone's lifts add to one squad total.";
+    colRef = db.collection("lifts");
+    store = {
+      add: (l) => colRef.add({ ...l, by: myId || "", drive: false }),
+      remove: (id) => colRef.doc(id).update({ removed: true }),
+    };
+
+    if (isOwner) {
+      mcpApi = await window.claude.use("mcp").catch(() => null);
+      $("drivePanel").hidden = !mcpApi;
+      if (mcpApi) {
+        const perms = await window.claude.use("permissions").catch(() => null);
+        const st = perms ? await perms.state("mcp:" + DOCS).catch(() => "unavailable") : "unavailable";
+        autoSync = st === "granted";
+        setDrive(autoSync ? "Connected. New lifts are saved to the Drive log while this page is open." : "Press Save to Drive to copy the squad's lifts into the Google Doc.");
+      }
+    }
+
     let loaded = false;
-    const timer = setTimeout(() => { if (!loaded) { $("history").innerHTML = '<li class="empty">The logbook is taking a while to load. It will appear when the connection catches up.</li>'; } }, 10000);
-    col.onSnapshot((snap) => {
+    const timer = setTimeout(() => { if (!loaded) $("history").innerHTML = '<li class="empty">The logbook is taking a while to load. It will appear when the connection catches up.</li>'; }, 10000);
+    colRef.onSnapshot((snap) => {
       loaded = true; clearTimeout(timer);
-      lifts = snap.docs.map((d) => ({ id: d.id, ...clean(d.data() || {}) }));
+      all = snap.docs.map((d) => ({ id: d.id, ...clean(d.data() || {}) }));
+      lifts = all.filter((l) => !l.removed);
       render();
+      syncDrive(false);
     }, () => {
       clearTimeout(timer);
       $("history").innerHTML = '<li class="empty">Couldn\'t load the logbook. Reload the page to try again.</li>';
