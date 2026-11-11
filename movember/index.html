@@ -74,8 +74,7 @@ h1 .tash { display: inline-block; width: .9em; vertical-align: -.02em; }
 
 /* Log form */
 section h2 { font: 400 26px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; margin: 0 0 12px; }
-form.log { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; align-items: end; }
-@media (max-width: 560px) { form.log { grid-template-columns: 1fr 1fr 1fr; } form.log .ex { grid-column: 1 / -1; } }
+form.log { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
 label { display: grid; gap: 5px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; min-width: 0; }
 input {
   width: 100%; min-width: 0; font: 500 17px var(--body); color: var(--ink); background: var(--surface);
@@ -93,8 +92,6 @@ button:active { transform: scale(.97); }
 .primary { background: var(--plate); color: var(--plate-ink); margin-left: auto; }
 .primary:disabled { opacity: .45; cursor: not-allowed; }
 .ghost { background: transparent; border-color: var(--line); color: var(--ink); }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.chips button { padding: 7px 12px; font-size: 13px; font-weight: 600; }
 .note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
 .readonly { margin: 0; padding: 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); }
 
@@ -154,29 +151,14 @@ footer p { margin: 0 0 6px; }
   <section aria-labelledby="log-h">
     <h2 id="log-h">Log a lift</h2>
     <form class="log" id="logForm" autocomplete="off">
-      <label class="ex">Exercise
-        <input id="exercise" list="exercises" placeholder="Deadlift" required maxlength="40">
-        <datalist id="exercises">
-          <option value="Squat"><option value="Bench press"><option value="Deadlift"><option value="Overhead press">
-          <option value="Barbell row"><option value="Leg press"><option value="Lat pulldown"><option value="Romanian deadlift">
-          <option value="Hip thrust"><option value="Dumbbell press"><option value="Pull-ups (bodyweight)">
-        </datalist>
-      </label>
       <label>Weight (kg)<input id="weight" type="number" inputmode="decimal" min="0" max="1000" step="0.5" placeholder="100" required></label>
       <label>Reps<input id="reps" type="number" inputmode="numeric" min="1" max="500" step="1" placeholder="5" required></label>
-      <label>Sets<input id="sets" type="number" inputmode="numeric" min="1" max="100" step="1" value="1" required></label>
       <div class="formfoot">
-        <span class="calc" id="calc">weight × reps × sets = <b>0 kg</b></span>
+        <span class="calc" id="calc">kg × reps = <b>0 kg</b></span>
         <button class="primary" type="submit" id="addBtn" disabled>Add to total</button>
       </div>
     </form>
-    <div class="chips" id="chips" aria-label="Add a session total directly">
-      <button type="button" class="ghost" data-kg="1000">+1,000 kg</button>
-      <button type="button" class="ghost" data-kg="2500">+2,500 kg</button>
-      <button type="button" class="ghost" data-kg="5000">+5,000 kg</button>
-      <button type="button" class="ghost" data-kg="10000">+10,000 kg</button>
-    </div>
-    <p class="note" id="storeNote">Volume counts every kilo moved: a 100kg deadlift for 5 reps × 3 sets adds 1,500kg.</p>
+    <p class="note" id="storeNote">Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg.</p>
     <p class="readonly" id="readonly" hidden>You're viewing Johnson's live total. Only Johnson can add lifts here, but you can back the challenge below.</p>
   </section>
 
@@ -203,7 +185,7 @@ footer p { margin: 0 0 6px; }
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => Math.round(n).toLocaleString("en-GB");
 
-  let lifts = [];          // {id, exercise, weight, reps, sets, kg, at}
+  let lifts = [];          // {id, weight, reps, kg, at}
   let store = null;        // {add(lift), remove(id)}
   let canWrite = true;
 
@@ -275,10 +257,9 @@ footer p { margin: 0 0 6px; }
       }
       const li = document.createElement("li");
       const what = document.createElement("div"); what.className = "what";
-      const name = document.createElement("b"); name.textContent = l.exercise || "Session total";
+      const name = document.createElement("b"); name.textContent = l.weight ? `${l.weight}kg × ${l.reps} reps` : "Lift";
       const detail = document.createElement("span");
-      const time = new Date(l.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-      detail.textContent = l.weight ? `${l.weight}kg × ${l.reps} × ${l.sets} · ${time}` : time;
+      detail.textContent = new Date(l.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
       what.append(name, detail);
       const kg = document.createElement("span"); kg.className = "kg"; kg.textContent = fmt(l.kg) + " kg";
       li.append(what, kg);
@@ -309,15 +290,15 @@ footer p { margin: 0 0 6px; }
 
   // ---------- form ----------
   const vol = () => {
-    const w = parseFloat($("weight").value), r = parseInt($("reps").value, 10), s = parseInt($("sets").value, 10);
-    return w > 0 && r > 0 && s > 0 ? w * r * s : 0;
+    const w = parseFloat($("weight").value), r = parseInt($("reps").value, 10);
+    return w > 0 && r > 0 ? w * r : 0;
   };
   function updateCalc() {
     const v = vol();
-    $("calc").innerHTML = "weight × reps × sets = <b>" + fmt(v) + " kg</b>";
-    $("addBtn").disabled = !(v > 0 && $("exercise").value.trim());
+    $("calc").innerHTML = "kg × reps = <b>" + fmt(v) + " kg</b>";
+    $("addBtn").disabled = !(v > 0);
   }
-  ["exercise", "weight", "reps", "sets"].forEach((id) => $(id).addEventListener("input", updateCalc));
+  ["weight", "reps"].forEach((id) => $(id).addEventListener("input", updateCalc));
 
   function addLift(lift) {
     return store.add(lift).then(() => toast("+" + fmt(lift.kg) + " kg. Keep going!")).catch(() => toast("Couldn't save that lift. Check your connection and try again."));
@@ -326,23 +307,18 @@ footer p { margin: 0 0 6px; }
     e.preventDefault();
     const v = vol();
     if (!v || !store) return;
-    addLift({ exercise: $("exercise").value.trim().slice(0, 40), weight: parseFloat($("weight").value), reps: parseInt($("reps").value, 10), sets: parseInt($("sets").value, 10), kg: v, at: Date.now() });
+    addLift({ weight: parseFloat($("weight").value), reps: parseInt($("reps").value, 10), kg: v, at: Date.now() });
     $("reps").value = ""; updateCalc(); $("reps").focus();
-  });
-  $("chips").addEventListener("click", (e) => {
-    const b = e.target.closest("button[data-kg]");
-    if (!b || !store) return;
-    addLift({ exercise: "Session total", weight: 0, reps: 0, sets: 0, kg: Number(b.dataset.kg), at: Date.now() });
   });
 
   function setWritable(on) {
     canWrite = on;
-    $("logForm").hidden = !on; $("chips").hidden = !on; $("storeNote").hidden = !on;
+    $("logForm").hidden = !on; $("storeNote").hidden = !on;
     $("readonly").hidden = on;
   }
 
   // ---------- storage: shared live db when available, else this browser ----------
-  const clean = (d) => ({ exercise: String(d.exercise || "").slice(0, 40), weight: Number(d.weight) || 0, reps: Number(d.reps) || 0, sets: Number(d.sets) || 0, kg: Math.max(0, Number(d.kg) || 0), at: Number(d.at) || 0 });
+  const clean = (d) => ({ weight: Number(d.weight) || 0, reps: Number(d.reps) || 0, kg: Math.max(0, Number(d.kg) || 0), at: Number(d.at) || 0 });
 
   function useLocal() {
     let saved = [];
@@ -353,7 +329,7 @@ footer p { margin: 0 0 6px; }
       add: (l) => { lifts.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...l }); persist(); render(); return Promise.resolve(); },
       remove: (id) => { lifts = lifts.filter((l) => l.id !== id); persist(); render(); return Promise.resolve(); },
     };
-    $("storeNote").textContent = "Volume counts every kilo moved: a 100kg deadlift for 5 reps × 3 sets adds 1,500kg. Lifts are saved in this browser.";
+    $("storeNote").textContent = "Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg. Lifts are saved in this browser.";
     setWritable(true);
     render();
   }
@@ -364,7 +340,7 @@ footer p { margin: 0 0 6px; }
     const user = await window.claude.use("user").catch(() => null);
     const may = user && user.can ? user.can("data.write") : null;
     setWritable(may !== false);
-    $("storeNote").textContent = "Volume counts every kilo moved: a 100kg deadlift for 5 reps × 3 sets adds 1,500kg. The total is live for everyone with the link.";
+    $("storeNote").textContent = "Volume counts every kilo moved: a 100kg lift for 10 reps adds 1,000kg. The total is live for everyone with the link.";
     const col = db.collection("lifts");
     store = { add: (l) => col.add(l), remove: (id) => col.doc(id).delete() };
     let loaded = false;
