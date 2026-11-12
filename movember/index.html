@@ -119,6 +119,17 @@ button:active { transform: scale(.97); }
 .day { font: 600 12px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 16px 0 4px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
 .day span { font-family: var(--mono); letter-spacing: 0; }
 
+.honour { margin: 0; font-size: 16px; font-weight: 600; }
+.honour b { color: var(--plate-text); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.next { display: grid; gap: 6px; }
+.next-top { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
+.next-top b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.track { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.track i { display: block; height: 100%; width: 0; border-radius: 5px; background: var(--plate); transition: width .6s ease; }
+.next.done .track i { background: var(--good); }
+.today-top { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
+.today-top b { color: var(--ink); }
+#burst { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 .paceline { margin: 0; font-size: 14px; color: var(--muted); }
 .paceline b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .you { margin: 12px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; }
@@ -157,7 +168,7 @@ footer p { margin: 0 0 6px; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 8px; font-size: 14px; }
 .bump { animation: bump .5s ease; }
 @keyframes bump { 40% { transform: scale(1.04); } }
-@media (prefers-reduced-motion: reduce) { .bump { animation: none; } button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bump { animation: none; } button { transition: none; } .track i { transition: none; } }
 </style>
 </head>
 <body>
@@ -178,6 +189,15 @@ footer p { margin: 0 0 6px; }
     </div>
     <div class="bar" aria-hidden="true"><svg id="meter" viewBox="0 0 1000 34" preserveAspectRatio="none"></svg></div>
     <div class="ticks" aria-hidden="true"><span>0</span><span>131,400</span><span>262,800</span><span>394,200</span><span>525,600</span></div>
+    <p class="honour" id="honour"></p>
+    <div class="next" id="next" hidden>
+      <div class="next-top"><span id="nextLabel"></span><b id="nextLeft"></b></div>
+      <div class="track"><i id="nextFill"></i></div>
+    </div>
+    <div class="next" id="daily" hidden>
+      <div class="next-top"><span id="dailyLabel"></span><b id="dailyLeft"></b></div>
+      <div class="track"><i id="dailyFill"></i></div>
+    </div>
     <p class="paceline" id="paceLine" hidden></p>
     <div class="stats">
       <div class="stat"><b id="left">525,600</b><span>kg to go</span></div>
@@ -189,15 +209,16 @@ footer p { margin: 0 0 6px; }
 
   <section id="squadSec" aria-labelledby="squad-h" hidden>
     <h2 id="squad-h">The squad</h2>
+    <p class="today-top" id="todayTop" hidden></p>
     <ol class="squad" id="squad"></ol>
   </section>
 
   <section aria-labelledby="log-h">
     <h2 id="log-h">Log a lift</h2>
     <form class="log" id="logForm" autocomplete="off">
-      <label class="who">Your name<input id="name" type="text" maxlength="30" autocomplete="nickname" placeholder="Johnson" list="names" required><datalist id="names"></datalist></label>
-      <label>Weight (kg)<input id="weight" type="number" inputmode="decimal" min="0" max="1000" step="0.5" placeholder="100" required></label>
-      <label>Reps<input id="reps" type="number" inputmode="numeric" min="1" max="500" step="1" placeholder="10" required></label>
+      <label class="who">Your name<input id="name" type="text" maxlength="24" autocomplete="nickname" placeholder="Johnson" list="names" required><datalist id="names"></datalist></label>
+      <label>Weight (kg)<input id="weight" type="number" inputmode="decimal" min="0" max="400" step="0.5" placeholder="100" required></label>
+      <label>Reps<input id="reps" type="number" inputmode="numeric" min="1" max="100" step="1" placeholder="10" required></label>
       <div class="formfoot">
         <span class="calc" id="calc">kg × reps = <b>0 kg</b></span>
         <button class="primary" type="submit" id="addBtn" disabled>Add to total</button>
@@ -236,6 +257,7 @@ footer p { margin: 0 0 6px; }
   </footer>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<canvas id="burst" aria-hidden="true"></canvas>
 
 <script>
 (() => {
@@ -327,12 +349,97 @@ footer p { margin: 0 0 6px; }
     el.textContent = "";
     const a = document.createElement("span"); a.textContent = `${rows[i].label}: ${ordinal(i + 1)} of ${rows.length} in the squad · ${rows[i].lifts} ${rows[i].lifts === 1 ? "lift" : "lifts"}`;
     const b = document.createElement("b"); b.textContent = fmt(rows[i].kg) + " kg";
-    el.append(a, b);
+    const c = document.createElement("span"); c.style.flexBasis = "100%";
+    const st = streak(k);
+    const chase = i === 0
+      ? (rows.length > 1 ? `You're leading the squad by ${fmt(rows[0].kg - rows[1].kg)} kg. Stay ahead.` : "You're first on the board. Bring the squad in.")
+      : `${fmt(rows[i - 1].kg - rows[i].kg + 1)} kg more puts you past ${rows[i - 1].label || "the next lifter"}.`;
+    c.textContent = chase + (st > 1 ? ` ${st}-day streak.` : "");
+    el.append(a, b, c);
   }
 
   let showAll = false;
   const PAGE = 25;
   $("moreBtn").addEventListener("click", () => { showAll = true; renderHistory(); });
+
+  // ---------- motivation ----------
+  const MILESTONES = [5000, 10000, 25000, 50000, 75000, 100000, 150000, 200000, 262800, 300000, 350000, 400000, 450000, 500000, GOAL];
+  const milestoneName = (m) => m === GOAL ? "the full 525,600 kg" : m === 262800 ? "halfway (262,800 kg)" : fmt(m) + " kg";
+  const setBar = (id, label, left, frac, done) => {
+    const el = $(id); el.hidden = false; el.classList.toggle("done", !!done);
+    $(id + "Label").textContent = label; $(id + "Left").textContent = left;
+    $(id + "Fill").style.width = Math.max(0, Math.min(1, frac)) * 100 + "%";
+  };
+
+  function renderMotivation(total, todayKg) {
+    $("honour").innerHTML = total > 0
+      ? "One kilo, one man: <b>" + fmt(total) + "</b> remembered so far."
+      : "One kilo, one man. The first lift starts the count.";
+    const next = MILESTONES.find((m) => m > total);
+    if (next) {
+      const prev = [...MILESTONES].reverse().find((m) => m <= total) || 0;
+      setBar("next", "Next milestone: " + milestoneName(next), fmt(next - total) + " kg to go", (total - prev) / (next - prev));
+    } else $("next").hidden = true;
+    const dl = daysLeft();
+    if (total < GOAL && dl > 0) {
+      const target = (GOAL - (total - todayKg)) / dl;   // what today needs, fixed at the start of the day
+      const hit = todayKg >= target;
+      setBar("daily", hit ? "Today's target smashed" : "Today's squad target: " + fmt(target) + " kg",
+        hit ? "+" + fmt(todayKg - target) + " kg over" : fmt(target - todayKg) + " kg to go", todayKg / target, hit);
+    } else $("daily").hidden = true;
+  }
+
+  // Days in a row (ending today or yesterday) that a name has logged at least one lift.
+  function streak(key) {
+    const days = new Set(lifts.filter((l) => l.name && "n:" + l.name.toLowerCase() === key).map((l) => dayKey(l.at)));
+    const d = new Date(); let n = 0;
+    if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
+    while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+
+  // A short burst of salmon plates when a lift lands; a bigger one at a milestone.
+  let burstRaf = 0;
+  function burst(big) {
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const c = $("burst"), ctx = c.getContext("2d");
+    const w = c.width = innerWidth, h = c.height = innerHeight;
+    const colors = ["#fa8072", "#ffb3a8", "#b8432f", "#3b1d18", "#ffd6cc"];
+    const parts = Array.from({ length: big ? 160 : 45 }, () => ({
+      x: w / 2 + (Math.random() - .5) * w * (big ? .8 : .3), y: big ? -20 : h * .35,
+      vx: (Math.random() - .5) * (big ? 6 : 9), vy: big ? Math.random() * 4 + 2 : -(Math.random() * 9 + 4),
+      r: Math.random() * 5 + 4, c: colors[(Math.random() * colors.length) | 0], a: Math.random() * 6.3, s: (Math.random() - .5) * .3,
+    }));
+    const start = performance.now(), life = big ? 2600 : 1400;
+    cancelAnimationFrame(burstRaf);
+    (function frame(t) {
+      const k = (t - start) / life;
+      ctx.clearRect(0, 0, w, h);
+      if (k >= 1) return;
+      for (const p of parts) {
+        p.vy += .28; p.x += p.vx; p.y += p.vy; p.a += p.s;
+        ctx.save(); ctx.globalAlpha = 1 - k * k; ctx.translate(p.x, p.y); ctx.rotate(p.a);
+        ctx.fillStyle = p.c; ctx.beginPath(); ctx.ellipse(0, 0, p.r, p.r * .55, 0, 0, 6.3); ctx.fill(); ctx.restore();
+      }
+      burstRaf = requestAnimationFrame(frame);
+    })(start);
+  }
+
+  const CHEERS = [
+    (kg) => `+${fmt(kg)} kg. That's ${fmt(kg)} men remembered.`,
+    (kg) => `+${fmt(kg)} kg on the bar for the lads.`,
+    (kg) => `+${fmt(kg)} kg. Every rep counts for someone.`,
+    (kg) => `+${fmt(kg)} kg. Strong work, keep it moving.`,
+    (kg) => `+${fmt(kg)} kg closer. Who's next?`,
+  ];
+  let seenTotal = null;
+  function celebrate(total) {
+    if (seenTotal !== null && total > seenTotal) {
+      const crossed = MILESTONES.filter((m) => seenTotal < m && total >= m).pop();
+      if (crossed) { burst(true); toast("Milestone! The squad just passed " + milestoneName(crossed) + "."); }
+    }
+    seenTotal = total;
+  }
 
   let lastTotal = null;
   function render() {
@@ -348,6 +455,8 @@ footer p { margin: 0 0 6px; }
     $("pace").textContent = total >= GOAL ? "0" : dl > 0 ? fmt((GOAL - total) / dl) : "–";
     drawMeter(frac);
     renderPace(total);
+    renderMotivation(total, sum(lifts.filter((l) => dayKey(l.at) === today)));
+    celebrate(total);
     if (lastTotal !== null && total > lastTotal) { const n = $("total"); n.classList.remove("bump"); void n.offsetWidth; n.classList.add("bump"); }
     lastTotal = total;
     renderSquad();
@@ -360,6 +469,11 @@ footer p { margin: 0 0 6px; }
     ol.textContent = "";
     const rows = board();
     renderYou(rows);
+    const tk = dayKey(Date.now()), td = {};
+    for (const l of lifts) if (l.name && dayKey(l.at) === tk) { const n = l.name.toLowerCase(); td[n] = td[n] || { name: l.name, kg: 0 }; td[n].kg += l.kg; }
+    const best = Object.values(td).sort((a, b) => b.kg - a.kg)[0];
+    const tt = $("todayTop"); tt.hidden = !best;
+    if (best) { tt.textContent = ""; const bn = document.createElement("b"); bn.textContent = best.name; tt.append("Top lifter today: ", bn, ` with ${fmt(best.kg)} kg.`); }
     const dl = $("names"); dl.textContent = "";
     for (const r of rows) if (r.label) { const o = document.createElement("option"); o.value = r.label; dl.append(o); }
     if (!rows.length) {
@@ -453,7 +567,7 @@ footer p { margin: 0 0 6px; }
   // ---------- form ----------
   const vol = () => {
     const w = parseFloat($("weight").value), r = parseInt($("reps").value, 10);
-    return w > 0 && r > 0 ? w * r : 0;
+    return w > 0 && w <= 400 && r > 0 && r <= 100 ? w * r : 0;
   };
   function updateCalc() {
     const v = vol();
@@ -474,8 +588,9 @@ footer p { margin: 0 0 6px; }
   }
   function logLift(weight, reps) {
     const name = cleanName($("name").value);
-    if (!name) { $("name").focus(); toast("Add your name first."); return; }
-    if (!store) return;
+    if (!name) { $("name").focus(); toast("Add your name first."); return false; }
+    if (!/^[\p{L}][\p{L}' -]*[\p{L}]$/u.test(name) || name.length > 24) { $("name").focus(); toast("Use your real name: letters only, 2 to 24 characters."); return false; }
+    if (!store) return false;
     try { localStorage.setItem(NAME_KEY, name); } catch (_) {}
     const v = weight * reps;
     last = { weight, reps };
@@ -483,8 +598,9 @@ footer p { margin: 0 0 6px; }
     showAgain();
     const lift = { name, weight, reps, kg: v, at: Date.now() };
     store.add(lift)
-      .then(() => { toast("+" + fmt(v) + " kg. Keep going!"); syncDrive(true); })
+      .then(() => { burst(false); toast(CHEERS[(Math.random() * CHEERS.length) | 0](v)); syncDrive(true); })
       .catch((e) => toast((e && e.message) || "Couldn't save that lift. Check your connection and try again."));
+    return true;
   }
   $("againBtn").addEventListener("click", () => { if (last) logLift(last.weight, last.reps); });
   $("name").addEventListener("input", () => renderYou(board()));
@@ -493,7 +609,7 @@ footer p { margin: 0 0 6px; }
   $("logForm").addEventListener("submit", (e) => {
     e.preventDefault();
     if (!vol()) return;
-    logLift(parseFloat($("weight").value), parseInt($("reps").value, 10));
+    if (!logLift(parseFloat($("weight").value), parseInt($("reps").value, 10))) return;
     $("reps").value = ""; updateCalc();
   });
 

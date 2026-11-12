@@ -1,7 +1,7 @@
 // GET    /api/lifts            the squad log (cached at the edge for 45s)
 // POST   /api/lifts            {key, lifts:[{id,name,weight,reps,at}]} saves a batch
 // DELETE /api/lifts            {key, id} removes a lift logged from the same phone
-const { hash, cleanName, read, mutate, publicLift } = require("./_store");
+const { hash, cleanName, nameProblem, liftProblem, read, mutate, publicLift } = require("./_store");
 
 function body(req) {
   if (req.body && typeof req.body === "object") return req.body;
@@ -28,17 +28,19 @@ module.exports = async (req, res) => {
       const incoming = Array.isArray(b.lifts) ? b.lifts.slice(0, 50) : [];
       const now = Date.now();
       const fresh = [];
+      let rejected = "";
       for (const l of incoming) {
         const id = String(l.id || "");
         const name = cleanName(l.name);
         const weight = Math.round(Number(l.weight) * 2) / 2;
         const reps = Math.round(Number(l.reps));
-        if (!/^[a-z0-9]{8,40}$/.test(id) || !name) continue;
-        if (!(weight > 0 && weight <= 1000) || !(reps >= 1 && reps <= 500)) continue;
+        if (!/^[a-z0-9]{8,40}$/.test(id)) continue;
+        const problem = nameProblem(name) || liftProblem(weight, reps);
+        if (problem) { rejected = problem; continue; }
         const at = Number(l.at) > now - 7 * 86400000 && Number(l.at) <= now + 60000 ? Math.round(Number(l.at)) : now;
         fresh.push({ id, at, weight, reps, name, k: hash(key) });
       }
-      if (!fresh.length) return send(res, 400, { error: "Add your name, a weight and reps to log a lift." });
+      if (!fresh.length) return send(res, 400, { error: rejected || "Add your name, a weight and reps to log a lift." });
       const lifts = await mutate((all) => {
         const have = new Set(all.map((l) => l.id));
         const add = fresh.filter((l) => !have.has(l.id));

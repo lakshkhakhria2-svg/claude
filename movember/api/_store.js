@@ -14,6 +14,28 @@ const GOAL = 525600;
 const hash = (s) => crypto.createHash("sha256").update(String(s)).digest("hex").slice(0, 16);
 const cleanName = (n) => String(n || "").replace(/\s+/g, " ").trim().slice(0, 30);
 
+// A name has to look like a person's name: letters (with spaces, hyphens or
+// apostrophes), 2-24 characters, at most three words, nothing jokey or rude.
+const BLOCKED = /\b(test|testing|asdf|qwerty|admin|anon|anonymous|nobody|someone|null|undefined|none|fake|lol|lmao|xxx|fuck\w*|shit\w*|cunt\w*|wank\w*|twat\w*|dick\w*|cock\w*|penis|pussy|bitch\w*|bastard|nigg\w*|fag\w*|rape\w*|hitler|nazi)\b/i;
+function nameProblem(name) {
+  if (name.length < 2 || name.length > 24) return "Use your real first name (2 to 24 letters).";
+  if (!/^[\p{L}][\p{L}' -]*[\p{L}]$/u.test(name)) return "Names can only use letters, spaces, hyphens and apostrophes.";
+  if (name.split(" ").length > 3) return "Use your name, up to three words.";
+  if (/(.)\1\1/i.test(name)) return "That doesn't look like a real name.";
+  if (!/[aeiouy]/i.test(name)) return "That doesn't look like a real name.";
+  if (BLOCKED.test(name)) return "Use your real name to log lifts.";
+  return "";
+}
+
+// A single entry has to be something a person could lift.
+const MAX_WEIGHT = 400, MAX_REPS = 100, MAX_ENTRY_KG = 6000;
+function liftProblem(weight, reps) {
+  if (!(weight > 0 && weight <= MAX_WEIGHT)) return `Weight must be between 0.5kg and ${MAX_WEIGHT}kg.`;
+  if (!(reps >= 1 && reps <= MAX_REPS)) return `Reps must be between 1 and ${MAX_REPS}.`;
+  if (weight * reps > MAX_ENTRY_KG) return "That's more than one entry can hold. Log it as separate sets.";
+  return "";
+}
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // The ETag used to guard a save comes from the file's metadata (head), which is
@@ -74,4 +96,4 @@ async function mutate(change) {
 
 const publicLift = ({ id, at, weight, reps, name }) => ({ id, at, weight, reps, kg: weight * reps, name });
 
-module.exports = { GOAL, hash, cleanName, read, mutate, publicLift };
+module.exports = { GOAL, hash, cleanName, nameProblem, liftProblem, read, mutate, publicLift };
