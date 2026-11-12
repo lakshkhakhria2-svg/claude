@@ -718,6 +718,7 @@ body {
   const tailBrakeMat = mat(0xff2a3d, { emissive: 0xff1a2d, emissiveIntensity: 2.5 });
   const blinkOn = mat(0xffb627, { emissive: 0xffa000, emissiveIntensity: 2.5 }), blinkOff = mat(0x7a5a18, { roughness: 0.3 });
   const trimMat = mat(0x16181c, { roughness: 0.6 });
+  const playerGlass = new THREE.MeshStandardMaterial({ color: lin(0x1a2433), metalness: 0.6, roughness: 0.1, transparent: true, opacity: 0.45, depthWrite: false });
   const trailerMat = mat(0xeeeeec, { roughness: 0.5 });
   const stripeMat = mat(0xf5f5f5, { roughness: 0.3 });
   const paint = color => mat(color, { metalness: 0.45, roughness: 0.28, envMapIntensity: 1.2 });
@@ -889,11 +890,11 @@ body {
     ['lsh', 'lel'], ['lel', 'lha'], ['rsh', 'rel'], ['rel', 'rha'], ['lhi', 'pelvis'], ['rhi', 'pelvis'], ['lhi', 'rhi'], ['lhi', 'lkn'], ['lkn', 'lft'], ['rhi', 'rkn'], ['rkn', 'rft'], ['head', 'lsh'], ['head', 'rsh']];
   const RAG_LIMBS = [['neck', 'pelvis', 0.36, 0.24, 'shirt'], ['lsh', 'lel', 0.11, 0.11, 'shirt'], ['lel', 'lha', 0.1, 0.1, 'skin'], ['rsh', 'rel', 0.11, 0.11, 'shirt'], ['rel', 'rha', 0.1, 0.1, 'skin'],
     ['lhi', 'lkn', 0.15, 0.15, 'legs'], ['lkn', 'lft', 0.13, 0.13, 'legs'], ['rhi', 'rkn', 0.15, 0.15, 'legs'], ['rkn', 'rft', 0.13, 0.13, 'legs']];
-  let ragdoll = null;
+  let ragdoll = null;   // the one the camera follows
+  let ragdolls = [];
   const unitBox = new THREE.BoxGeometry(1, 1, 1);
-  function clearRagdoll() { if (ragdoll) { ragdoll.meshes.forEach(m => scene.remove(m)); ragdoll = null; } }
+  function clearRagdoll() { ragdolls.forEach(r => r.meshes.forEach(m => scene.remove(m))); ragdolls = []; ragdoll = null; }
   function spawnRagdoll(x, y, z, vx, vy, vz, colors) {
-    clearRagdoll();
     const pts = {};
     // a random tumble: spin about a sideways-ish axis so they somersault and cartwheel
     const axis = new THREE.Vector3(1, (Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.2).normalize().multiplyScalar(-(9 + Math.random() * 7));
@@ -910,11 +911,12 @@ body {
     const meshes = [];
     const limbs = RAG_LIMBS.map(([a, b, w, d, m]) => { const mesh = new THREE.Mesh(unitBox, mats[m]); mesh.castShadow = true; scene.add(mesh); meshes.push(mesh); return { a: pts[a], b: pts[b], w, d, mesh }; });
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 10), mat(colors.helmet || colors.skin)); head.castShadow = true; scene.add(head); meshes.push(head);
-    ragdoll = { pts: Object.values(pts), named: pts, sticks, limbs, head, meshes, dt0, last: dt0 };
+    ragdolls.push({ pts: Object.values(pts), named: pts, sticks, limbs, head, meshes, dt0, last: dt0 });
+    ragdoll = ragdolls[0];
   }
-  function updateRagdoll(dt, scrollDz) {
-    if (!ragdoll) return;
-    const R = ragdoll, g = -16;   // a touch more than real gravity so it reads snappy
+  function updateRagdoll(dt, scrollDz) { for (const r of ragdolls) stepRagdoll(r, dt, scrollDz); }
+  function stepRagdoll(R, dt, scrollDz) {
+    const g = -16;   // a touch more than real gravity so it reads snappy
     for (const pt of R.pts) {
       const p = pt.p, q = pt.q;
       const vx = (p.x - q.x) / R.last * dt, vy = (p.y - q.y) / R.last * dt, vz = (p.z - q.z) / R.last * dt;
@@ -955,21 +957,21 @@ body {
   }
   // scraping along the road: friction once per step, not per solver pass
   function ragdollFriction() {
-    if (!ragdoll) return;
-    for (const pt of ragdoll.pts) if (pt.ground) { const p = pt.p, q = pt.q; q.x = p.x - (p.x - q.x) * 0.985; q.z = p.z - (p.z - q.z) * 0.985; }
+    for (const r of ragdolls) for (const pt of r.pts) if (pt.ground) { const p = pt.p, q = pt.q; q.x = p.x - (p.x - q.x) * 0.985; q.z = p.z - (p.z - q.z) * 0.985; }
   }
   function syncRagdoll() {
-    if (!ragdoll) return;
     const up = new THREE.Vector3();
-    for (const l of ragdoll.limbs) {
+    for (const r of ragdolls) {
+    for (const l of r.limbs) {
       const a = l.a.p, b = l.b.p, len = a.distanceTo(b);
       l.mesh.position.copy(a).add(b).multiplyScalar(0.5);
       l.mesh.scale.set(l.w, l.d, len);
       up.copy(b); l.mesh.lookAt(up);
     }
-    ragdoll.head.position.copy(ragdoll.named.head.p);
+    r.head.position.copy(r.named.head.p);
+    }
   }
-  function ragdollSpeed() { if (!ragdoll) return 0; const p = ragdoll.named.pelvis; return Math.hypot(p.p.x - p.q.x, p.p.z - p.q.z, p.p.y - p.q.y) / ragdoll.last; }
+  function ragdollSpeed() { let m = 0; for (const r of ragdolls) { const p = r.named.pelvis; m = Math.max(m, Math.hypot(p.p.x - p.q.x, p.p.z - p.q.z, p.p.y - p.q.y) / r.last); } return m; }
 
   // ---------- ramp trucks: a stunt ramp on a flatbed that launches you over the cab ----------
   const RAMP_LEN = 9;
@@ -1087,6 +1089,17 @@ body {
       const y = 0.31 + spec.h + spec.cabH + 0.13;
       const bar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.1, 0.36), trimMat); bar.position.set(0, y - 0.09, spec.cabZ + 0.05); ud.body.add(bar);
       for (const [x, m] of [[-0.33, copRed], [0.33, copBlue]]) { const l = new THREE.Mesh(copLightGeo, m); l.position.set(x, y, spec.cabZ + 0.05); ud.body.add(l); }
+    }
+    if (!spec.bike && !spec.truck) {
+      ud.body.children.forEach(m => { if (m.material === glassMat) m.material = playerGlass; });
+      const occ = new THREE.Group(), sc = spec.w / 1.9, front = spec.cabZ - spec.cabL * 0.2, back = spec.cabZ + spec.cabL * 0.24, seatY = ud.top - 0.02;
+      const skins = [0xe2b48f, 0xc68a5f, 0x8d5a3a, 0xf0c9a4, 0xe2b48f], shirts = [0x2a3a55, 0xd4232f, 0x2fa35a, 0xe6b31e, 0xe8e8ec];
+      [[-0.4, front], [0.4, front], [-0.5, back], [0, back], [0.5, back]].forEach(([x, z], i) => {
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(0.34 * sc, 0.34, 0.2), mat(shirts[i])); torso.position.set(x * sc, seatY + 0.17, z); occ.add(torso);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), mat(skins[i])); head.position.set(x * sc, seatY + 0.45, z); occ.add(head);
+        const hair = new THREE.Mesh(new THREE.SphereGeometry(0.115, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat([0x1a1410, 0x5a3a20, 0xd8b070, 0x101010, 0x8a4a20][i])); hair.position.set(x * sc, seatY + 0.47, z + 0.01); occ.add(hair);
+      });
+      ud.body.add(occ); ud.occ = occ;
     }
     flame = new THREE.Group();
     for (const x of spec.bike ? [0.19] : [-0.45, 0.45]) { const f = new THREE.Mesh(flameGeo, flameMat); f.position.set(x, 0.45, spec.l / 2 + 0.25); flame.add(f); }
@@ -1439,6 +1452,7 @@ body {
       y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, wheelie: 0, wheelieT: 0, air: false, onRamp: null, airT: 0, airSpin: 0, airSpinRate: 0, landSpin: 0, jumped: 0, closeRide: 0, drifting: false, driftAngle: 0, driftT: 0, driftAngSum: 0, driftDir: 0 };
     clearDriftFx();
     clearRagdoll(); if (playerMesh && playerMesh.userData.rider) playerMesh.userData.rider.visible = true;
+    if (playerMesh && playerMesh.userData.occ) playerMesh.userData.occ.visible = true;
     bestAnnounced = false; score = 0; distance = 0; nearMisses = 0; p_rpm = 0.2; p_throttle = 0; resetScoring(); resetPolice(); resetChase(); topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
     updateHull();
     for (let i = 0; i < 7; i++) spawnCar(-25 - i * 32);
@@ -2354,8 +2368,15 @@ body {
     if (c) { throwDebris(cx, cz, 6, c.color, 7); knockLoose(c); }
     // the driver goes flying
     const fwd = p.v * (p.bike ? 0.95 : 0.8) + 4;
-    spawnRagdoll(p.x, p.bike ? 1.35 : 1.25, -0.4, p.vx * 0.6 + (Math.random() - 0.5) * 5, 7 + Math.random() * 5 + impact * 0.15, -fwd,
-      p.bike ? { shirt: 0x1b1f27, legs: 0x22314f, skin: 0xe2b48f, helmet: save.color } : { shirt: [0xe8e8ec, 0x2a3a55, 0xd4232f, 0x2fa35a][Math.floor(Math.random() * 4)], legs: 0x2a3e66, skin: [0xe2b48f, 0xc68a5f, 0x8d5a3a][Math.floor(Math.random() * 3)] });
+    const SHIRTS = [0xe8e8ec, 0x2a3a55, 0xd4232f, 0x2fa35a, 0xe6b31e, 0x7c4ddb, 0x29a8d6], SKINS = [0xe2b48f, 0xc68a5f, 0x8d5a3a, 0xf0c9a4];
+    const pick = a => a[Math.floor(Math.random() * a.length)];
+    const seats = p.bike ? [[0, 0]] : [[-0.4, -0.35], [0.4, -0.35], [-0.5, 0.55], [0, 0.55], [0.5, 0.55]];   // driver, front passenger, three in the back
+    seats.forEach(([sx, sz], i) => {
+      const k = 0.75 + Math.random() * 0.35;
+      spawnRagdoll(p.x + sx, (p.bike ? 1.35 : 1.25) + Math.random() * 0.3, -0.4 + sz, p.vx * 0.6 + sx * 6 + (Math.random() - 0.5) * 5, 6 + Math.random() * 6 + impact * 0.15, -fwd * k,
+        p.bike ? { shirt: 0x1b1f27, legs: 0x22314f, skin: 0xe2b48f, helmet: save.color } : { shirt: pick(SHIRTS), legs: pick([0x2a3e66, 0x3a3a3a, 0x6b5a44]), skin: pick(SKINS) });
+    });
+    if (playerMesh.userData.occ) playerMesh.userData.occ.visible = false;
     if (playerMesh.userData.rider) playerMesh.userData.rider.visible = false;
     if (p.bike) { p.vy = 2 + Math.random() * 2; p.rollRate = (Math.random() < 0.5 ? -1 : 1) * (5 + Math.random() * 4); }
     else if (impact > 20) { p.vy = 5 + Math.random() * 3; p.rollRate = (Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 3); }
