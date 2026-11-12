@@ -127,8 +127,6 @@ button:active { transform: scale(.97); }
 .track { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
 .track i { display: block; height: 100%; width: 0; border-radius: 5px; background: var(--plate); transition: width .6s ease; }
 .next.done .track i { background: var(--good); }
-.today-top { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
-.today-top b { color: var(--ink); }
 #burst { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 .paceline { margin: 0; font-size: 14px; color: var(--muted); }
 .paceline b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -143,7 +141,12 @@ button:active { transform: scale(.97); }
 /* Squad */
 .squad { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .squad li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; }
+.boards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; align-items: start; }
+@media (max-width: 560px) { .boards { grid-template-columns: minmax(0, 1fr); } }
+.board h3 { margin: 0 0 10px; font: 600 12px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-text); }
 .squad li b { font-weight: 600; overflow-wrap: anywhere; }
+.squad li b .rank { display: inline-block; min-width: 1.6em; font: 700 13px var(--mono); color: var(--muted); }
+.squad li:first-child b .rank { color: var(--plate-text); }
 .squad li.me b::after { content: " (you)"; font-weight: 400; color: var(--muted); }
 .squad li .kg { font: 700 15px var(--mono); font-variant-numeric: tabular-nums; }
 .squad li i { grid-column: 1 / -1; display: block; height: 6px; border-radius: 3px; background: var(--plate); }
@@ -208,9 +211,17 @@ footer p { margin: 0 0 6px; }
   </section>
 
   <section id="squadSec" aria-labelledby="squad-h" hidden>
-    <h2 id="squad-h">The squad</h2>
-    <p class="today-top" id="todayTop" hidden></p>
-    <ol class="squad" id="squad"></ol>
+    <h2 id="squad-h">Leaderboard</h2>
+    <div class="boards">
+      <div class="board">
+        <h3>Most kg today</h3>
+        <ol class="squad" id="squadToday"></ol>
+      </div>
+      <div class="board">
+        <h3>Most kg all time</h3>
+        <ol class="squad" id="squad"></ol>
+      </div>
+    </div>
   </section>
 
   <section aria-labelledby="log-h">
@@ -317,9 +328,9 @@ footer p { margin: 0 0 6px; }
   }
 
   const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
-  function board() {
+  function board(list = lifts) {
     const by = {};
-    for (const l of [...lifts].sort((a, b) => a.at - b.at)) {
+    for (const l of [...list].sort((a, b) => a.at - b.at)) {
       const k = l.name ? "n:" + l.name.toLowerCase() : "u:" + (l.by || "");
       if (!by[k]) by[k] = { key: k, label: "", id: l.by, kg: 0, lifts: 0 };
       by[k].kg += l.kg; by[k].lifts++;
@@ -463,35 +474,37 @@ footer p { margin: 0 0 6px; }
     renderHistory();
   }
 
+  function drawBoard(ol, rows, emptyText) {
+    ol.textContent = "";
+    if (!rows.length) {
+      const li = document.createElement("li"); li.className = "empty"; li.textContent = emptyText;
+      ol.append(li); return;
+    }
+    const top = rows[0].kg || 1, mk = myKey();
+    rows.forEach(({ key, label, id, kg }, i) => {
+      const li = document.createElement("li");
+      if (key === mk) li.className = "me";
+      const name = document.createElement("b");
+      const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = (i + 1) + ".";
+      name.append(rank, label || who(id));
+      const val = document.createElement("span"); val.className = "kg"; val.textContent = fmt(kg) + " kg";
+      const bar = document.createElement("i"); bar.style.width = Math.max(2, (kg / top) * 100) + "%";
+      li.append(name, val, bar);
+      ol.append(li);
+    });
+  }
+
   function renderSquad() {
     const ol = $("squad");
     $("squadSec").hidden = false;
     ol.textContent = "";
     const rows = board();
     renderYou(rows);
-    const tk = dayKey(Date.now()), td = {};
-    for (const l of lifts) if (l.name && dayKey(l.at) === tk) { const n = l.name.toLowerCase(); td[n] = td[n] || { name: l.name, kg: 0 }; td[n].kg += l.kg; }
-    const best = Object.values(td).sort((a, b) => b.kg - a.kg)[0];
-    const tt = $("todayTop"); tt.hidden = !best;
-    if (best) { tt.textContent = ""; const bn = document.createElement("b"); bn.textContent = best.name; tt.append("Top lifter today: ", bn, ` with ${fmt(best.kg)} kg.`); }
     const dl = $("names"); dl.textContent = "";
     for (const r of rows) if (r.label) { const o = document.createElement("option"); o.value = r.label; dl.append(o); }
-    if (!rows.length) {
-      const li = document.createElement("li"); li.className = "empty";
-      li.textContent = "Nobody's on the board yet. The first lift logged puts its lifter at the top.";
-      ol.append(li); return;
-    }
-    const top = rows[0].kg || 1;
-    const mk = myKey();
-    for (const { key, label, id, kg } of rows) {
-      const li = document.createElement("li");
-      if (key === mk) li.className = "me";
-      const name = document.createElement("b"); name.textContent = label || who(id);
-      const val = document.createElement("span"); val.className = "kg"; val.textContent = fmt(kg) + " kg";
-      const bar = document.createElement("i"); bar.style.width = Math.max(2, (kg / top) * 100) + "%";
-      li.append(name, val, bar);
-      ol.append(li);
-    }
+    const tk = dayKey(Date.now());
+    drawBoard(ol, rows, "Nobody's on the board yet. The first lift logged puts its lifter at the top.");
+    drawBoard($("squadToday"), board(lifts.filter((l) => dayKey(l.at) === tk)), "No lifts yet today. Log one to take the top spot.");
     if (shared) resolveNames(rows.filter((r) => !r.label && r.id).map((r) => r.id));
   }
 
