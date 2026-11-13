@@ -43,6 +43,12 @@ body {
 .gauge span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .gauge.speed b { color: var(--amber); }
 .gauge.combo b { color: var(--cyan); }
+.heisthud { position: absolute; top: 70px; left: 12px; width: 190px; background: #0b0d14cc; border: 1px solid #ffb62755; border-radius: 4px; padding: 6px 9px; display: none; flex-direction: column; gap: 3px; pointer-events: none; font-size: 11px; letter-spacing: .06em; color: var(--muted); }
+.heisthud.on { display: flex; }
+.heisthud b { font-family: var(--display); font-weight: 400; font-size: 13px; color: var(--amber); }
+.heisthud strong { color: #7cff6b; font-family: var(--display); font-weight: 400; font-size: 14px; }
+.heisthud i { display: block; height: 5px; background: #ffffff1a; border-radius: 3px; overflow: hidden; }
+.heisthud em { display: block; height: 100%; width: 0; background: var(--amber); }
 .pop { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); font-family: var(--display); font-size: 26px; color: var(--cyan); text-shadow: 0 2px 0 #000, 0 0 18px #29d3ff88; pointer-events: none; white-space: nowrap; opacity: 0; }
 .pop.hot { color: var(--amber); text-shadow: 0 2px 0 #000, 0 0 18px #ffb62788; font-size: 30px; }
 .pop.show { animation: pop 1s ease-out forwards; }
@@ -80,7 +86,7 @@ body {
 .bustbar span { font-family: var(--display); font-size: 12px; color: var(--danger); letter-spacing: .08em; }
 .bustbar i { flex: 1; height: 8px; background: #ff4d5e33; border-radius: 4px; overflow: hidden; }
 .bustbar b { display: block; height: 100%; width: 0; background: var(--danger); }
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #ffffff2a; border-radius: 4px; overflow: hidden; }
+.modes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid #ffffff2a; border-radius: 4px; overflow: hidden; }
 .mode { font-family: var(--display); font-size: 15px; letter-spacing: .04em; padding: 9px; border: 0; background: transparent; color: #c3c7d6; cursor: pointer; }
 .mode[aria-pressed="true"] { background: #ffffff1f; color: var(--paint); box-shadow: inset 0 -2px 0 var(--amber); }
 .mode:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
@@ -214,6 +220,7 @@ body {
     <div class="tier" id="hTier"></div>
     <div class="chain" id="chain"><b id="chainMult">x1</b><span><em id="chainPot">0</em> pts at stake</span><small id="chainCount"></small></div>
     <div class="suspect" id="suspectHud"><div class="sh-top"><b>SUSPECT</b><span id="sLvl">LV 1</span></div><i><em id="sHealth"></em></i><div class="sh-row"><span id="sDist"></span><span id="sTime"></span></div></div>
+    <div class="heisthud" id="heistHud"><b id="heistStage"></b><span id="heistGoal"></span><i><em id="heistBar"></em></i><span>LOOT <strong id="heistLoot"></strong></span></div>
     <div class="feed" id="feed" aria-live="polite"></div>
     <button class="mute" id="muteBtn" aria-label="Sound" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="cross" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="flash" id="flash"></div>
@@ -238,7 +245,7 @@ body {
           <kbd>M</kbd><span>Sound on / off</span>
         </div>
         <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
-        <div class="modes" role="group" aria-label="Game mode"><button class="mode" id="modeEndless" aria-pressed="true">Endless</button><button class="mode" id="modeChase" aria-pressed="false">Chase</button></div>
+        <div class="modes" role="group" aria-label="Game mode"><button class="mode" id="modeEndless" aria-pressed="true">Endless</button><button class="mode" id="modeChase" aria-pressed="false">Chase</button><button class="mode" id="modeHeist" aria-pressed="false">Bank Heist</button></div>
         <p class="modedesc" id="modeDesc"></p>
         <div class="modes maps" role="group" aria-label="Map"><button class="mode" data-m="highway">Highway</button><button class="mode" data-m="city">City Night</button><button class="mode" data-m="desert">Desert Night</button><button class="mode" data-m="ocean">Ocean Bridge</button></div>
         <p class="modedesc diffdesc" id="mapDesc"></p>
@@ -310,7 +317,8 @@ body {
 
   // ---------- world constants (metres) ----------
   const LANES = 5, LANE_W = 3.6, ROAD_W = LANES * LANE_W;
-  let onWater = false;   // true while you drive a boat
+  let onWater = false, onSnow = false;
+  let mapOverride = null;   // the bank heist picks the scenery for each stage   // on the sea in a boat / on a snowy pass on skis
   const laneX = i => (i - (LANES - 1) / 2) * LANE_W;
   const MPS = 0.447;           // mph -> m/s
   const SPAWN_Z = -260, DESPAWN_Z = 40;
@@ -766,7 +774,7 @@ body {
   const ALL_MAP_PROPS = [oceanGroup, pierGroup, treeGroup, hillIM, cloudIM, ...lampGroups, ...poolGroups, cityGroup, desertGroup, mesaIM, stars];
   let curMap = MAPS.highway, envRT = null;
   function applyMap(id) {
-    if (onWater) id = 'ocean';
+    if (onWater) id = 'ocean'; else if (onSnow) id = 'snow'; else if (mapOverride) id = mapOverride;
     const m = MAPS[id] || MAPS.highway; curMap = m;
     sky.material.uniforms.top.value.set(m.top); sky.material.uniforms.horizon.value.set(m.hor);
     sky.material.uniforms.sun.value.set(...m.dir).normalize(); sky.material.uniforms.sunCol.value.set(...m.sunCol); sky.material.uniforms.glow.value = m.glow;
@@ -860,6 +868,9 @@ body {
     sprite: { pitch: 128, w: 0.8, l: 2.0, mass: 0.55, bike: true },
     viper: { pitch: 112, w: 0.82, l: 2.1, mass: 0.6, bike: true, fairing: true },
     comet: { pitch: 96, w: 0.85, l: 2.2, mass: 0.65, bike: true, fairing: true },
+    skis: { pitch: 60, w: 0.8, l: 1.85, mass: 0.55, bike: true, ski: true },
+    snowboard: { pitch: 60, w: 0.8, l: 1.6, mass: 0.55, bike: true, ski: true },
+    raceskis: { pitch: 60, w: 0.8, l: 1.85, mass: 0.55, bike: true, ski: true },
     jetski: { pitch: 110, w: 1.1, l: 3, mass: 0.7, bike: true, boat: true },
     speedboat: { pitch: 46, w: 2.2, l: 6, mass: 1.4, boat: true, h: 0.5, cabH: 0.6, cabZ: 0.9, cabL: 2.6 },
     powerboat: { pitch: 40, w: 2.4, l: 7.5, mass: 1.7, boat: true, h: 0.4, cabH: 0.55, cabZ: 0.6, cabL: 1.8 },
@@ -922,6 +933,7 @@ body {
   }
 
   function makeCar(id, color, isPlayer) {
+    if (CAR_SPECS[id].ski) return makeSkier(id, color, isPlayer);
     if (CAR_SPECS[id].boat || (onWater && !CAR_SPECS[id].ramp)) return makeBoat(id, color, isPlayer);
     if (CAR_SPECS[id].bike) return makeBike(id, color, isPlayer);
     if (CAR_SPECS[id].ramp) return makeRampTruck(color);
@@ -1099,14 +1111,94 @@ body {
   });
   const buoyEdgeGroup = strips[strips.length - 1].group;
   buoyLaneGroup.visible = buoyEdgeGroup.visible = false;
-  function setWater(on) {
-    const changed = on !== onWater; onWater = on;
-    for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !on;
-    buoyLaneGroup.visible = buoyEdgeGroup.visible = on;
-    oceanGroup.position.y = on ? -WATER_Y - 0.12 : 0;   // bring the sea up to road level
-    applyMap(save.map);
-    if (changed) try { if (state !== 'play') reset(); } catch (e) {}   // swap the traffic for boats (or back); skipped during start-up
+
+
+  // ---------- snow: a mountain pass for skis and snowboards ----------
+  const snowTex = canvasTex(256, (g, s) => { g.fillStyle = '#eef3f8'; g.fillRect(0, 0, s, s); speckle(g, 7000, s, ['#ffffff', '#dfe7f0', '#d2dce8', '#f6f9fc'], 0.7, 3); }, 30, 600 / GRASS_TILE);
+  const snowRoadTex = canvasTex(512, (g, s) => {
+    g.fillStyle = '#d9e1ea'; g.fillRect(0, 0, s, s); speckle(g, 9000, s, ['#eef3f8', '#c6d0dc', '#b9c4d2', '#ffffff'], 0.6, 3);
+    g.fillStyle = 'rgba(120,135,155,0.28)';
+    for (let i = 0; i < 5; i++) { const x = (i + 0.5) * s / 5; g.fillRect(x - 26, 0, 9, s); g.fillRect(x + 17, 0, 9, s); }   // packed tyre tracks
+  }, 1, 600 / ROAD_TILE);
+  snowRoadTex.repeat.copy(asphaltTex.repeat); snowRoadTex.offset = asphaltTex.offset;   // scrolls with the road
+  const snowPineIM = new THREE.InstancedMesh(new THREE.ConeGeometry(2.2, 7, 7).translate(0, 4.5, 0), matte(0x2d4a36, { flatShading: true }), 70);
+  const snowCapIM = new THREE.InstancedMesh(new THREE.ConeGeometry(1.5, 3.2, 7).translate(0, 7.2, 0), matte(0xf4f8fc, { flatShading: true }), 70);
+  const snowTrunkIM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.3, 1.2, 6).translate(0, 0.6, 0), matte(0x4a3424), 70);
+  snowPineIM.castShadow = true;
+  makeStrip(Array.from({ length: 70 }, (_, i) => ({ x: (i % 2 ? 1 : -1) * (ROAD_W / 2 + 6 + Math.random() * 45), z: DESPAWN_Z - Math.random() * 300, s: 0.7 + Math.random() * 0.8 })), 300, [snowPineIM, snowCapIM, snowTrunkIM], (it, i) => {
+    dummy.position.set(it.x, 0, it.z); dummy.rotation.set(0, it.x, 0); dummy.scale.setScalar(it.s); dummy.updateMatrix();
+    snowPineIM.setMatrixAt(i, dummy.matrix); snowCapIM.setMatrixAt(i, dummy.matrix); snowTrunkIM.setMatrixAt(i, dummy.matrix);
+  });
+  const pineGroup = strips[strips.length - 1].group;
+  const peakIM = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 6), matte(0xf2f6fa, { flatShading: true }), 14);
+  for (let i = 0; i < 14; i++) {
+    const side = i % 2 ? 1 : -1, h = 60 + Math.random() * 90;
+    dummy.position.set(side * (60 + Math.random() * 220), h / 2 - 4, -260 - Math.random() * 180); dummy.rotation.set(0, Math.random() * 3, 0);
+    dummy.scale.set(50 + Math.random() * 60, h, 50 + Math.random() * 60); dummy.updateMatrix(); peakIM.setMatrixAt(i, dummy.matrix);
   }
+  peakIM.frustumCulled = false; scene.add(peakIM);
+  const FLAKES = 1400, flakePos = new Float32Array(FLAKES * 3);
+  for (let i = 0; i < FLAKES; i++) { flakePos[i * 3] = (Math.random() - 0.5) * 80; flakePos[i * 3 + 1] = Math.random() * 30; flakePos[i * 3 + 2] = 10 - Math.random() * 130; }
+  const flakeGeo = new THREE.BufferGeometry(); flakeGeo.setAttribute('position', new THREE.BufferAttribute(flakePos, 3));
+  const snowfall = new THREE.Points(flakeGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.9 }));
+  snowfall.frustumCulled = false; scene.add(snowfall);
+  function updateSnow(dt, dz) {
+    if (!snowfall.visible) return;
+    for (let i = 0; i < FLAKES; i++) {
+      let y = flakePos[i * 3 + 1] - (3 + (i % 5) * 0.4) * dt, z = flakePos[i * 3 + 2] + dz * 0.9;
+      flakePos[i * 3] += Math.sin(time * 1.3 + i) * 0.6 * dt;
+      if (y < 0) y += 30; if (z > 10) z -= 130;
+      flakePos[i * 3 + 1] = y; flakePos[i * 3 + 2] = z;
+    }
+    flakeGeo.attributes.position.needsUpdate = true;
+  }
+  MAPS.snow = { name: 'Snowy Pass', night: false, top: 0x8ea4bf, hor: 0xdde5ee, fog: [55, 260], hemi: [0xeef4ff, 0xb8c4d4, 0.95], light: [0xffffff, 1.5], dir: [-0.3, 0.8, -0.5], sunCol: [1, 1, 1], glow: 0.06, exposure: 1.0, ground: snowTex, shoulder: 0xe4ebf2, env: ['#8ea4bf', '#dde5ee', '#e8eef4', '#c8d2de'], show: [pineGroup, peakIM, snowfall, cloudIM] };
+  ALL_MAP_PROPS.push(pineGroup, peakIM, snowfall);
+  // skiers and snowboarders
+  function makeSkier(id, color, isPlayer) {
+    const board = id === 'snowboard', race = id === 'raceskis';
+    const g = new THREE.Group(); g.rotation.order = 'YXZ';
+    const b = new THREE.Group(); g.add(b);
+    const suit = isPlayer ? paint(color) : paintFor(color), dark = mat(0x1b1f27), skin = mat(0xe2b48f), skiMat = mat(race ? 0xffd23c : 0xf4f4f4, { roughness: 0.4 });
+    const add = (geo, m, x, y, z, rx = 0, p = b, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; p.add(o); return o; };
+    const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+    if (board) { add(box(0.34, 0.05, 1.6), suit, 0, 0.04, 0); add(box(0.34, 0.05, 0.2), suit, 0, 0.07, -0.85, 0.4); }
+    else for (const x of [-0.14, 0.14]) { add(box(0.1, 0.04, 1.85), skiMat, x, 0.03, 0); add(box(0.1, 0.04, 0.22), skiMat, x, 0.08, -0.98, 0.45); }
+    const rider = new THREE.Group(); b.add(rider);
+    if (board) rider.rotation.y = -Math.PI / 2;   // stand sideways on the board
+    const crouch = race ? 0.82 : 1;
+    for (const x of [-0.14, 0.14]) {
+      add(box(0.15, 0.2, 0.26), dark, board ? 0 : x, 0.12, board ? x * 2.6 : 0.05, 0, board ? b : rider);   // boots
+    }
+    for (const x of [-0.14, 0.14]) {
+      add(box(0.13, 0.46, 0.13), board ? dark : suit, x, 0.36 * crouch, -0.07, -0.35, rider);              // shins
+      add(box(0.15, 0.42, 0.15), board ? dark : suit, x, 0.7 * crouch, -0.08, 0.55, rider);                // thighs
+    }
+    add(box(0.36, 0.22, 0.24), suit, 0, 0.9 * crouch, 0.04, 0, rider);                                      // hips
+    add(box(0.4, 0.55, 0.27), suit, 0, 1.18 * crouch, -0.08, race ? -0.9 : -0.45, rider);                  // jacket
+    const hy = race ? 1.32 : 1.52, hz = race ? -0.42 : -0.26;
+    add(new THREE.SphereGeometry(0.14, 12, 9), race ? suit : skin, 0, hy, hz, 0, rider);
+    add(new THREE.SphereGeometry(0.155, 12, 9, 0, Math.PI * 2, 0, Math.PI / 2), suit, 0, hy + 0.01, hz, 0, rider);   // helmet
+    add(box(0.26, 0.08, 0.06), glassMat, 0, hy, hz - 0.12, 0, rider);                                       // goggles
+    for (const s of [-1, 1]) {
+      const arm = add(box(0.09, 0.46, 0.09), suit, s * 0.25, 1.12 * crouch, -0.2, board ? 0 : -0.9, rider, board ? s * 1.1 : 0);
+      if (!board) add(new THREE.CylinderGeometry(0.015, 0.015, 1.15, 5), trimMat, s * 0.3, 0.62, 0.05, 0.45, rider);   // poles
+    }
+    return Object.assign(g, { userData: { id, w: 0.8, l: board ? 1.6 : 1.85, mass: 0.55, top: 1.3, tails: [], blinkers: [], body: b, wheels: [], front: [], paint: suit, bike: true, ski: true, rider } });
+  }
+  function setTerrain(kind) {
+    const water = kind === 'water', snow = kind === 'snow', changed = water !== onWater || snow !== onSnow;
+    onWater = water; onSnow = snow;
+    for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !water;
+    buoyLaneGroup.visible = buoyEdgeGroup.visible = water;
+    oceanGroup.position.y = water ? -WATER_Y - 0.12 : 0;   // bring the sea up to road level
+    road.material.map = snow ? snowRoadTex : asphaltTex; road.material.needsUpdate = true;
+    skidIM.material.color.set(snow ? 0x8a9bb2 : 0x0a0a0a);
+    applyMap(save.map);
+    if (changed) try { if (state !== 'play') reset(); } catch (e) {}   // swap the traffic (boats on water); skipped during start-up
+  }
+  const terrainOf = id => CAR_SPECS[id].boat ? 'water' : CAR_SPECS[id].ski ? 'snow' : 'road';
+  const curTerrain = () => onWater ? 'water' : onSnow ? 'snow' : 'road';
 
   // ---------- blood: splatter and stains where the bodies hit the road ----------
   const SPLATS = 180, splatIM = new THREE.InstancedMesh(new THREE.CircleGeometry(0.5, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x6e0808, transparent: true, opacity: 0.85, depthWrite: false }), SPLATS);
@@ -1370,7 +1462,7 @@ body {
   const flameGeo = new THREE.ConeGeometry(0.13, 0.9, 8).rotateX(Math.PI / 2);
   function setPlayerCar(id, color, cop = false) {
     if (playerMesh) scene.remove(playerMesh);
-    if (!!CAR_SPECS[id].boat !== onWater) setWater(!!CAR_SPECS[id].boat);
+    if (terrainOf(id) !== curTerrain()) setTerrain(terrainOf(id));
     playerMesh = makeCar(id, color, true);
     const spec = CAR_SPECS[id], ud = playerMesh.userData;
     if (spec.stripe && !spec.wedge) for (const x of spec.stripe === 2 ? [-0.28, 0.28] : [0]) {
@@ -1477,6 +1569,7 @@ body {
   document.querySelectorAll('.maps .mode').forEach(b => b.onclick = () => setMap(b.dataset.m));
   $('modeEndless').onclick = () => setMode('endless');
   $('modeChase').onclick = () => setMode('chase');
+  $('modeHeist').onclick = () => setMode('heist');
   $('chaseReset').onclick = () => { save.chaseLevel = 1; persist(); refreshModeDesc(); };
 
   let best = 0;
@@ -1496,6 +1589,9 @@ body {
     { id: 'super', name: 'Wraith', price: 45000, upMul: 2.4, desc: 'Top-tier pace, huge brakes and the biggest nitro tank.', vmax: 96, accel: 1.55, brake: 1.35, lat: 1.25, armor: 1.05, wreck: 0, tank: 1.35 },
     { id: 'sprite', name: 'Sprite 250', price: 7000, upMul: 1.2, bike: true, desc: 'Motorbike. Light and twitchy: splits lanes between cars, but any hit hurts. Hold E to wheelie.', vmax: 72, accel: 1.5, brake: 1.15, lat: 1.5, armor: 1.7, wreck: -6, tank: 1.1 },
     { id: 'viper', name: 'Viper 600', price: 18000, upMul: 1.7, bike: true, desc: 'Motorbike. A sharp sport bike that fires out of gaps. Fragile. Hold E to wheelie.', vmax: 88, accel: 1.8, brake: 1.25, lat: 1.6, armor: 1.6, wreck: -5.5, tank: 1.2 },
+    { id: 'skis', name: 'Freeride Skis', price: 5000, upMul: 1.1, bike: true, ski: true, desc: 'Skis. Carve between the cars on a snowy mountain pass. Light and fragile. Hold E to tuck.', vmax: 70, accel: 1.3, brake: 1.1, lat: 1.45, armor: 1.8, wreck: -7, tank: 1 },
+    { id: 'snowboard', name: 'Shred Board', price: 11000, upMul: 1.4, bike: true, ski: true, desc: 'Snowboard. Quicker than skis and great at carving. Hold E to tuck.', vmax: 78, accel: 1.4, brake: 1, lat: 1.55, armor: 1.75, wreck: -6.5, tank: 1.15 },
+    { id: 'raceskis', name: 'Downhill Racer', price: 30000, upMul: 2, bike: true, ski: true, desc: 'Race skis. A downhill racer in a full tuck: frightening speed and a big boost tank. Hold E to tuck.', vmax: 95, accel: 1.8, brake: 1.15, lat: 1.4, armor: 1.7, wreck: -6, tank: 1.35 },
     { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 0.8, lat: 1.35, armor: 1.6, wreck: -5, tank: 1.1 },
     { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 0.75, lat: 0.95, armor: 0.9, wreck: 1, tank: 1.15 },
     { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 0.8, lat: 1.05, armor: 0.85, wreck: 1, tank: 1.35 },
@@ -1512,7 +1608,7 @@ body {
       if (s.cars) { for (const id in s.cars) if (CAR_SPECS[id] && id !== 'truck') save.cars[id] = { levels: Object.assign(freshLevels(), s.cars[id].levels) }; }
       else if (s.levels) Object.assign(save.cars.street.levels, s.levels);   // older saves: upgrades belong to the starter car
       if (s.car && save.cars[s.car]) save.car = s.car;
-      if (s.mode === 'chase') save.mode = 'chase';
+      if (s.mode === 'chase' || s.mode === 'heist') save.mode = s.mode;
       save.chaseLevel = Math.max(1, Math.floor(+s.chaseLevel || 1));
       if (['easy', 'normal', 'hard'].includes(s.diff)) save.diff = s.diff;
       if (typeof s.map === 'string') save.map = s.map;
@@ -1543,11 +1639,11 @@ body {
   if (!save.scores.length && best > 0) save.scores = [{ score: best, miles: 0, date: Date.now() }];
   function renderScores(el, mine) {
     el.innerHTML = save.scores.length
-      ? save.scores.map((r, i) => `<li class="${r === mine ? 'me' : ''}"><span>${i + 1}.</span><b>${r.score.toLocaleString('en-US')}</b><span>${r.mode === 'chase' ? 'Chase · ' : ''}${r.miles ? r.miles.toFixed(2) + ' mi' : ''}</span></li>`).join('')
+      ? save.scores.map((r, i) => `<li class="${r === mine ? 'me' : ''}"><span>${i + 1}.</span><b>${r.score.toLocaleString('en-US')}</b><span>${r.mode === 'chase' ? 'Chase · ' : r.mode === 'heist' ? 'Heist · ' : ''}${r.miles ? r.miles.toFixed(2) + ' mi' : ''}</span></li>`).join('')
       : '<li class="empty">No runs yet. Your best five runs show up here.</li>';
   }
   const money = n => save.unlimited && n >= 999999999 ? '$∞' : '$' + Math.round(n).toLocaleString('en-US');
-  function ensurePlayerCar() { const cop = mode === 'chase'; if (!playerMesh || playerMesh.userData.id !== save.car || playerMesh.userData.cop !== cop) setPlayerCar(save.car, save.color, cop); }
+  function ensurePlayerCar() { if (mapOverride) { mapOverride = null; applyMap(save.map); } const cop = mode === 'chase'; if (!playerMesh || playerMesh.userData.id !== save.car || playerMesh.userData.cop !== cop) setPlayerCar(save.car, save.color, cop); }
   function applyLoadout() {
     Object.assign(S, statsFor(save.cars[save.car].levels, carById(save.car)));
     S.wreck += DIF().wreck;
@@ -1566,12 +1662,12 @@ body {
     $('gCash').textContent = money(save.cash);
     $('carName').textContent = c.name;
     $('carDesc').textContent = c.desc;
-    $('carIdx').textContent = `${c.boat ? 'Boat' : c.bike ? 'Bike' : 'Car'} · ${gView + 1} of ${CARS.length}` + (owned ? ' · owned' : '');
+    $('carIdx').textContent = `${c.ski ? 'Snow' : c.boat ? 'Boat' : c.bike ? 'Bike' : 'Car'} · ${gView + 1} of ${CARS.length}` + (owned ? ' · owned' : '');
     $('carBars').innerHTML = statBars(c, L).map(([n, v]) => `<div class="bar"><span>${n}</span><i><b style="width:${Math.round(v * 100)}%"></b></i></div>`).join('');
     const btn = $('carAct');
     if (!owned) { btn.textContent = `Buy for ${money(c.price)}`; btn.disabled = save.cash < c.price; btn.dataset.act = 'buy'; }
-    else if (save.car === c.id) { btn.textContent = c.boat ? 'Driving this boat' : c.bike ? 'Riding this bike' : 'Driving this car'; btn.disabled = true; btn.dataset.act = ''; }
-    else { btn.textContent = c.boat ? 'Drive this boat' : c.bike ? 'Ride this bike' : 'Drive this car'; btn.disabled = false; btn.dataset.act = 'select'; }
+    else if (save.car === c.id) { btn.textContent = c.ski ? 'Riding these' : c.boat ? 'Driving this boat' : c.bike ? 'Riding this bike' : 'Driving this car'; btn.disabled = true; btn.dataset.act = ''; }
+    else { btn.textContent = c.ski ? 'Ride these' : c.boat ? 'Drive this boat' : c.bike ? 'Ride this bike' : 'Drive this car'; btn.disabled = false; btn.dataset.act = 'select'; }
     $('uNote').hidden = owned;
     $('uList').innerHTML = UPGRADES.map(u => {
       const lv = L[u.id], maxed = lv >= COSTS.length, cost = maxed ? 0 : costOf(c, lv);
@@ -1617,7 +1713,7 @@ body {
     renderGarage();
   }
   function closeGarage() { state = 'menu'; ensurePlayerCar(); applyLoadout(); refreshModeDesc(); $('garageOv').hidden = true; $('startOv').hidden = false; }
-  let mode = save.mode === 'chase' ? 'chase' : 'endless';
+  let mode = save.mode === 'chase' || save.mode === 'heist' ? save.mode : 'endless';
   ensurePlayerCar();
   applyLoadout();
 
@@ -1755,9 +1851,9 @@ body {
     cars.forEach(c => scene.remove(c.mesh));
     cars = []; sparks = [];
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
-    const spec = CAR_SPECS[save.car];
+    const spec = CAR_SPECS[playerMesh ? playerMesh.userData.id : save.car];
     player = { isPlayer: true, x: laneX(2), z: 0, vx: 0, v: 31, yaw: 0, yawRate: 0, steer: 0, w: spec.w, l: spec.l, mass: spec.mass,
-      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, wheelie: 0, wheelieT: 0, air: false, onRamp: null, airT: 0, airSpin: 0, airSpinRate: 0, landSpin: 0, jumped: 0, closeRide: 0, drifting: false, driftAngle: 0, driftT: 0, driftAngSum: 0, driftDir: 0 };
+      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, ski: !!spec.ski, wheelie: 0, wheelieT: 0, air: false, onRamp: null, airT: 0, airSpin: 0, airSpinRate: 0, landSpin: 0, jumped: 0, closeRide: 0, drifting: false, driftAngle: 0, driftT: 0, driftAngSum: 0, driftDir: 0 };
     clearDriftFx();
     clearRagdoll(); if (playerMesh && playerMesh.userData.rider) playerMesh.userData.rider.visible = true;
     if (playerMesh && playerMesh.userData.occ) playerMesh.userData.occ.visible = true;
@@ -1769,7 +1865,10 @@ body {
   function start() {
     Sound.init();
     ensurePlayerCar(); applyLoadout();
+    if (mode === 'heist') startHeist();
     reset();
+    if (mode === 'heist') heistAfterReset();
+    $('heistHud').classList.toggle('on', mode === 'heist');
     state = 'play';
     $('startOv').hidden = true; $('overOv').hidden = true; $('garageOv').hidden = true;
   }
@@ -1925,6 +2024,7 @@ body {
   }
   const MODE_DESC = {
     endless: 'Weave through traffic for points. Drive fast enough and the police come after you.',
+    heist: 'Rob the bank and escape with the loot. Start in a getaway car, then switch to a motorbike, a speedboat and skis as the cops chase you. Every hit costs you loot.',
     chase: "You're the cop. Hitting traffic damages your cruiser; ramming the getaway car doesn't. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
   };
   function refreshModeDesc() {
@@ -1937,8 +2037,66 @@ body {
     stage.dataset.mode = m;
     $('modeEndless').setAttribute('aria-pressed', m === 'endless');
     $('modeChase').setAttribute('aria-pressed', m === 'chase');
+    $('modeHeist').setAttribute('aria-pressed', m === 'heist');
     refreshModeDesc();
     if (state === 'menu') { ensurePlayerCar(); applyLoadout(); }
+  }
+
+  // ---------- bank heist: escape with the loot by car, bike, boat and skis ----------
+  const HEIST = [
+    { car: 'muscle', map: 'city', label: 'GETAWAY CAR', len: 1400, msg: 'GO GO GO! Get out of the city' },
+    { car: 'viper', map: 'desert', label: 'MOTORBIKE', len: 1400, msg: 'SWITCH TO THE BIKE!' },
+    { car: 'speedboat', map: 'ocean', label: 'SPEEDBOAT', len: 1600, msg: 'TO THE BOAT!' },
+    { car: 'skis', map: 'snow', label: 'SKIS', len: 1400, msg: 'SKI FOR THE BORDER!' },
+  ];
+  const LOOT = 120000;
+  let heistStage = 0, heistStartD = 0, loot = 0, heistWon = false;
+  function heistVehicle(i) {
+    const h = HEIST[i];
+    mapOverride = h.map;
+    setPlayerCar(h.car, save.color, false);
+    applyMap(save.map);
+    Object.assign(S, statsFor(freshLevels(), carById(h.car))); S.wreck += DIF().wreck;
+  }
+  function startHeist() {   // called from start() before reset()
+    heistStage = 0; loot = LOOT; heistWon = false;
+    heistVehicle(0);
+  }
+  function heistAfterReset() {
+    heistStartD = 0; heat = 3.2; chased = true; policeTimer = 0.5;
+    showPop('BANK JOB! ' + HEIST[0].msg, true); feed('ALARM TRIPPED · 3★', 0, 'lost');
+  }
+  function heistSwap() {
+    const p = player, keep = { v: p.v, x: p.x, hull: p.hull };
+    heistStage++; heistStartD = distance;
+    heistVehicle(heistStage);
+    const spec = CAR_SPECS[HEIST[heistStage].car];
+    Object.assign(p, { w: spec.w, l: spec.l, mass: spec.mass, bike: !!spec.bike, ski: !!spec.ski, wheelie: 0, drifting: false, driftAngle: 0, slide: 0, yaw: 0, yawRate: 0, vx: 0, air: false, onRamp: null, y: 0, vy: 0, airSpin: 0, landSpin: 0 });
+    p.v = Math.max(28, keep.v * 0.85); p.hull = Math.min(100, Math.max(keep.hull, 50) + 25); updateHull();
+    cars.forEach(c => scene.remove(c.mesh)); cars = [];
+    hazards.forEach(h => scene.remove(h.mesh)); hazards = []; roadblock = null;
+    clearDriftFx();
+    for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
+    heat = Math.max(heat, 3 + heistStage * 0.5); chased = true; policeTimer = 1.2; escapeTimer = 0;
+    flash(); shake = Math.max(shake, 0.5);
+    showPop(HEIST[heistStage].msg, true); feed(`STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].label}`, 0, 'lost');
+    addBonus(`HANDOFF ${heistStage}`, 1500 * heistStage);
+  }
+  function updateHeist(dt) {
+    const p = player;
+    if (p.wrecked || heistWon) return;
+    heat = Math.max(heat, 2.5 + heistStage * 0.5); chased = true;   // they never stop looking for you
+    const left = HEIST[heistStage].len - (distance - heistStartD);
+    if (left <= 0) {
+      if (heistStage < HEIST.length - 1) heistSwap();
+      else { heistWon = true; endReason = 'escaped'; addBonus('CLEAN GETAWAY', 15000); showPop('YOU GOT AWAY WITH IT!', true); flash(); gameOver(); }
+      return;
+    }
+    const nxt = HEIST[heistStage + 1];
+    setText('heistStage', `STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].label}`);
+    setText('heistGoal', `${Math.ceil(left)} m to ${nxt ? 'the ' + nxt.label.toLowerCase() : 'the border'}`);
+    setText('heistLoot', money(loot));
+    setWidth('heistBar', 1 - left / HEIST[heistStage].len);
   }
 
   // ---------- police: heat, team tactics, PITs, spike strips, roadblocks and a helicopter ----------
@@ -2197,7 +2355,7 @@ body {
       if (bust >= 1) busted();
       // escape: every cop left far behind (or taken out); the helicopter makes you hold it longer
       const need = heli && !heli.leave ? 12 : 5;
-      if (chased && !cops.some(c => c.z < 130)) {
+      if (chased && mode !== 'heist' && !cops.some(c => c.z < 130)) {
         escapeTimer += dt;
         if (escapeTimer > need) {
           addBonus(`ESCAPED · ${Math.max(1, stars)}★`, 750 * Math.max(1, stars) * (heli ? 2 : 1));
@@ -2440,10 +2598,10 @@ body {
     // motorbike wheelie: hold E; it steers worse but every second of it feeds your chain
     const wantW = p.bike && keys.wheelie && p.v > 9 && !keys.down ? 0.5 : 0;
     p.wheelie += (wantW - p.wheelie) * Math.min(1, dt * (wantW ? 3 : 7));
-    if (p.wheelie > 0.3) { p.wheelieT += dt; if (p.wheelieT >= 1) { p.wheelieT -= 1; addChainStep('WHEELIE', 120 * (p.v / MPS / 100)); } } else p.wheelieT = 0;
+    if (p.wheelie > 0.3) { p.wheelieT += dt; if (p.wheelieT >= 1) { p.wheelieT -= 1; addChainStep(p.ski ? 'TUCK' : onWater ? 'NOSE UP' : 'WHEELIE', 120 * (p.v / MPS / 100)); } } else p.wheelieT = 0;
     const latMax = (6 + p.v * 0.06) * S.lat * (1 - p.wheelie * 0.9) * (p.drifting ? 1.3 : 1);
     const prevVx = p.vx;
-    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1) * (onWater ? 0.62 : 1);
+    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1) * (onWater ? 0.62 : onSnow ? 0.78 : 1);
     p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
     if (flatT > 0) p.vx += (Math.sin(time * 9) * 6 + (Math.random() - 0.5) * 18) * dt;   // flat tyres pull and shimmy
     p.x += p.vx * dt;
@@ -2451,7 +2609,7 @@ body {
 
     // the car points along its motion; after a hit it keeps some spin before the tyres catch it
     const prevYaw = p.yaw;
-    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * (onWater ? 2.6 : 1.8) + p.driftAngle;
+    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * (onWater ? 2.6 : onSnow ? 2.3 : 1.8) + p.driftAngle;
     if (p.slide > 0) { p.yaw += p.yawRate * dt; p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 3); }
     else p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 16);
     p.yawRate = p.slide > 0 ? p.yawRate * Math.exp(-4 * dt) : (p.yaw - prevYaw) / dt;
@@ -2510,6 +2668,7 @@ body {
   function damage(amount, source = 'car') {
     if (mode === 'chase' && source !== 'car') return;   // in Chase only traffic hurts you
     player.hull -= amount * S.armor * DIF().dmg;
+    if (mode === 'heist' && !heistWon) { const lost = Math.min(loot, Math.round(amount * S.armor * DIF().dmg * 300)); if (lost > 0) { loot -= lost; feed(`LOOT −${money(lost)}`, 0, 'lost'); } }
     updateHull();
     if (player.hull <= 0) wreck(0);
   }
@@ -2562,12 +2721,14 @@ body {
     }
     updateDriftFx(dt, Math.max(0, p.v) * dt);
     updateOcean(dt, Math.max(0, p.v) * dt);
+    updateSnow(dt, Math.max(0, p.v) * dt);
     barrier(p);
     if (!p.wrecked) topSpeed = Math.max(topSpeed, p.v / MPS);
 
     distance += Math.max(0, p.v) * dt;
     if (!p.wrecked) scoreTick(p, dt);
     if (mode === 'chase') updateChase(dt); else updatePolice(dt);
+    if (mode === 'heist') updateHeist(dt);
 
     const bodies = [...cars, p];
     for (const c of cars) {
@@ -2700,6 +2861,7 @@ body {
     const prevTop = save.scores[0]?.score || 0;
     if (score > best) { best = score; try { localStorage.setItem('laneSplitterBest', best); } catch (e) {} }
     const run = { score, miles: distance / 1609, date: Date.now(), mode };
+    $('heistHud').classList.remove('on');
     if (score > 0) { save.scores.push(run); save.scores.sort((a, b) => b.score - a.score); save.scores = save.scores.slice(0, 5); }
     const rank = save.scores.indexOf(run);
     $('newHs').hidden = !(score > prevTop && score > 0);
@@ -2713,7 +2875,9 @@ body {
     $('breakdown').innerHTML = (mode === 'chase' ? row('Suspects caught', caught) + row('Next chase starts at', 'Level ' + chaseLevel) : '') + row('Driving', n(runStats.drive)) + row('Banked chains', n(runStats.chains)) + row('Bonuses', n(runStats.bonus))
       + (runStats.lost ? row('Chains lost', '−' + n(runStats.lost), 'neg') : '');
     $('finalStats').textContent = `${(distance / 1609).toFixed(2)} miles · ${nearMisses} near misses · best chain x${runStats.bestMult}` + (runStats.threads ? ` · ${runStats.threads} needle threads` : '') + ` · top ${Math.round(topSpeed)} mph`;
-    const earned = Math.round(score / 12 * DIF().pay);
+    const kept = mode === 'heist' ? Math.round(heistWon ? loot : loot * 0.2) : 0;
+    if (mode === 'heist') $('breakdown').innerHTML += row(heistWon ? 'Loot escaped with' : 'Loot you hid before getting caught', money(kept)) + row('Stages cleared', `${heistStage + (heistWon ? 1 : 0)} of ${HEIST.length}`);
+    const earned = Math.round(score / 12 * DIF().pay) + kept;
     save.cash += earned; persist(); applyLoadout();
     $('earned').textContent = '+' + money(earned) + (DIF().pay !== 1 ? ` (${DIF().name} ×${DIF().pay})` : '');
     $('cashOver').textContent = money(save.cash);
@@ -2751,6 +2915,11 @@ body {
       ud.body.rotation.set(w, 0, lean);
       ud.body.position.set(0, zr * Math.sin(w), zr - zr * Math.cos(w));
     } else ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
+    if (ud.ski) {
+      ud.body.position.set(0, 0, 0); ud.body.rotation.set(0, 0, p.wrecked ? 0 : clamp(-p.vx * 0.09, -0.75, 0.75));
+      ud.rider.scale.y = 1 - p.wheelie * 0.55; ud.rider.position.z = p.wheelie * 0.1;
+      if (!p.wrecked && !p.air && p.v > 12 && Math.random() < dt * (4 + Math.abs(p.vx) * 3)) puff(p.x + (Math.random() - 0.5) * 0.8, 0.9);
+    }
     if (onWater) {
       if (!p.air && !p.onRamp) { playerMesh.position.y += Math.sin(time * 5) * 0.04; ud.body.rotation.x += clamp(p.v / 450, 0, 0.09) + Math.sin(time * 6.5) * 0.012; }
       ud.wake.visible = !p.air && !p.wrecked; ud.wake.scale.z = 0.5 + clamp(p.v / 50, 0, 1);
@@ -2834,7 +3003,7 @@ body {
     p_rpm += (rpmTarget - p_rpm) * Math.min(1, dt * 12);
     p_throttle += (thr - p_throttle) * Math.min(1, dt * 8);
     const id = playerMesh ? playerMesh.userData.id : save.car;
-    Sound.update({ rpm: p_rpm, throttle: p_throttle, speed: playing ? p.v : 0, boost: playing && p.boosting, on: playing || (idle && state === 'garage'), pitch: CAR_SPECS[id].pitch, screech: playing && p.drifting,
+    Sound.update({ rpm: p_rpm, throttle: p_throttle, speed: playing ? p.v : 0, boost: playing && p.boosting, on: (playing || (idle && state === 'garage')) && !CAR_SPECS[id].ski, pitch: CAR_SPECS[id].pitch, screech: playing && p.drifting,
       siren: mode === 'chase' ? (playing ? 0.3 : 0) : (playing || state === 'wreck') ? activeCops().reduce((m, c) => Math.max(m, clamp(1 - Math.hypot(c.z, c.x - p.x) / 160, 0, 1)), 0) : 0 });
   }
   let last = performance.now();
