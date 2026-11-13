@@ -1426,7 +1426,17 @@ body {
   // ---------- input ----------
   const keys = { left: false, right: false, up: false, down: false, nitro: false, wheelie: false, handbrake: false };
   const keyMap = { KeyE: 'wheelie', ShiftLeft: 'nitro', ShiftRight: 'nitro', KeyN: 'nitro', Space: 'handbrake', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down' };
+  let cheatBuf = '';
   addEventListener('keydown', e => {
+    if (/^Key[A-Z]$/.test(e.code)) {   // type MONEY to switch unlimited money on or off
+      cheatBuf = (cheatBuf + e.code.slice(3)).slice(-5);
+      if (cheatBuf === 'MONEY') {
+        cheatBuf = ''; save.unlimited = !save.unlimited;
+        if (!save.unlimited) save.cash = 50000;
+        persist(); applyLoadout(); if (state === 'garage') renderGarage();
+        showPop(save.unlimited ? 'UNLIMITED MONEY ON' : 'UNLIMITED MONEY OFF', true);
+      }
+    }
     Sound.init();
     if (e.code === 'KeyM' && !e.repeat) { Sound.toggle(); updateMuteBtn(); return; }
     if (state === 'garage' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { e.preventDefault(); viewCar(gView + (e.code === 'ArrowLeft' ? -1 : 1)); return; }
@@ -1506,6 +1516,7 @@ body {
       save.chaseLevel = Math.max(1, Math.floor(+s.chaseLevel || 1));
       if (['easy', 'normal', 'hard'].includes(s.diff)) save.diff = s.diff;
       if (typeof s.map === 'string') save.map = s.map;
+      if (s.unlimited) save.unlimited = true;
     }
   } catch (e) {}
   const DIFFS = {
@@ -1514,7 +1525,7 @@ body {
     hard: { name: 'Hard', gap: 0.72, swerve: 1.9, dmg: 1.35, heat: 1.5, cop: 7, wreck: -2, pay: 1.5, desc: 'Packed lanes, late lane changes, more damage and cops that hit hard. Pays ×1.5 cash.' },
   };
   const DIF = () => DIFFS[save.diff] || DIFFS.normal;
-  const persist = () => { try { localStorage.setItem('laneSplitterSave', JSON.stringify(save)); } catch (e) {} };
+  const persist = () => { if (save.unlimited) save.cash = 999999999; try { localStorage.setItem('laneSplitterSave', JSON.stringify(save)); } catch (e) {} };
   const S = {};
   const statsFor = (L, c) => ({
     vmax: c.vmax + L.engine * 5.6, accel: c.accel * (1 + L.engine * 0.12), brake: c.brake * (1 + L.brakes * 0.15), lat: c.lat * (1 + L.handling * 0.08),
@@ -1535,7 +1546,7 @@ body {
       ? save.scores.map((r, i) => `<li class="${r === mine ? 'me' : ''}"><span>${i + 1}.</span><b>${r.score.toLocaleString('en-US')}</b><span>${r.mode === 'chase' ? 'Chase · ' : ''}${r.miles ? r.miles.toFixed(2) + ' mi' : ''}</span></li>`).join('')
       : '<li class="empty">No runs yet. Your best five runs show up here.</li>';
   }
-  const money = n => '$' + Math.round(n).toLocaleString('en-US');
+  const money = n => save.unlimited && n >= 999999999 ? '$∞' : '$' + Math.round(n).toLocaleString('en-US');
   function ensurePlayerCar() { const cop = mode === 'chase'; if (!playerMesh || playerMesh.userData.id !== save.car || playerMesh.userData.cop !== cop) setPlayerCar(save.car, save.color, cop); }
   function applyLoadout() {
     Object.assign(S, statsFor(save.cars[save.car].levels, carById(save.car)));
