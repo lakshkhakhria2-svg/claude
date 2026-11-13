@@ -296,6 +296,7 @@ body {
 
   // ---------- world constants (metres) ----------
   const LANES = 5, LANE_W = 3.6, ROAD_W = LANES * LANE_W;
+  let onWater = false;   // true while you drive a boat
   const laneX = i => (i - (LANES - 1) / 2) * LANE_W;
   const MPS = 0.447;           // mph -> m/s
   const SPAWN_Z = -260, DESPAWN_Z = 40;
@@ -417,7 +418,7 @@ body {
   const barrierShape = new THREE.Shape();
   barrierShape.moveTo(-0.35, 0); barrierShape.lineTo(0.35, 0); barrierShape.lineTo(0.2, 0.3); barrierShape.lineTo(0.12, 0.9); barrierShape.lineTo(-0.12, 0.9); barrierShape.lineTo(-0.2, 0.3); barrierShape.closePath();
   const barrierGeo = new THREE.ExtrudeGeometry(barrierShape, { depth: 600, bevelEnabled: false });
-  [-1, 1].forEach(s => { const b = new THREE.Mesh(barrierGeo, mat(0xc9c6bd)); b.position.set(s * (ROAD_W / 2 + 2.4), 0, -450); b.castShadow = b.receiveShadow = true; scene.add(b); });
+  const barriers = [-1, 1].map(s => { const b = new THREE.Mesh(barrierGeo, mat(0xc9c6bd)); b.position.set(s * (ROAD_W / 2 + 2.4), 0, -450); b.castShadow = b.receiveShadow = true; scene.add(b); return b; });
 
   // lane dashes (instanced, recycled)
   const DASHES = Math.ceil(300 / DASH_PERIOD);
@@ -626,7 +627,7 @@ body {
     for (let i = 0; i < 900; i++) { g.fillStyle = ['#2a6e9c', '#174b72', '#3d86b4', '#8fc4e0'][i % 4]; g.globalAlpha = i % 4 === 3 ? 0.35 : 0.5; g.fillRect(Math.random() * s, Math.random() * s, 6 + Math.random() * 18, 1.5); }
     g.globalAlpha = 1;
   }, 900 / WATER_TILE, 600 / WATER_TILE);
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 600), new THREE.MeshStandardMaterial({ map: waterTex, roughness: 0.28, metalness: 0.1, color: lin(0x9cc8e6), envMapIntensity: 0.6 }));
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 600), new THREE.MeshStandardMaterial({ map: waterTex, roughness: 0.42, metalness: 0.1, color: lin(0x9cc8e6), envMapIntensity: 0.6 }));
   water.rotation.x = -Math.PI / 2; water.position.set(0, WATER_Y, -150); water.receiveShadow = true; oceanGroup.add(water);
   const deck = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 7.4, 1.6, 600), mat(0xb9b5ac)); deck.position.set(0, -0.83, -150); deck.receiveShadow = true; oceanGroup.add(deck);
   const deckLip = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 8, 0.4, 600), mat(0x8e8a82)); deckLip.position.set(0, -1.6, -150); oceanGroup.add(deckLip);
@@ -751,6 +752,7 @@ body {
   const ALL_MAP_PROPS = [oceanGroup, pierGroup, treeGroup, hillIM, cloudIM, ...lampGroups, ...poolGroups, cityGroup, desertGroup, mesaIM, stars];
   let curMap = MAPS.highway, envRT = null;
   function applyMap(id) {
+    if (onWater) id = 'ocean';
     const m = MAPS[id] || MAPS.highway; curMap = m;
     sky.material.uniforms.top.value.set(m.top); sky.material.uniforms.horizon.value.set(m.hor);
     sky.material.uniforms.sun.value.set(...m.dir).normalize(); sky.material.uniforms.sunCol.value.set(...m.sunCol); sky.material.uniforms.glow.value = m.glow;
@@ -765,6 +767,7 @@ body {
     headMat.emissiveIntensity = m.night ? 3.5 : 0.5; tailMat.emissiveIntensity = m.night ? 1.8 : 0.5;
     headLight.intensity = m.night ? 7 : 0;
     reflGroup.visible = m.night;
+    if (onWater) [pierGroup, ...lampGroups, reflGroup].forEach(o => o.visible = false);
     // lane paint glows a little at night so the lanes stay readable
     for (const mm of [dashMesh.material, edgeL.material, edgeR.material]) { mm.emissive.copy(mm.color); mm.emissiveIntensity = m.night ? 0.45 : 0; }
     tailMat.emissiveIntensity = m.night ? 2.6 : 0.5;
@@ -788,7 +791,7 @@ body {
   const SKIDS = 360, skidIM = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.24, 0.7).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x0a0a0a, transparent: true, opacity: 0.55, depthWrite: false }), SKIDS);
   skidIM.frustumCulled = false; skidIM.count = 0; scene.add(skidIM);
   const skids = []; let skidAcc = 0;
-  function layMark(x, z, yaw) { if (skids.length >= SKIDS) skids.shift(); skids.push({ x, z, yaw }); }
+  function layMark(x, z, yaw) { if (onWater) return; if (skids.length >= SKIDS) skids.shift(); skids.push({ x, z, yaw }); }
   function updateDriftFx(dt, scrollDz) {
     for (const s of smoke) { s.x += s.vx * dt; s.y += s.vy * dt; s.z += scrollDz * 0.7; s.life -= dt; }
     while (smoke.length && smoke[0].life <= 0) smoke.shift();
@@ -843,6 +846,9 @@ body {
     sprite: { pitch: 128, w: 0.8, l: 2.0, mass: 0.55, bike: true },
     viper: { pitch: 112, w: 0.82, l: 2.1, mass: 0.6, bike: true, fairing: true },
     comet: { pitch: 96, w: 0.85, l: 2.2, mass: 0.65, bike: true, fairing: true },
+    jetski: { pitch: 110, w: 1.1, l: 3, mass: 0.7, bike: true, boat: true },
+    speedboat: { pitch: 46, w: 2.2, l: 6, mass: 1.4, boat: true, h: 0.5, cabH: 0.6, cabZ: 0.9, cabL: 2.6 },
+    powerboat: { pitch: 40, w: 2.4, l: 7.5, mass: 1.7, boat: true, h: 0.4, cabH: 0.55, cabZ: 0.6, cabL: 1.8 },
   };
   const tireGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 14).rotateZ(Math.PI / 2);
   const hubGeo = mergeParts([[new THREE.CylinderGeometry(0.22, 0.22, 0.3, 10), 0, 0, 0, 0, 0, Math.PI / 2], [new THREE.BoxGeometry(0.31, 0.36, 0.07)]]);
@@ -902,6 +908,7 @@ body {
   }
 
   function makeCar(id, color, isPlayer) {
+    if (CAR_SPECS[id].boat || (onWater && !CAR_SPECS[id].ramp)) return makeBoat(id, color, isPlayer);
     if (CAR_SPECS[id].bike) return makeBike(id, color, isPlayer);
     if (CAR_SPECS[id].ramp) return makeRampTruck(color);
     const G = carGeo(id, isPlayer);
@@ -981,6 +988,110 @@ body {
     }
     g.userData = { id, w: spec.w, l: spec.l, mass: spec.mass, top: 1.2, tails, blinkers: [], body: b, wheels, front, paint: body, bike: true, rider };
     return g;
+  }
+
+  // ---------- boats: drive on the water ----------
+  // a pointed hull: a box for the back two thirds and a four-sided cone for the bow
+  function addHull(parent, W, L, H, m, y = 0) {
+    const back = L * 0.66;
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(W, H, back), m); hull.position.set(0, y + H / 2, L / 2 - back / 2); hull.castShadow = hull.receiveShadow = true; parent.add(hull);
+    const bowL = L - back, bow = new THREE.Mesh(new THREE.ConeGeometry(W / Math.SQRT2, bowL, 4).rotateY(Math.PI / 4).rotateX(-Math.PI / 2), m);
+    bow.scale.set(1, H / W, 1); bow.position.set(0, y + H / 2, -L / 2 + bowL / 2); bow.castShadow = true; parent.add(bow);
+    return hull;
+  }
+  const boatWhite = mat(0xf4f3ee, { roughness: 0.35 }), boatDeck = mat(0xc9a77a, { roughness: 0.7 }), boatDark = mat(0x22262c, { roughness: 0.6 });
+  const BOAT_STYLE = { street: 'runabout', hatch: 'runabout', muscle: 'runabout', coupe: 'runabout', super: 'runabout', suv: 'cruiser', truck: 'barge', police: 'police', interceptor: 'police' };
+  function makeBoat(id, color, isPlayer) {
+    const spec = CAR_SPECS[id];
+    const style = spec.boat ? id : BOAT_STYLE[id] || 'runabout';
+    const g = new THREE.Group(); g.rotation.order = 'YXZ';
+    const b = new THREE.Group(); g.add(b);
+    const body = isPlayer ? paint(color) : paintFor(color);
+    const add = (geo, m, x, y, z, rx = 0, p = b) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.x = rx; o.castShadow = true; p.add(o); return o; };
+    const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+    let W, L, top, mass = 1.4, extra = {};
+    if (style === 'jetski') {
+      W = 1.1; L = 3; top = 0.9; mass = 0.7;
+      addHull(b, W, L, 0.5, body, -0.15);
+      add(box(0.9, 0.12, 1.9), boatWhite, 0, 0.4, 0.35);
+      add(box(0.5, 0.25, 1.2), boatDark, 0, 0.55, 0.45);                       // seat
+      add(box(0.7, 0.35, 0.5), body, 0, 0.6, -0.55, -0.3);                      // nose cowl
+      add(box(0.7, 0.05, 0.05), trimMat, 0, 0.92, -0.45);                       // bars
+      const rider = new THREE.Group(); b.add(rider);
+      const vest = mat(0xff6a00), skin = mat(0xe2b48f), shorts = mat(0x22314f);
+      add(box(0.38, 0.55, 0.26), vest, 0, 1.05, 0.15, -0.5, rider);
+      add(new THREE.SphereGeometry(0.13, 12, 9), skin, 0, 1.42, -0.05, 0, rider);
+      for (const x of [-1, 1]) { add(box(0.09, 0.09, 0.55), skin, x * 0.2, 1.05, -0.2, 0.4, rider); add(box(0.13, 0.13, 0.45), shorts, x * 0.15, 0.72, 0.35, 0.2, rider); }
+      extra = { bike: true, rider };
+    } else if (style === 'speedboat' || style === 'runabout') {
+      W = 2.2; L = isPlayer ? 6 : 5.8; top = 0.95; mass = 1.4;
+      addHull(b, W, L, 0.8, body, -0.3);
+      add(box(W - 0.2, 0.08, L * 0.62), boatWhite, 0, 0.52, L * 0.17);
+      add(box(W - 0.3, 0.35, 0.08), glassMat, 0, 0.8, -0.35, -0.6);           // windscreen
+      add(box(W - 0.2, 0.3, 0.25), boatWhite, 0, 0.68, -0.6);
+      add(box(W - 0.4, 0.3, 0.5), boatDark, 0, 0.7, 1.3);                       // back bench
+      add(box(0.3, 0.5, 0.4), trimMat, 0, 0.3, L / 2 + 0.1);                    // outboard
+    } else if (style === 'powerboat') {
+      W = 2.4; L = 7.5; top = 0.9; mass = 1.7;
+      addHull(b, W, L, 0.75, body, -0.3);
+      add(box(W - 0.15, 0.1, L * 0.66), boatWhite, 0, 0.47, L * 0.17);
+      add(box(W - 0.5, 0.42, 1.6), boatDark, 0, 0.7, 0.3);                     // cockpit canopy
+      add(box(W - 0.55, 0.3, 0.06), glassMat, 0, 0.82, -0.5, -0.9);
+      for (const x of [-1, 1]) { add(box(0.12, 0.12, L * 0.62), boatWhite, x * (W / 2 - 0.06), 0.55, L * 0.17); add(box(0.35, 0.55, 0.5), trimMat, x * 0.45, 0.3, L / 2 + 0.15); }
+      add(box(W, 0.06, 0.6), body, 0, 1.1, L / 2 - 0.4);                        // rear wing
+      for (const x of [-0.9, 0.9]) add(box(0.06, 0.6, 0.4), body, x, 0.8, L / 2 - 0.4);
+    } else if (style === 'cruiser') {
+      W = 2.7; L = 8; top = 2.1; mass = 2.2;
+      addHull(b, W, L, 1.1, boatWhite, -0.4);
+      add(box(W + 0.02, 0.18, L * 0.66 + 0.02), body, 0, 0.45, L * 0.17);
+      add(box(W - 0.6, 1.2, 3.4), boatWhite, 0, 1.25, 0.3);
+      add(box(W - 0.55, 0.45, 3.2), glassMat, 0, 1.4, 0.3);
+      add(box(W - 0.3, 0.06, 2), boatDeck, 0, 0.72, L / 2 - 1.1);
+    } else if (style === 'barge') {
+      W = 3; L = 12; top = 2.8; mass = 5;
+      addHull(b, W, L, 1.4, body, -0.6);
+      add(box(W - 0.2, 0.1, L * 0.62), boatDark, 0, 0.82, L * 0.15);
+      const CC = [0xc0392b, 0x2e86c1, 0xf39c12, 0x27ae60, 0xe8e8e8];
+      for (let i = 0; i < 3; i++) add(box(W - 0.4, 1.5, 2.2), mat(CC[(i + Math.floor(Math.abs(color) % 5)) % 5], { roughness: 0.8 }), 0, 1.6, -2 + i * 2.4);
+      add(box(W - 0.3, 2.2, 1.8), boatWhite, 0, 1.9, L / 2 - 1.2);
+      add(box(W - 0.25, 0.45, 1.6), glassMat, 0, 2.5, L / 2 - 1.2);
+    } else {   // police
+      W = 2.4; L = 6.6; top = 1.9; mass = 1.8;
+      addHull(b, W, L, 0.9, boatWhite, -0.35);
+      add(box(W + 0.02, 0.22, L * 0.66 + 0.02), mat(0x1a4fd0), 0, 0.3, L * 0.17);
+      add(box(W - 0.5, 1, 2.2), boatWhite, 0, 1.05, 0.6);
+      add(box(W - 0.45, 0.4, 2), glassMat, 0, 1.2, 0.6);
+      for (const [x, m] of [[-0.33, copRed], [0.33, copBlue]]) { const l = new THREE.Mesh(copLightGeo, m); l.position.set(x, 1.65, 0.6); b.add(l); }
+    }
+    const tails = [add(box(0.22, 0.1, 0.06), tailMat, 0, top * 0.5 + 0.2, L / 2 + 0.02)];
+    const blinkers = isPlayer ? [] : [-1, 1].map(x => add(blinkGeo, blinkOff, x * (W / 2 + 0.02), 0.45, L / 2 - 0.4));
+    add(box(0.25, 0.12, 0.05), headMat, 0, 0.55, -L / 2 + 0.6);
+    const wake = new THREE.Mesh(new THREE.PlaneGeometry(W * 1.6, L * 2.2).rotateX(-Math.PI / 2), foamMat); wake.position.set(0, 0.04, L * 1.4); g.add(wake);
+    const bowFoam = new THREE.Mesh(new THREE.PlaneGeometry(W * 1.7, L * 0.4).rotateX(-Math.PI / 2), foamMat); bowFoam.position.set(0, 0.05, -L * 0.3); g.add(bowFoam);
+    g.userData = { id, w: W, l: L, mass, top, tails, blinkers, body: b, wheels: [], front: [], paint: body, boat: true, wake, ...extra };
+    return g;
+  }
+  // buoys mark the lanes and the edge of the course
+  const buoyLaneIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.28, 10, 8), mat(0xff7a00, { roughness: 0.4, emissive: 0xff5a00, emissiveIntensity: 0.25 }), (LANES - 1) * 12);
+  makeStrip(Array.from({ length: (LANES - 1) * 12 }, (_, i) => ({ k: i % (LANES - 1), z: DESPAWN_Z - Math.floor(i / (LANES - 1)) * 25 })), 300, [buoyLaneIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(-ROAD_W / 2 + (it.k + 1) * LANE_W, 0.12, it.z); dummy.updateMatrix(); buoyLaneIM.setMatrixAt(i, dummy.matrix);
+  });
+  const buoyLaneGroup = strips[strips.length - 1].group;
+  const buoyEdgeIM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.35, 0.45, 1.1, 10).translate(0, 0.35, 0), mat(0xffffff, { roughness: 0.4 }), 80);
+  const buoyCapIM = new THREE.InstancedMesh(new THREE.ConeGeometry(0.36, 0.5, 10).translate(0, 1.15, 0), new THREE.MeshBasicMaterial({ color: 0xff3020 }), 80);
+  for (let i = 0; i < 80; i++) buoyEdgeIM.setColorAt(i, new THREE.Color(Math.floor(i / 2) % 2 ? 0xd82a20 : 0xf4f4f4));
+  makeStrip(Array.from({ length: 80 }, (_, i) => ({ s: i % 2 ? 1 : -1, z: DESPAWN_Z - Math.floor(i / 2) * 7.5 })), 300, [buoyEdgeIM, buoyCapIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(it.s * (ROAD_W / 2 + 2.2), 0, it.z); dummy.updateMatrix(); buoyEdgeIM.setMatrixAt(i, dummy.matrix); buoyCapIM.setMatrixAt(i, dummy.matrix);
+  });
+  const buoyEdgeGroup = strips[strips.length - 1].group;
+  buoyLaneGroup.visible = buoyEdgeGroup.visible = false;
+  function setWater(on) {
+    const changed = on !== onWater; onWater = on;
+    for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !on;
+    buoyLaneGroup.visible = buoyEdgeGroup.visible = on;
+    oceanGroup.position.y = on ? -WATER_Y - 0.12 : 0;   // bring the sea up to road level
+    applyMap(save.map);
+    if (changed) try { if (state !== 'play') reset(); } catch (e) {}   // swap the traffic for boats (or back); skipped during start-up
   }
 
   // ---------- blood: splatter and stains where the bodies hit the road ----------
@@ -1071,7 +1182,8 @@ body {
           if (it === 0) {
             q.y = p.y + vy * 0.55; pt.ground = true;
             const hitSpeed = -vy / dt;
-            if (hitSpeed > 4 && (pt === R.named.head || pt === R.named.pelvis || pt === R.named.neck) && (R.bloodT || 0) <= time) {
+            if (onWater) { if (hitSpeed > 3 && pt === R.named.pelvis) for (let k = 0; k < 5; k++) puff(p.x + (Math.random() - 0.5) * 1.2, p.z + (Math.random() - 0.5) * 1.2); }
+            else if (hitSpeed > 4 && (pt === R.named.head || pt === R.named.pelvis || pt === R.named.neck) && (R.bloodT || 0) <= time) {
               R.bloodT = time + 0.08;
               splat(p.x, p.z, clamp(0.25 + hitSpeed * 0.05, 0.3, 1.1));
               spray(p.x, 0.2, p.z, Math.min(18, 4 + hitSpeed), 2 + hitSpeed * 0.3);
@@ -1161,8 +1273,11 @@ body {
     const b = new THREE.Group(); g.add(b);
     const body = paintFor(color), W = 2.5;
     const add = (geo, m, x, y, z, shadow = true) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = shadow; b.add(o); return o; };
+    if (onWater) addHull(b, W + 0.5, 12.6, 1.2, body, -0.75);   // floating ramp barge
+    else {
     add(new THREE.BoxGeometry(W, 2.3, 2.7), body, 0, 1.55, -4.65);                       // cab, low enough to clear from the lip
     add(new THREE.BoxGeometry(W - 0.3, 0.8, 0.05), glassMat, 0, 2.05, -6.02, false);
+    }
     add(new THREE.BoxGeometry(W - 0.4, 0.4, 11.6), trimMat, 0, 0.55, 0);                  // chassis
     const ramp = new THREE.Mesh(rampGeo, new THREE.MeshLambertMaterial({ map: rampTex, side: THREE.DoubleSide })); ramp.receiveShadow = true; ramp.castShadow = true; b.add(ramp);
     const sides = new THREE.Mesh(rampSideGeo, new THREE.MeshLambertMaterial({ color: lin(0x3a3f48), side: THREE.DoubleSide })); sides.castShadow = true; b.add(sides);
@@ -1170,7 +1285,7 @@ body {
     for (const x of [-1, 1]) add(lamp, headMat, x * 0.9, 1.0, -6.02, false);
     const tails = [-1, 1].map(x => add(lamp, tailMat, x * 0.95, 0.5, 6.02, false));
     const blinkers = [-1, 1].map(x => add(blinkGeo, blinkOff, x * (W / 2 + 0.02), 0.6, 5.7, false));
-    for (const z of [-4.6, 2.5, 4.6]) for (const x of [-1, 1]) { const t = new THREE.Mesh(tireGeo, wheelMat); t.position.set(x * (W / 2 - 0.1), 0.36, z); g.add(t); }
+    if (!onWater) for (const z of [-4.6, 2.5, 4.6]) for (const x of [-1, 1]) { const t = new THREE.Mesh(tireGeo, wheelMat); t.position.set(x * (W / 2 - 0.1), 0.36, z); g.add(t); }
     for (const x of [-1, 1]) { const strip = new THREE.Mesh(rampEdgeGeo, rampGlowMat); strip.position.x = x * (W / 2 - 0.05); b.add(strip); }
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.1), rampSignMat); sign.position.set(0, 3.55, -3.4); b.add(sign);
     for (const x of [-1, 1]) add(new THREE.BoxGeometry(0.25, 0.2, 0.25), rampBeacon, x * 1.0, 2.82, -5.6, false);
@@ -1241,6 +1356,7 @@ body {
   const flameGeo = new THREE.ConeGeometry(0.13, 0.9, 8).rotateX(Math.PI / 2);
   function setPlayerCar(id, color, cop = false) {
     if (playerMesh) scene.remove(playerMesh);
+    if (!!CAR_SPECS[id].boat !== onWater) setWater(!!CAR_SPECS[id].boat);
     playerMesh = makeCar(id, color, true);
     const spec = CAR_SPECS[id], ud = playerMesh.userData;
     if (spec.stripe && !spec.wedge) for (const x of spec.stripe === 2 ? [-0.28, 0.28] : [0]) {
@@ -1356,6 +1472,9 @@ body {
     { id: 'super', name: 'Wraith', price: 45000, upMul: 2.4, desc: 'Top-tier pace, huge brakes and the biggest nitro tank.', vmax: 96, accel: 1.55, brake: 1.35, lat: 1.25, armor: 1.05, wreck: 0, tank: 1.35 },
     { id: 'sprite', name: 'Sprite 250', price: 7000, upMul: 1.2, bike: true, desc: 'Motorbike. Light and twitchy: splits lanes between cars, but any hit hurts. Hold E to wheelie.', vmax: 72, accel: 1.5, brake: 1.15, lat: 1.5, armor: 1.7, wreck: -6, tank: 1.1 },
     { id: 'viper', name: 'Viper 600', price: 18000, upMul: 1.7, bike: true, desc: 'Motorbike. A sharp sport bike that fires out of gaps. Fragile. Hold E to wheelie.', vmax: 88, accel: 1.8, brake: 1.25, lat: 1.6, armor: 1.6, wreck: -5.5, tank: 1.2 },
+    { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 0.8, lat: 1.35, armor: 1.6, wreck: -5, tank: 1.1 },
+    { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 0.75, lat: 0.95, armor: 0.9, wreck: 1, tank: 1.15 },
+    { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 0.8, lat: 1.05, armor: 0.85, wreck: 1, tank: 1.35 },
     { id: 'comet', name: 'Comet 1000', price: 40000, upMul: 2.2, bike: true, desc: 'Motorbike. A superbike with savage pace and a huge nitro tank. One mistake ends it. Hold E to wheelie.', vmax: 100, accel: 2.1, brake: 1.35, lat: 1.65, armor: 1.5, wreck: -5, tank: 1.4 },
   ];
   const carById = id => CARS.find(c => c.id === id) || CARS[0];
@@ -1422,12 +1541,12 @@ body {
     $('gCash').textContent = money(save.cash);
     $('carName').textContent = c.name;
     $('carDesc').textContent = c.desc;
-    $('carIdx').textContent = `${c.bike ? 'Bike' : 'Car'} · ${gView + 1} of ${CARS.length}` + (owned ? ' · owned' : '');
+    $('carIdx').textContent = `${c.boat ? 'Boat' : c.bike ? 'Bike' : 'Car'} · ${gView + 1} of ${CARS.length}` + (owned ? ' · owned' : '');
     $('carBars').innerHTML = statBars(c, L).map(([n, v]) => `<div class="bar"><span>${n}</span><i><b style="width:${Math.round(v * 100)}%"></b></i></div>`).join('');
     const btn = $('carAct');
     if (!owned) { btn.textContent = `Buy for ${money(c.price)}`; btn.disabled = save.cash < c.price; btn.dataset.act = 'buy'; }
-    else if (save.car === c.id) { btn.textContent = c.bike ? 'Riding this bike' : 'Driving this car'; btn.disabled = true; btn.dataset.act = ''; }
-    else { btn.textContent = c.bike ? 'Ride this bike' : 'Drive this car'; btn.disabled = false; btn.dataset.act = 'select'; }
+    else if (save.car === c.id) { btn.textContent = c.boat ? 'Driving this boat' : c.bike ? 'Riding this bike' : 'Driving this car'; btn.disabled = true; btn.dataset.act = ''; }
+    else { btn.textContent = c.boat ? 'Drive this boat' : c.bike ? 'Ride this bike' : 'Drive this car'; btn.disabled = false; btn.dataset.act = 'select'; }
     $('uNote').hidden = owned;
     $('uList').innerHTML = UPGRADES.map(u => {
       const lv = L[u.id], maxed = lv >= COSTS.length, cost = maxed ? 0 : costOf(c, lv);
@@ -2299,7 +2418,7 @@ body {
     if (p.wheelie > 0.3) { p.wheelieT += dt; if (p.wheelieT >= 1) { p.wheelieT -= 1; addChainStep('WHEELIE', 120 * (p.v / MPS / 100)); } } else p.wheelieT = 0;
     const latMax = (6 + p.v * 0.06) * S.lat * (1 - p.wheelie * 0.9) * (p.drifting ? 1.3 : 1);
     const prevVx = p.vx;
-    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1);
+    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1) * (onWater ? 0.62 : 1);
     p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
     if (flatT > 0) p.vx += (Math.sin(time * 9) * 6 + (Math.random() - 0.5) * 18) * dt;   // flat tyres pull and shimmy
     p.x += p.vx * dt;
@@ -2307,7 +2426,7 @@ body {
 
     // the car points along its motion; after a hit it keeps some spin before the tyres catch it
     const prevYaw = p.yaw;
-    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * 1.8 + p.driftAngle;
+    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * (onWater ? 2.6 : 1.8) + p.driftAngle;
     if (p.slide > 0) { p.yaw += p.yawRate * dt; p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 3); }
     else p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 16);
     p.yawRate = p.slide > 0 ? p.yawRate * Math.exp(-4 * dt) : (p.yaw - prevYaw) / dt;
@@ -2607,6 +2726,11 @@ body {
       ud.body.rotation.set(w, 0, lean);
       ud.body.position.set(0, zr * Math.sin(w), zr - zr * Math.cos(w));
     } else ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
+    if (onWater) {
+      if (!p.air && !p.onRamp) { playerMesh.position.y += Math.sin(time * 5) * 0.04; ud.body.rotation.x += clamp(p.v / 450, 0, 0.09) + Math.sin(time * 6.5) * 0.012; }
+      ud.wake.visible = !p.air && !p.wrecked; ud.wake.scale.z = 0.5 + clamp(p.v / 50, 0, 1);
+      if (!p.wrecked && !p.air && p.v > 12 && Math.random() < dt * (p.v / 3)) puff(p.x + (Math.random() - 0.5) * p.w * 1.4, p.l * 0.55);
+    }
     p.spin += Math.max(0, p.v) * dt / 0.36;
     syncCar(playerMesh, ud.body, p.spin, p.steer);
     ud.tails.forEach(t => t.material = keys.down && state === 'play' ? tailBrakeMat : tailMat);
@@ -2617,7 +2741,7 @@ body {
     rampBeacon.emissiveIntensity = Math.floor(time * 3) % 2 ? 3 : 0.2;
     copGlowR.opacity = copPhase ? 0.32 : 0.04; copGlowB.opacity = copPhase ? 0.04 : 0.32;
     for (const c of cars) {
-      c.mesh.position.set(c.x, 0, c.z);
+      c.mesh.position.set(c.x, onWater ? Math.sin(time * 2.2 + c.z * 0.13) * 0.06 : 0, c.z);
       c.mesh.rotation.y = c.yaw;
       const dir = c.target - c.lane;
       if (c.police) c.mesh.visible = c.z < 900;
