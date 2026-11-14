@@ -1651,9 +1651,9 @@ body {
     { id: 'skis', name: 'Freeride Skis', price: 5000, upMul: 1.1, bike: true, ski: true, desc: 'Skis. Carve between the cars on a snowy mountain pass. Light and fragile. Hold E to tuck.', vmax: 70, accel: 1.3, brake: 1.1, lat: 1.45, armor: 1.8, wreck: -7, tank: 1 },
     { id: 'snowboard', name: 'Shred Board', price: 11000, upMul: 1.4, bike: true, ski: true, desc: 'Snowboard. Quicker than skis and great at carving. Hold E to tuck.', vmax: 78, accel: 1.4, brake: 1, lat: 1.55, armor: 1.75, wreck: -6.5, tank: 1.15 },
     { id: 'raceskis', name: 'Downhill Racer', price: 30000, upMul: 2, bike: true, ski: true, desc: 'Race skis. A downhill racer in a full tuck: frightening speed and a big boost tank. Hold E to tuck.', vmax: 95, accel: 1.8, brake: 1.15, lat: 1.4, armor: 1.7, wreck: -6, tank: 1.35 },
-    { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 0.8, lat: 1.35, armor: 1.6, wreck: -5, tank: 1.1 },
-    { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 0.75, lat: 0.95, armor: 0.9, wreck: 1, tank: 1.15 },
-    { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 0.8, lat: 1.05, armor: 0.85, wreck: 1, tank: 1.35 },
+    { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 0.8, lat: 1.35, armor: 0.9, wreck: 2, tank: 1.1 },
+    { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 0.75, lat: 0.95, armor: 0.5, wreck: 7, tank: 1.15 },
+    { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 0.8, lat: 1.05, armor: 0.5, wreck: 7, tank: 1.35 },
     { id: 'comet', name: 'Comet 1000', price: 40000, upMul: 2.2, bike: true, desc: 'Motorbike. A superbike with savage pace and a huge nitro tank. One mistake ends it. Hold E to wheelie.', vmax: 100, accel: 2.1, brake: 1.35, lat: 1.65, armor: 1.5, wreck: -5, tank: 1.4 },
   ];
   const carById = id => CARS.find(c => c.id === id) || CARS[0];
@@ -2740,6 +2740,7 @@ body {
   }
 
   function damage(amount, source = 'car') {
+    if (onWater) amount *= 0.6;   // boats are built tough: water hits hurt less
     if (mode === 'chase' && source !== 'car') return;   // in Chase only traffic hurts you
     player.hull -= amount * S.armor * DIF().dmg;
     if (mode === 'heist' && !heistWon) { const lost = Math.min(loot, Math.round(amount * S.armor * DIF().dmg * 300)); if (lost > 0) { loot -= lost; feed(`LOOT −${money(lost)}`, 0, 'lost'); } }
@@ -2851,7 +2852,7 @@ body {
         if (!p.wrecked) {
           loseChain();
           raiseHeat(c.police ? 0.1 : 0.35);   // being rammed by a cop isn't your fault
-          if (hit.impact > S.wreck) { wreck(hit.impact, hit, c); }
+          if (hit.impact > S.wreck + (onWater ? 3 : 0)) { wreck(hit.impact, hit, c); }
           else {
             shake = Math.max(shake, Math.min(0.6, hit.impact * 0.05));
             p.slide = 0.15 + hit.impact * 0.025;
