@@ -43,6 +43,10 @@ body {
 .gauge span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .gauge.speed b { color: var(--amber); }
 .gauge.combo b { color: var(--cyan); }
+.heistload { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: -2px 0 8px; }
+.heistload[hidden] { display: none; }
+.heistload label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: left; }
+.heistload select { font: inherit; font-size: 13px; letter-spacing: 0; text-transform: none; color: #fff; background: #0b0d14; border: 1px solid #ffffff2a; border-radius: 4px; padding: 5px 6px; }
 .heisthud { position: absolute; top: 70px; left: 12px; width: 190px; background: #0b0d14cc; border: 1px solid #ffb62755; border-radius: 4px; padding: 6px 9px; display: none; flex-direction: column; gap: 3px; pointer-events: none; font-size: 11px; letter-spacing: .06em; color: var(--muted); }
 .heisthud.on { display: flex; }
 .heisthud b { font-family: var(--display); font-weight: 400; font-size: 13px; color: var(--amber); }
@@ -247,6 +251,7 @@ body {
         <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
         <div class="modes" role="group" aria-label="Game mode"><button class="mode" id="modeEndless" aria-pressed="true">Endless</button><button class="mode" id="modeChase" aria-pressed="false">Chase</button><button class="mode" id="modeHeist" aria-pressed="false">Bank Heist</button></div>
         <p class="modedesc" id="modeDesc"></p>
+        <div class="heistload" id="heistLoad" hidden></div>
         <div class="modes maps" role="group" aria-label="Map"><button class="mode" data-m="highway">Highway</button><button class="mode" data-m="city">City Night</button><button class="mode" data-m="desert">Desert Night</button><button class="mode" data-m="ocean">Ocean Bridge</button></div>
         <p class="modedesc diffdesc" id="mapDesc"></p>
         <div class="modes diffs" role="group" aria-label="Difficulty"><button class="mode" id="diffEasy" data-d="easy">Easy</button><button class="mode" id="diffNormal" data-d="normal">Normal</button><button class="mode" id="diffHard" data-d="hard">Hard</button></div>
@@ -317,7 +322,7 @@ body {
 
   // ---------- world constants (metres) ----------
   const LANES = 5, LANE_W = 3.6, ROAD_W = LANES * LANE_W;
-  let onWater = false, onSnow = false;
+  let onWater = false, onSnow = false, onAir = false;
   let mapOverride = null;   // the bank heist picks the scenery for each stage   // on the sea in a boat / on a snowy pass on skis
   const laneX = i => (i - (LANES - 1) / 2) * LANE_W;
   const MPS = 0.447;           // mph -> m/s
@@ -774,7 +779,7 @@ body {
   const ALL_MAP_PROPS = [oceanGroup, pierGroup, treeGroup, hillIM, cloudIM, ...lampGroups, ...poolGroups, cityGroup, desertGroup, mesaIM, stars];
   let curMap = MAPS.highway, envRT = null;
   function applyMap(id) {
-    if (onWater) id = 'ocean'; else if (onSnow) id = 'snow'; else if (mapOverride) id = mapOverride;
+    if (onWater) id = 'ocean'; else if (onSnow) id = 'snow'; else if (onAir) id = 'sky'; else if (mapOverride) id = mapOverride;
     const m = MAPS[id] || MAPS.highway; curMap = m;
     sky.material.uniforms.top.value.set(m.top); sky.material.uniforms.horizon.value.set(m.hor);
     sky.material.uniforms.sun.value.set(...m.dir).normalize(); sky.material.uniforms.sunCol.value.set(...m.sunCol); sky.material.uniforms.glow.value = m.glow;
@@ -789,7 +794,7 @@ body {
     headMat.emissiveIntensity = m.night ? 3.5 : 0.5; tailMat.emissiveIntensity = m.night ? 1.8 : 0.5;
     headLight.intensity = m.night ? 7 : 0;
     reflGroup.visible = m.night;
-    if (onWater) [pierGroup, ...lampGroups, reflGroup].forEach(o => o.visible = false);
+    if (onWater || onAir) [pierGroup, ...lampGroups, reflGroup].forEach(o => o.visible = false);
     // lane paint glows a little at night so the lanes stay readable
     for (const mm of [dashMesh.material, edgeL.material, edgeR.material]) { mm.emissive.copy(mm.color); mm.emissiveIntensity = m.night ? 0.45 : 0; }
     tailMat.emissiveIntensity = m.night ? 2.6 : 0.5;
@@ -813,7 +818,7 @@ body {
   const SKIDS = 360, skidIM = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.24, 0.7).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x0a0a0a, transparent: true, opacity: 0.55, depthWrite: false }), SKIDS);
   skidIM.frustumCulled = false; skidIM.count = 0; scene.add(skidIM);
   const skids = []; let skidAcc = 0;
-  function layMark(x, z, yaw) { if (onWater) return; if (skids.length >= SKIDS) skids.shift(); skids.push({ x, z, yaw }); }
+  function layMark(x, z, yaw) { if (onWater || onAir) return; if (skids.length >= SKIDS) skids.shift(); skids.push({ x, z, yaw }); }
   function updateDriftFx(dt, scrollDz) {
     for (const s of smoke) { s.x += s.vx * dt; s.y += s.vy * dt; s.z += scrollDz * 0.7; s.life -= dt; }
     while (smoke.length && smoke[0].life <= 0) smoke.shift();
@@ -868,6 +873,8 @@ body {
     sprite: { pitch: 128, w: 0.8, l: 2.0, mass: 0.55, bike: true },
     viper: { pitch: 112, w: 0.82, l: 2.1, mass: 0.6, bike: true, fairing: true },
     comet: { pitch: 96, w: 0.85, l: 2.2, mass: 0.65, bike: true, fairing: true },
+    propplane: { pitch: 78, w: 2.2, l: 5, mass: 1.3, plane: true },
+    jet: { pitch: 150, w: 2.4, l: 6.5, mass: 1.5, plane: true },
     skis: { pitch: 60, w: 0.8, l: 1.85, mass: 0.55, bike: true, ski: true },
     snowboard: { pitch: 60, w: 0.8, l: 1.6, mass: 0.55, bike: true, ski: true },
     raceskis: { pitch: 60, w: 0.8, l: 1.85, mass: 0.55, bike: true, ski: true },
@@ -934,6 +941,7 @@ body {
 
   function makeCar(id, color, isPlayer) {
     if (CAR_SPECS[id].ski) return makeSkier(id, color, isPlayer);
+    if (CAR_SPECS[id].plane || (onAir && !CAR_SPECS[id].ramp)) return makePlane(id, color, isPlayer);
     if (CAR_SPECS[id].boat || (onWater && !CAR_SPECS[id].ramp)) return makeBoat(id, color, isPlayer);
     if (CAR_SPECS[id].bike) return makeBike(id, color, isPlayer);
     if (CAR_SPECS[id].ramp) return makeRampTruck(color);
@@ -1187,9 +1195,11 @@ body {
     return Object.assign(g, { userData: { id, w: 0.8, l: board ? 1.6 : 1.85, mass: 0.55, top: 1.3, tails: [], blinkers: [], body: b, wheels: [], front: [], paint: suit, bike: true, ski: true, rider } });
   }
   function setTerrain(kind) {
-    const water = kind === 'water', snow = kind === 'snow', changed = water !== onWater || snow !== onSnow;
-    onWater = water; onSnow = snow;
-    for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !water;
+    const water = kind === 'water', snow = kind === 'snow', air = kind === 'air', changed = water !== onWater || snow !== onSnow || air !== onAir;
+    onWater = water; onSnow = snow; onAir = air;
+    for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !water && !air;
+    skyLaneGroup.visible = skyEdgeGroup.visible = air;
+    ground.position.y = air ? GROUND_Y_AIR : -0.03; ground.scale.setScalar(air ? 4 : 1);
     buoyLaneGroup.visible = buoyEdgeGroup.visible = water;
     oceanGroup.position.y = water ? -WATER_Y - 0.12 : 0;   // bring the sea up to road level
     road.material.map = snow ? snowRoadTex : asphaltTex; road.material.needsUpdate = true;
@@ -1197,8 +1207,69 @@ body {
     applyMap(save.map);
     if (changed) try { if (state !== 'play') reset(); } catch (e) {}   // swap the traffic (boats on water); skipped during start-up
   }
-  const terrainOf = id => CAR_SPECS[id].boat ? 'water' : CAR_SPECS[id].ski ? 'snow' : 'road';
-  const curTerrain = () => onWater ? 'water' : onSnow ? 'snow' : 'road';
+  const terrainOf = id => CAR_SPECS[id].boat ? 'water' : CAR_SPECS[id].ski ? 'snow' : CAR_SPECS[id].plane ? 'air' : 'road';
+  const curTerrain = () => onWater ? 'water' : onSnow ? 'snow' : onAir ? 'air' : 'road';
+
+  // ---------- the sky: planes in sky lanes, far above the countryside ----------
+  const GROUND_Y_AIR = -130;
+  const airCloudIM = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), matte(0xffffff, { flatShading: true }), 90);
+  makeStrip(Array.from({ length: 90 }, (_, i) => {
+    const below = i % 3 === 0;
+    return { x: below ? (Math.random() - 0.5) * 200 : (i % 2 ? 1 : -1) * (ROAD_W / 2 + 34 + Math.random() * 130), y: below ? -45 - Math.random() * 50 : -25 + Math.random() * 45, z: DESPAWN_Z - Math.random() * 300, sx: 8 + Math.random() * 16, sy: 3 + Math.random() * 5, sz: 6 + Math.random() * 12 };
+  }), 300, [airCloudIM], (it, i) => {
+    dummy.position.set(it.x, it.y, it.z); dummy.rotation.set(0, it.x, 0); dummy.scale.set(it.sx, it.sy, it.sz); dummy.updateMatrix(); airCloudIM.setMatrixAt(i, dummy.matrix);
+  });
+  const airCloudGroup = strips[strips.length - 1].group;
+  const skyLaneIM = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.22), new THREE.MeshBasicMaterial({ color: 0x5fe3ff }), (LANES - 1) * 12);
+  makeStrip(Array.from({ length: (LANES - 1) * 12 }, (_, i) => ({ k: i % (LANES - 1), z: DESPAWN_Z - Math.floor(i / (LANES - 1)) * 25 })), 300, [skyLaneIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(-ROAD_W / 2 + (it.k + 1) * LANE_W, 1.1, it.z); dummy.updateMatrix(); skyLaneIM.setMatrixAt(i, dummy.matrix);
+  });
+  const skyLaneGroup = strips[strips.length - 1].group;
+  const skyEdgeIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.35, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff3a30 }), 80);
+  makeStrip(Array.from({ length: 80 }, (_, i) => ({ s: i % 2 ? 1 : -1, z: DESPAWN_Z - Math.floor(i / 2) * 7.5 })), 300, [skyEdgeIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(it.s * (ROAD_W / 2 + 2.2), 1.1, it.z); dummy.updateMatrix(); skyEdgeIM.setMatrixAt(i, dummy.matrix);
+  });
+  const skyEdgeGroup = strips[strips.length - 1].group;
+  skyLaneGroup.visible = skyEdgeGroup.visible = false;
+  MAPS.sky = { name: 'Open Sky', night: false, top: 0x2563c4, hor: 0xcfe3f5, fog: [140, 520], hemi: [0xdbe8ff, 0x6a8a5a, 0.85], light: [0xfff4e0, 2.2], dir: [-0.5, 0.75, -0.45], sunCol: [1, 0.95, 0.85], glow: 0.3, exposure: 1.05, ground: grassTex, shoulder: 0x8c8a80, env: ['#2563c4', '#cfe3f5', '#e8eef6', '#6a8a5a'], show: [airCloudGroup, cloudIM] };
+  ALL_MAP_PROPS.push(airCloudGroup);
+  // planes: a fuselage, wings, a tail and either a propeller or jet engines
+  const PLANE_STYLE = { street: 'light', hatch: 'light', muscle: 'light', coupe: 'light', super: 'light', suv: 'twin', truck: 'cargo', police: 'police', interceptor: 'police' };
+  function makePlane(id, color, isPlayer) {
+    const style = CAR_SPECS[id].plane ? id : PLANE_STYLE[id] || 'light';
+    const g = new THREE.Group(); g.rotation.order = 'YXZ';
+    const b = new THREE.Group(); b.position.y = 1.15; g.add(b);
+    const body = isPlayer ? paint(color) : paintFor(color), white = mat(0xf2f2ef, { roughness: 0.4 });
+    const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); b.add(o); return o; };
+    const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+    const S = { propplane: [5, 0.42, 4.6, 1.3, 1.2], jet: [6.5, 0.45, 3.6, 2.2, 1.5], light: [4.8, 0.4, 4.4, 1.2, 1.1], twin: [6.4, 0.5, 5.2, 1.5, 1.6], cargo: [12, 0.95, 6.8, 3, 5], police: [6, 0.45, 4.4, 1.6, 1.6] }[style];
+    const [L, r, span, chord, mass] = S;
+    const hullMat = style === 'police' || style === 'cargo' || style === 'twin' ? white : body;
+    add(new THREE.CylinderGeometry(r, r * 0.55, L * 0.8, 12).rotateX(Math.PI / 2), hullMat, 0, 0, L * 0.08);
+    add(new THREE.ConeGeometry(r, L * 0.22, 12).rotateX(-Math.PI / 2), style === 'jet' ? mat(0x30343c) : hullMat, 0, 0, -L * 0.42);
+    const wingZ = style === 'jet' ? L * 0.05 : -L * 0.06;
+    if (style === 'jet') {   // swept delta wing
+      const sh = new THREE.Shape(); sh.moveTo(0, -L * 0.25); sh.lineTo(span / 2, L * 0.18); sh.lineTo(span / 2 - 0.3, L * 0.26); sh.lineTo(-span / 2 + 0.3, L * 0.26); sh.lineTo(-span / 2, L * 0.18); sh.closePath();
+      const w = add(new THREE.ShapeGeometry(sh).rotateX(Math.PI / 2), body, 0, -0.05, 0); w.material = body; w.material.side = THREE.DoubleSide;
+      for (const x of [-0.35, 0.35]) add(box(0.05, 0.9, 0.9), body, x, 0.5, L * 0.38);
+      add(new THREE.CylinderGeometry(0.34, 0.3, 0.3, 12).rotateX(Math.PI / 2), mat(0x1a1a1a), 0, 0, L * 0.5);
+    } else {
+      add(box(span, 0.09, chord), style === 'police' ? mat(0x1a4fd0) : body, 0, style === 'cargo' ? r * 0.7 : -r * 0.2, wingZ);
+      add(box(span * 0.38, 0.07, chord * 0.55), hullMat, 0, 0.1, L * 0.43);
+      add(box(0.08, r * 2.2, chord * 0.7), style === 'police' ? mat(0x1a4fd0) : body, 0, r * 1.3, L * 0.42);
+      if (style === 'twin' || style === 'cargo') for (const x of [-1, 1]) add(new THREE.CylinderGeometry(r * 0.35, r * 0.35, chord * 0.9, 10).rotateX(Math.PI / 2), mat(0x8a8f98), x * span * 0.27, -r * 0.4, wingZ - 0.1);
+    }
+    add(new THREE.SphereGeometry(r * 0.75, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.8, 0.8, 1.7), glassMat, 0, r * 0.55, -L * 0.2);   // canopy
+    let prop = null;
+    if (style === 'propplane' || style === 'light') { prop = add(box(0.1, 1.5, 0.05), mat(0x222222), 0, 0, -L * 0.54); add(new THREE.ConeGeometry(0.13, 0.25, 8).rotateX(-Math.PI / 2), mat(0xdddddd), 0, 0, -L * 0.56); }
+    if (style === 'police') for (const [x, m] of [[-0.25, copRed], [0.25, copBlue]]) { const l = new THREE.Mesh(copLightGeo, m); l.position.set(x, r + 0.05, 0.3); b.add(l); }
+    const tails = [add(box(0.14, 0.14, 0.06), tailMat, 0, r * 1.3 + r, L * 0.42 + chord * 0.35)];
+    add(box(0.12, 0.1, 0.12), mat(0xff2020, { emissive: 0xff2020, emissiveIntensity: 2 }), -span / 2, 0, wingZ);   // nav lights
+    add(box(0.12, 0.1, 0.12), mat(0x20ff40, { emissive: 0x20ff40, emissiveIntensity: 2 }), span / 2, 0, wingZ);
+    const blinkers = isPlayer ? [] : [-1, 1].map(x => add(blinkGeo, blinkOff, x * (span / 2 - 0.2), 0.08, wingZ + chord / 2));
+    g.userData = { id, w: style === 'cargo' ? 3 : Math.min(2.4, span * 0.5), l: L, mass, top: 2, tails, blinkers, body: b, wheels: [], front: [], paint: body, plane: true, prop };
+    return g;
+  }
 
   // ---------- blood: splatter and stains where the bodies hit the road ----------
   const SPLATS = 180, splatIM = new THREE.InstancedMesh(new THREE.CircleGeometry(0.5, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x6e0808, transparent: true, opacity: 0.85, depthWrite: false }), SPLATS);
@@ -1283,7 +1354,7 @@ body {
       }
       for (const pt of R.pts) {
         const p = pt.p, q = pt.q;
-        if (p.y < pt.r) {   // ground: bounce on the first pass, then just keep it above the road
+        if (p.y < pt.r && !onAir) {   // ground: bounce on the first pass, then just keep it above the road
           const vy = p.y - q.y; p.y = pt.r;
           if (it === 0) {
             q.y = p.y + vy * 0.55; pt.ground = true;
@@ -1471,12 +1542,12 @@ body {
     }
     ud.cop = cop;
     if (cop && spec.bike) { for (const [x, m] of [[-0.12, copRed], [0.12, copBlue]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.1), m); l.position.set(x, 1.08, spec.l * 0.42); ud.body.add(l); } }
-    else if (cop && !spec.truck) {
+    else if (cop && !spec.truck && !spec.plane) {
       const y = 0.31 + spec.h + spec.cabH + 0.13;
       const bar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.1, 0.36), trimMat); bar.position.set(0, y - 0.09, spec.cabZ + 0.05); ud.body.add(bar);
       for (const [x, m] of [[-0.33, copRed], [0.33, copBlue]]) { const l = new THREE.Mesh(copLightGeo, m); l.position.set(x, y, spec.cabZ + 0.05); ud.body.add(l); }
     }
-    if (!spec.bike && !spec.truck) {
+    if (!spec.bike && !spec.truck && !spec.plane) {
       ud.body.children.forEach(m => { if (m.material === glassMat) m.material = playerGlass; });
       const occ = new THREE.Group(), sc = spec.w / 1.9, front = spec.cabZ - spec.cabL * 0.2, back = spec.cabZ + spec.cabL * 0.24, seatY = ud.top - 0.02;
       const skins = [0xe2b48f, 0xc68a5f, 0x8d5a3a, 0xf0c9a4, 0xe2b48f], shirts = [0x2a3a55, 0xd4232f, 0x2fa35a, 0xe6b31e, 0xe8e8ec];
@@ -1488,7 +1559,7 @@ body {
       ud.body.add(occ); ud.occ = occ;
     }
     flame = new THREE.Group();
-    for (const x of spec.bike ? [0.19] : [-0.45, 0.45]) { const f = new THREE.Mesh(flameGeo, flameMat); f.position.set(x, 0.45, spec.l / 2 + 0.25); flame.add(f); }
+    for (const x of spec.bike ? [0.19] : spec.plane ? [0] : [-0.45, 0.45]) { const f = new THREE.Mesh(flameGeo, flameMat); f.position.set(x, spec.plane ? 1.15 : 0.45, spec.l / 2 + 0.25); flame.add(f); }
     flame.visible = false; ud.body.add(flame);
     scene.add(playerMesh);
   }
@@ -1589,6 +1660,8 @@ body {
     { id: 'super', name: 'Wraith', price: 45000, upMul: 2.4, desc: 'Top-tier pace, huge brakes and the biggest nitro tank.', vmax: 96, accel: 1.55, brake: 1.35, lat: 1.25, armor: 1.05, wreck: 0, tank: 1.35 },
     { id: 'sprite', name: 'Sprite 250', price: 7000, upMul: 1.2, bike: true, desc: 'Motorbike. Light and twitchy: splits lanes between cars, but any hit hurts. Hold E to wheelie.', vmax: 72, accel: 1.5, brake: 1.15, lat: 1.5, armor: 1.7, wreck: -6, tank: 1.1 },
     { id: 'viper', name: 'Viper 600', price: 18000, upMul: 1.7, bike: true, desc: 'Motorbike. A sharp sport bike that fires out of gaps. Fragile. Hold E to wheelie.', vmax: 88, accel: 1.8, brake: 1.25, lat: 1.6, armor: 1.6, wreck: -5.5, tank: 1.2 },
+    { id: 'propplane', name: 'Skyhopper', price: 9000, upMul: 1.3, plane: true, desc: 'Plane. A little prop plane. Fly the sky lanes and weave through the air traffic.', vmax: 80, accel: 1.2, brake: 0.9, lat: 1.15, armor: 1.2, wreck: -2, tank: 1.1 },
+    { id: 'jet', name: 'Falcon Jet', price: 42000, upMul: 2.4, plane: true, desc: 'Plane. A fighter jet with enormous speed and a big afterburner tank.', vmax: 110, accel: 1.9, brake: 1, lat: 1.1, armor: 1.1, wreck: -1, tank: 1.4 },
     { id: 'skis', name: 'Freeride Skis', price: 5000, upMul: 1.1, bike: true, ski: true, desc: 'Skis. Carve between the cars on a snowy mountain pass. Light and fragile. Hold E to tuck.', vmax: 70, accel: 1.3, brake: 1.1, lat: 1.45, armor: 1.8, wreck: -7, tank: 1 },
     { id: 'snowboard', name: 'Shred Board', price: 11000, upMul: 1.4, bike: true, ski: true, desc: 'Snowboard. Quicker than skis and great at carving. Hold E to tuck.', vmax: 78, accel: 1.4, brake: 1, lat: 1.55, armor: 1.75, wreck: -6.5, tank: 1.15 },
     { id: 'raceskis', name: 'Downhill Racer', price: 30000, upMul: 2, bike: true, ski: true, desc: 'Race skis. A downhill racer in a full tuck: frightening speed and a big boost tank. Hold E to tuck.', vmax: 95, accel: 1.8, brake: 1.15, lat: 1.4, armor: 1.7, wreck: -6, tank: 1.35 },
@@ -1612,6 +1685,7 @@ body {
       save.chaseLevel = Math.max(1, Math.floor(+s.chaseLevel || 1));
       if (['easy', 'normal', 'hard'].includes(s.diff)) save.diff = s.diff;
       if (typeof s.map === 'string') save.map = s.map;
+      if (s.heist && typeof s.heist === 'object') save.heist = s.heist;
       if (s.unlimited) save.unlimited = true;
     }
   } catch (e) {}
@@ -1662,12 +1736,12 @@ body {
     $('gCash').textContent = money(save.cash);
     $('carName').textContent = c.name;
     $('carDesc').textContent = c.desc;
-    $('carIdx').textContent = `${c.ski ? 'Snow' : c.boat ? 'Boat' : c.bike ? 'Bike' : 'Car'} · ${gView + 1} of ${CARS.length}` + (owned ? ' · owned' : '');
+    $('carIdx').textContent = `${c.plane ? 'Plane' : c.ski ? 'Snow' : c.boat ? 'Boat' : c.bike ? 'Bike' : 'Car'} · ${gView + 1} of ${CARS.length}` + (owned ? ' · owned' : '');
     $('carBars').innerHTML = statBars(c, L).map(([n, v]) => `<div class="bar"><span>${n}</span><i><b style="width:${Math.round(v * 100)}%"></b></i></div>`).join('');
     const btn = $('carAct');
     if (!owned) { btn.textContent = `Buy for ${money(c.price)}`; btn.disabled = save.cash < c.price; btn.dataset.act = 'buy'; }
-    else if (save.car === c.id) { btn.textContent = c.ski ? 'Riding these' : c.boat ? 'Driving this boat' : c.bike ? 'Riding this bike' : 'Driving this car'; btn.disabled = true; btn.dataset.act = ''; }
-    else { btn.textContent = c.ski ? 'Ride these' : c.boat ? 'Drive this boat' : c.bike ? 'Ride this bike' : 'Drive this car'; btn.disabled = false; btn.dataset.act = 'select'; }
+    else if (save.car === c.id) { btn.textContent = c.plane ? 'Flying this plane' : c.ski ? 'Riding these' : c.boat ? 'Driving this boat' : c.bike ? 'Riding this bike' : 'Driving this car'; btn.disabled = true; btn.dataset.act = ''; }
+    else { btn.textContent = c.plane ? 'Fly this plane' : c.ski ? 'Ride these' : c.boat ? 'Drive this boat' : c.bike ? 'Ride this bike' : 'Drive this car'; btn.disabled = false; btn.dataset.act = 'select'; }
     $('uNote').hidden = owned;
     $('uList').innerHTML = UPGRADES.map(u => {
       const lv = L[u.id], maxed = lv >= COSTS.length, cost = maxed ? 0 : costOf(c, lv);
@@ -1853,7 +1927,7 @@ body {
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
     const spec = CAR_SPECS[playerMesh ? playerMesh.userData.id : save.car];
     player = { isPlayer: true, x: laneX(2), z: 0, vx: 0, v: 31, yaw: 0, yawRate: 0, steer: 0, w: spec.w, l: spec.l, mass: spec.mass,
-      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, ski: !!spec.ski, wheelie: 0, wheelieT: 0, air: false, onRamp: null, airT: 0, airSpin: 0, airSpinRate: 0, landSpin: 0, jumped: 0, closeRide: 0, drifting: false, driftAngle: 0, driftT: 0, driftAngSum: 0, driftDir: 0 };
+      y: 0, vy: 0, roll: 0, rollRate: 0, bodyRoll: 0, bodyPitch: 0, accel: 0, hull: 100, wrecked: false, slide: 0, spin: 0, nitro: 0.5, boosting: false, latA: 0, bike: !!spec.bike, ski: !!spec.ski, plane: !!spec.plane, wheelie: 0, wheelieT: 0, air: false, onRamp: null, airT: 0, airSpin: 0, airSpinRate: 0, landSpin: 0, jumped: 0, closeRide: 0, drifting: false, driftAngle: 0, driftT: 0, driftAngSum: 0, driftDir: 0 };
     clearDriftFx();
     clearRagdoll(); if (playerMesh && playerMesh.userData.rider) playerMesh.userData.rider.visible = true;
     if (playerMesh && playerMesh.userData.occ) playerMesh.userData.occ.visible = true;
@@ -1876,7 +1950,7 @@ body {
   function spawnCar(z) {
     const r = Math.random();
     const type = r < 0.15 ? 'truck' : r < 0.45 ? 'street' : r < 0.65 ? 'hatch' : r < 0.82 ? 'suv' : r < 0.92 ? 'muscle' : 'coupe';
-    const rampT = type === 'truck' && Math.random() < 0.45;
+    const rampT = type === 'truck' && !onAir && Math.random() < 0.45;
     const truck = type === 'truck';
     const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     const len = CAR_SPECS[type].l;
@@ -2024,13 +2098,14 @@ body {
   }
   const MODE_DESC = {
     endless: 'Weave through traffic for points. Drive fast enough and the police come after you.',
-    heist: 'Rob the bank and escape with the loot. Start in a getaway car, then switch to a motorbike, a speedboat and skis as the cops chase you. Every hit costs you loot.',
+    heist: 'Rob the bank and escape with the loot: through the city, across the harbour, over the mountains, through the sky and across the desert to the border. Pick your vehicle for each kind of ground below. Every hit costs you loot.',
     chase: "You're the cop. Hitting traffic damages your cruiser; ramming the getaway car doesn't. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
   };
   function refreshModeDesc() {
     const lv = save.chaseLevel || 1;
     $('modeDesc').textContent = MODE_DESC[mode] + (mode === 'chase' ? ` You're on level ${lv}.` : '');
     $('chaseReset').hidden = !(mode === 'chase' && lv > 1);
+    $('heistLoad').hidden = mode !== 'heist'; if (mode === 'heist') renderHeistLoad();
   }
   function setMode(m) {
     mode = m; save.mode = m; persist();
@@ -2044,19 +2119,33 @@ body {
 
   // ---------- bank heist: escape with the loot by car, bike, boat and skis ----------
   const HEIST = [
-    { car: 'muscle', map: 'city', label: 'GETAWAY CAR', len: 1400, msg: 'GO GO GO! Get out of the city' },
-    { car: 'viper', map: 'desert', label: 'MOTORBIKE', len: 1400, msg: 'SWITCH TO THE BIKE!' },
-    { car: 'speedboat', map: 'ocean', label: 'SPEEDBOAT', len: 1600, msg: 'TO THE BOAT!' },
-    { car: 'skis', map: 'snow', label: 'SKIS', len: 1400, msg: 'SKI FOR THE BORDER!' },
+    { t: 'road', map: 'city', place: 'CITY', len: 1300, msg: 'GO GO GO! Get out of the city' },
+    { t: 'water', map: 'ocean', place: 'HARBOUR', len: 1400, msg: 'TO THE BOAT!' },
+    { t: 'snow', map: 'snow', place: 'MOUNTAINS', len: 1300, msg: 'UP THE MOUNTAIN!' },
+    { t: 'air', map: 'sky', place: 'SKY', len: 1600, msg: 'TAKE OFF!' },
+    { t: 'road', map: 'desert', place: 'DESERT', len: 1300, msg: 'LAND IT AND RUN FOR THE BORDER!' },
   ];
+  // the vehicle you take on each kind of ground: anything you own, or the crew's free default
+  const HEIST_TERRAINS = [['road', 'Road'], ['water', 'Water'], ['snow', 'Snow'], ['air', 'Air']];
+  const HEIST_DEFAULT = { road: 'muscle', water: 'speedboat', snow: 'skis', air: 'propplane' };
+  const heistUsable = (id, t) => CAR_SPECS[id] && terrainOf(id) === t && (id === HEIST_DEFAULT[t] || !!save.cars[id]);
+  const heistPick = t => heistUsable((save.heist || {})[t], t) ? save.heist[t] : HEIST_DEFAULT[t];
+  function renderHeistLoad() {
+    $('heistLoad').innerHTML = HEIST_TERRAINS.map(([t, name]) => `<label><span>${name}</span><select data-t="${t}">${CARS.filter(c => terrainOf(c.id) === t).map(c => {
+      const ok = heistUsable(c.id, t);
+      return `<option value="${c.id}"${c.id === heistPick(t) ? ' selected' : ''}${ok ? '' : ' disabled'}>${c.name}${c.id === HEIST_DEFAULT[t] && !save.cars[c.id] ? ' (crew)' : ok ? '' : ' (locked)'}</option>`;
+    }).join('')}</select></label>`).join('');
+  }
+  $('heistLoad').addEventListener('change', e => { const t = e.target.dataset.t; if (!t) return; save.heist = { ...(save.heist || {}), [t]: e.target.value }; persist(); });
   const LOOT = 120000;
   let heistStage = 0, heistStartD = 0, loot = 0, heistWon = false;
   function heistVehicle(i) {
-    const h = HEIST[i];
+    const h = HEIST[i], id = heistPick(h.t);
     mapOverride = h.map;
-    setPlayerCar(h.car, save.color, false);
+    setPlayerCar(id, save.color, false);
     applyMap(save.map);
-    Object.assign(S, statsFor(freshLevels(), carById(h.car))); S.wreck += DIF().wreck;
+    Object.assign(S, statsFor(save.cars[id] ? save.cars[id].levels : freshLevels(), carById(id))); S.wreck += DIF().wreck;
+    return id;
   }
   function startHeist() {   // called from start() before reset()
     heistStage = 0; loot = LOOT; heistWon = false;
@@ -2069,9 +2158,8 @@ body {
   function heistSwap() {
     const p = player, keep = { v: p.v, x: p.x, hull: p.hull };
     heistStage++; heistStartD = distance;
-    heistVehicle(heistStage);
-    const spec = CAR_SPECS[HEIST[heistStage].car];
-    Object.assign(p, { w: spec.w, l: spec.l, mass: spec.mass, bike: !!spec.bike, ski: !!spec.ski, wheelie: 0, drifting: false, driftAngle: 0, slide: 0, yaw: 0, yawRate: 0, vx: 0, air: false, onRamp: null, y: 0, vy: 0, airSpin: 0, landSpin: 0 });
+    const spec = CAR_SPECS[heistVehicle(heistStage)];
+    Object.assign(p, { w: spec.w, l: spec.l, mass: spec.mass, bike: !!spec.bike, ski: !!spec.ski, plane: !!spec.plane, wheelie: 0, drifting: false, driftAngle: 0, slide: 0, yaw: 0, yawRate: 0, vx: 0, air: false, onRamp: null, y: 0, vy: 0, airSpin: 0, landSpin: 0 });
     p.v = Math.max(28, keep.v * 0.85); p.hull = Math.min(100, Math.max(keep.hull, 50) + 25); updateHull();
     cars.forEach(c => scene.remove(c.mesh)); cars = [];
     hazards.forEach(h => scene.remove(h.mesh)); hazards = []; roadblock = null;
@@ -2079,7 +2167,7 @@ body {
     for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
     heat = Math.max(heat, 3 + heistStage * 0.5); chased = true; policeTimer = 1.2; escapeTimer = 0;
     flash(); shake = Math.max(shake, 0.5);
-    showPop(HEIST[heistStage].msg, true); feed(`STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].label}`, 0, 'lost');
+    showPop(HEIST[heistStage].msg, true); feed(`STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].place}`, 0, 'lost');
     addBonus(`HANDOFF ${heistStage}`, 1500 * heistStage);
   }
   function updateHeist(dt) {
@@ -2093,8 +2181,8 @@ body {
       return;
     }
     const nxt = HEIST[heistStage + 1];
-    setText('heistStage', `STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].label}`);
-    setText('heistGoal', `${Math.ceil(left)} m to ${nxt ? 'the ' + nxt.label.toLowerCase() : 'the border'}`);
+    setText('heistStage', `STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].place}`);
+    setText('heistGoal', `${carById(playerMesh.userData.id).name} · ${Math.ceil(left)} m to ${nxt ? 'the ' + nxt.place.toLowerCase() : 'the border'}`);
     setText('heistLoot', money(loot));
     setWidth('heistBar', 1 - left / HEIST[heistStage].len);
   }
@@ -2347,8 +2435,8 @@ body {
       if (stars >= 1 && cops.length < Math.min(4, stars) && policeTimer <= 0) { spawnPolice(); policeTimer = 8 - stars; }
       roleT -= dt; if (roleT <= 0) { roleT = 0.5; assignRoles(); }
       // spike strips from 2★, roadblocks from 4★
-      if (chased && stars >= 2) { spikeTimer -= dt; if (spikeTimer <= 0 && !roadblock) { spawnSpikes(); spikeTimer = 22 - stars * 2 + Math.random() * 8; } }
-      if (chased && stars >= 4) { blockTimer -= dt; if (blockTimer <= 0 && !roadblock && !hazards.some(h => h.z < -60)) { spawnRoadblock(); blockTimer = 30 + Math.random() * 10; } }
+      if (chased && stars >= 2 && !onAir) { spikeTimer -= dt; if (spikeTimer <= 0 && !roadblock) { spawnSpikes(); spikeTimer = 22 - stars * 2 + Math.random() * 8; } }
+      if (chased && stars >= 4 && !onAir) { blockTimer -= dt; if (blockTimer <= 0 && !roadblock && !hazards.some(h => h.z < -60)) { spawnRoadblock(); blockTimer = 30 + Math.random() * 10; } }
       // busted: a cop right on you while you're crawling
       const near = cops.some(c => Math.abs(c.z) < 7 && Math.abs(c.x - p.x) < 4.5);
       bust = clamp(bust + (near && p.v < 25 ? 0.7 : -0.35) * dt, 0, 1);
@@ -2601,7 +2689,7 @@ body {
     if (p.wheelie > 0.3) { p.wheelieT += dt; if (p.wheelieT >= 1) { p.wheelieT -= 1; addChainStep(p.ski ? 'TUCK' : onWater ? 'NOSE UP' : 'WHEELIE', 120 * (p.v / MPS / 100)); } } else p.wheelieT = 0;
     const latMax = (6 + p.v * 0.06) * S.lat * (1 - p.wheelie * 0.9) * (p.drifting ? 1.3 : 1);
     const prevVx = p.vx;
-    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1) * (onWater ? 0.62 : onSnow ? 0.78 : 1);
+    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1) * (onWater ? 0.62 : onSnow ? 0.78 : onAir ? 0.85 : 1);
     p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
     if (flatT > 0) p.vx += (Math.sin(time * 9) * 6 + (Math.random() - 0.5) * 18) * dt;   // flat tyres pull and shimmy
     p.x += p.vx * dt;
@@ -2634,7 +2722,7 @@ body {
     p.yaw += p.yawRate * dt;
     p.x += p.vx * dt;
     p.vy -= 22 * dt; p.y += p.vy * dt; p.roll += p.rollRate * dt;
-    if (p.y <= 0) {
+    if (p.y <= 0 && !onAir) {
       if (p.vy < -4) { burst(p.x, 0.3, 0, 25, 9); shake = Math.max(shake, 0.4); }
       p.y = 0; p.vy = p.vy < -4 ? -p.vy * 0.3 : 0;
       p.rollRate *= 0.55;
@@ -2840,7 +2928,7 @@ body {
     const fwd = p.v * (p.bike ? 0.95 : 0.8) + 4;
     const SHIRTS = [0xe8e8ec, 0x2a3a55, 0xd4232f, 0x2fa35a, 0xe6b31e, 0x7c4ddb, 0x29a8d6], SKINS = [0xe2b48f, 0xc68a5f, 0x8d5a3a, 0xf0c9a4];
     const pick = a => a[Math.floor(Math.random() * a.length)];
-    const seats = p.bike ? [[0, 0]] : [[-0.4, -0.35], [0.4, -0.35], [-0.5, 0.55], [0, 0.55], [0.5, 0.55]];   // driver, front passenger, three in the back
+    const seats = p.bike || p.plane ? [[0, 0]] : [[-0.4, -0.35], [0.4, -0.35], [-0.5, 0.55], [0, 0.55], [0.5, 0.55]];   // driver, front passenger, three in the back
     seats.forEach(([sx, sz], i) => {
       const k = 0.75 + Math.random() * 0.35;
       spawnRagdoll(p.x + sx, (p.bike ? 1.35 : 1.25) + Math.random() * 0.3, -0.4 + sz, p.vx * 0.6 + sx * 6 + (Math.random() - 0.5) * 5, 6 + Math.random() * 6 + impact * 0.15, -fwd * k,
@@ -2915,6 +3003,11 @@ body {
       ud.body.rotation.set(w, 0, lean);
       ud.body.position.set(0, zr * Math.sin(w), zr - zr * Math.cos(w));
     } else ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
+    if (ud.plane) {
+      ud.body.rotation.set(p.bodyPitch * 0.5 + Math.sin(time * 1.7) * 0.015, 0, p.wrecked ? 0 : clamp(-p.vx * 0.12, -0.9, 0.9));
+      ud.body.position.y = 1.15 + Math.sin(time * 2.1) * 0.08;
+      if (ud.prop) ud.prop.rotation.z += dt * (20 + p.v);
+    }
     if (ud.ski) {
       ud.body.position.set(0, 0, 0); ud.body.rotation.set(0, 0, p.wrecked ? 0 : clamp(-p.vx * 0.09, -0.75, 0.75));
       ud.rider.scale.y = 1 - p.wheelie * 0.55; ud.rider.position.z = p.wheelie * 0.1;
@@ -2935,7 +3028,8 @@ body {
     rampBeacon.emissiveIntensity = Math.floor(time * 3) % 2 ? 3 : 0.2;
     copGlowR.opacity = copPhase ? 0.32 : 0.04; copGlowB.opacity = copPhase ? 0.04 : 0.32;
     for (const c of cars) {
-      c.mesh.position.set(c.x, onWater ? Math.sin(time * 2.2 + c.z * 0.13) * 0.06 : 0, c.z);
+      c.mesh.position.set(c.x, onWater ? Math.sin(time * 2.2 + c.z * 0.13) * 0.06 : onAir ? Math.sin(time * 1.6 + c.z * 0.11) * 0.25 : 0, c.z);
+      if (onAir && c.mesh.userData.plane) { c.mesh.userData.body.rotation.z = clamp(-c.vx * 0.15, -0.6, 0.6); if (c.mesh.userData.prop) c.mesh.userData.prop.rotation.z += dt * 40; }
       c.mesh.rotation.y = c.yaw;
       const dir = c.target - c.lane;
       if (c.police) c.mesh.visible = c.z < 900;
