@@ -36,8 +36,12 @@ body {
 }
 .wrap { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-block: 10px; box-sizing: border-box; }
 .stage { position: relative; flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1100px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px #ffffff14, 0 20px 60px #000a; background: #05060b; }
-.stage canvas { display: block; width: 100%; height: 100%; filter: saturate(1.18) contrast(1.09); }
-.grade { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,0.38) 100%), linear-gradient(180deg, rgba(255,170,80,0.06), transparent 35%, transparent 70%, rgba(20,10,40,0.08)); }
+.stage canvas { display: block; width: 100%; height: 100%; filter: saturate(1.3) contrast(1.1) sepia(0.07); transition: filter 1.2s ease; }
+.grade { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,0.38) 100%), linear-gradient(180deg, rgba(255,175,90,0.1), rgba(255,200,140,0.03) 40%, transparent 70%, rgba(40,20,60,0.08)); }
+.stage.wasted canvas { filter: grayscale(1) contrast(1.2) brightness(0.8); }
+.wastedban { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); padding: 14px 0 18px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.72) 18%, rgba(0,0,0,0.72) 82%, transparent); text-align: center; pointer-events: none; opacity: 0; transition: opacity .6s ease .7s; }
+.wastedban b { font-family: Georgia, 'Times New Roman', serif; font-weight: 900; font-size: clamp(48px, 11vw, 96px); letter-spacing: .04em; color: #c8131c; -webkit-text-stroke: 2px #000; text-shadow: 0 4px 0 #000, 0 0 30px #000; }
+.stage.wasted .wastedban { opacity: 1; }
 .hud { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: none; font-variant-numeric: tabular-nums; }
 .gauge { background: #0b0d14cc; border: 1px solid #ffffff1a; border-radius: 4px; padding: 4px 8px; text-align: center; min-width: 54px; }
 .gauge b { display: block; font-family: var(--display); font-weight: 400; font-size: 20px; line-height: 1.1; }
@@ -134,9 +138,25 @@ body {
 @keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
 .combobar { position: absolute; left: 50%; bottom: 14px; width: 40%; height: 4px; transform: translateX(-50%); background: #29d3ff33; border-radius: 2px; overflow: hidden; pointer-events: none; }
 .combobar i { display: block; height: 100%; background: var(--cyan); width: 0; }
+.title { position: absolute; inset: 0; z-index: 30; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; background: radial-gradient(ellipse at 50% 55%, transparent 30%, rgba(0,0,0,0.55) 100%), linear-gradient(180deg, rgba(0,0,0,0.35), transparent 30%, transparent 65%, rgba(0,0,0,0.6)); transition: opacity .6s ease, transform .6s ease; outline: none; }
+.title.gone { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.title .tbars::before, .title .tbars::after { content: ''; position: absolute; left: 0; right: 0; height: 9%; background: #000; }
+.title .tbars::before { top: 0; } .title .tbars::after { bottom: 0; }
+.tlogo { text-align: center; transform: skewX(-8deg); animation: tin 1s cubic-bezier(.2,.9,.3,1.2) both; }
+.tlogo h1 { margin: 6px 0 10px; font-family: var(--display); font-weight: 400; font-size: clamp(54px, 13vw, 120px); line-height: .9; letter-spacing: .01em; color: #fff; text-shadow: 0 5px 0 #000, 0 0 40px rgba(0,0,0,.6); }
+.tlogo h1 em { font-style: normal; background: linear-gradient(180deg, #ffe08a, #ffb627 45%, #ff6a2b); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; text-shadow: none; filter: drop-shadow(0 5px 0 #000); }
+.tsub { font-size: 12px; letter-spacing: .35em; color: #ffe2b0; text-shadow: 0 2px 0 #000; }
+.tchips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.tchips i { font-style: normal; font-size: 11px; letter-spacing: .18em; padding: 4px 8px; border: 1px solid #ffffff55; background: #0008; color: #fff; }
+.tpress { font-family: var(--display); font-size: 16px; letter-spacing: .3em; color: #fff; text-shadow: 0 2px 0 #000; animation: tblink 1.4s ease-in-out infinite; }
+.tmapname { position: absolute; bottom: calc(9% + 12px); right: 18px; font-size: 11px; letter-spacing: .25em; color: #ffffffb0; text-shadow: 0 1px 0 #000; }
+@keyframes tin { from { opacity: 0; transform: skewX(-8deg) translateY(30px) scale(.9); } }
+@keyframes tblink { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .tlogo, .tpress { animation: none; } }
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; padding: 12px; box-sizing: border-box; }
 .card { pointer-events: auto; background: #0b0d14e6; border: 1px solid #ffffff22; border-radius: 6px; padding: 22px 24px; max-width: 300px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-.card h1 { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.card h1 em { font-style: normal; color: var(--amber); }
+.card h1 { transform: skewX(-6deg); font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; margin: 0; letter-spacing: .02em; text-wrap: balance; }
 .card h1 em { font-style: normal; color: var(--amber); }
 .card p { margin: 0; color: #c3c7d6; font-size: 14px; line-height: 1.45; }
 .keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; text-align: left; font-size: 13px; color: #c3c7d6; }
@@ -217,6 +237,7 @@ body {
 <div class="wrap">
   <div class="stage" id="stage">
     <div class="grade" aria-hidden="true"></div>
+    <div class="wastedban" aria-live="assertive"><b id="wastedText">WASTED</b></div>
     <div class="hud">
       <div class="gauge speed"><b id="hSpeed">0</b><span>mph</span></div>
       <div class="gauge"><b id="hScore">0</b><span>score</span></div>
@@ -237,6 +258,12 @@ body {
     <div class="coparrows" id="copArrows"></div>
     <div class="bustbar" id="bustWrap"><span id="bustLabel">BUSTED</span><i><b id="bustBar"></b></i></div>
     <div class="nosbar"><span>NOS</span><i id="nosBar"></i></div>
+    <div class="title" id="titleOv" role="button" tabindex="0" aria-label="Press any key to start">
+      <div class="tbars"></div>
+      <div class="tlogo"><span class="tsub">A ROAD, SEA, SNOW &amp; SKY GETAWAY</span><h1>LANE<br><em>SPLITTER</em></h1><div class="tchips"><i>CARS</i><i>BIKES</i><i>BOATS</i><i>SKIS</i><i>PLANES</i></div></div>
+      <div class="tpress">PRESS ANY KEY</div>
+      <div class="tmapname" id="tMapName"></div>
+    </div>
     <div class="overlay" id="startOv">
       <div class="card">
         <h1>LANE <em>SPLITTER</em></h1>
@@ -255,7 +282,7 @@ body {
         <div class="modes" role="group" aria-label="Game mode"><button class="mode" id="modeEndless" aria-pressed="true">Endless</button><button class="mode" id="modeChase" aria-pressed="false">Chase</button><button class="mode" id="modeHeist" aria-pressed="false">Bank Heist</button></div>
         <p class="modedesc" id="modeDesc"></p>
         <div class="heistload" id="heistLoad" hidden></div>
-        <div class="modes maps" role="group" aria-label="Map"><button class="mode" data-m="highway">Highway</button><button class="mode" data-m="city">City Night</button><button class="mode" data-m="desert">Desert Night</button><button class="mode" data-m="ocean">Ocean Bridge</button></div>
+        <div class="modes maps" role="group" aria-label="Map"><button class="mode" data-m="highway">Highway</button><button class="mode" data-m="city">City Night</button><button class="mode" data-m="desert">Desert Night</button><button class="mode" data-m="ocean">Ocean Bridge</button><button class="mode" data-m="coast">Sunset Coast</button></div>
         <p class="modedesc diffdesc" id="mapDesc"></p>
         <div class="modes diffs" role="group" aria-label="Difficulty"><button class="mode" id="diffEasy" data-d="easy">Easy</button><button class="mode" id="diffNormal" data-d="normal">Normal</button><button class="mode" id="diffHard" data-d="hard">Hard</button></div>
         <p class="modedesc diffdesc" id="diffDesc"></p>
@@ -1316,6 +1343,69 @@ body {
     return g;
   }
 
+  // ---------- Sunset Coast: a warm, hazy coastal freeway with palms, stucco and a skyline ----------
+  const dryTex = canvasTex(256, (g, s) => { g.fillStyle = '#b39a5e'; g.fillRect(0, 0, s, s); speckle(g, 9000, s, ['#c9b070', '#9c8448', '#d6c084', '#8a7a44', '#7f8f4a'], 0.75, 3); }, 30, 600 / GRASS_TILE);
+  // palms: a leaning trunk and a drooping crown of fronds
+  const palmTrunkIM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22, 0.36, 1, 7).translate(0, 0.5, 0), matte(0x7a6248, { flatShading: true }), 60);
+  const frondParts = [];
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; frondParts.push([new THREE.BoxGeometry(1.1, 0.06, 3.6).translate(0, 0, 1.8).rotateX(0.45).rotateY(a), 0, 0, 0]); }
+  const palmCrownIM = new THREE.InstancedMesh(mergeParts(frondParts), matte(0x5c9a3c, { flatShading: true, side: THREE.DoubleSide, emissive: lin(0x1a3010) }), 60);
+  palmTrunkIM.castShadow = palmCrownIM.castShadow = true;
+  makeStrip(Array.from({ length: 60 }, (_, i) => ({ s: i % 2 ? 1 : -1, off: 4 + (i % 3 === 0 ? Math.random() * 3 : Math.random() * 20), z: DESPAWN_Z - Math.floor(i / 2) * 10 - Math.random() * 4, h: 9 + Math.random() * 7, lean: (Math.random() - 0.5) * 0.25, r: Math.random() * 6 })), 300, [palmTrunkIM, palmCrownIM], (it, i) => {
+    const x = it.s * (ROAD_W / 2 + it.off);
+    dummy.position.set(x, 0, it.z); dummy.rotation.set(0, 0, it.lean); dummy.scale.set(1, it.h, 1); dummy.updateMatrix(); palmTrunkIM.setMatrixAt(i, dummy.matrix);
+    dummy.position.set(x - Math.sin(it.lean) * it.h, Math.cos(it.lean) * it.h, it.z); dummy.rotation.set(0, it.r, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); palmCrownIM.setMatrixAt(i, dummy.matrix);
+  });
+  const palmGroup = strips[strips.length - 1].group;
+  // low stucco buildings with shaded windows
+  const stuccoTex = (() => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128; const g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, 128, 128);
+    g.fillStyle = '#5a6c80'; for (let y = 18; y < 120; y += 34) for (let x = 10; x < 120; x += 28) g.fillRect(x, y, 16, 18);
+    g.fillStyle = 'rgba(0,0,0,0.08)'; g.fillRect(0, 0, 128, 6);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+  })();
+  const STUCCO = 36, stuccoIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), new THREE.MeshLambertMaterial({ map: stuccoTex }), STUCCO);
+  const roofIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.4, 1), matte(0xb5523a), STUCCO);
+  const SCOL = [0xf1e3c8, 0xf3cdb0, 0xe9d7a8, 0xf6efe2, 0xe8b8a0, 0xd9e2d0];
+  for (let i = 0; i < STUCCO; i++) stuccoIM.setColorAt(i, new THREE.Color(SCOL[i % SCOL.length]));
+  stuccoIM.castShadow = true;
+  makeStrip(Array.from({ length: STUCCO }, (_, i) => { const w = 10 + Math.random() * 12, h = 5 + Math.random() * 9; return { s: i % 2 ? 1 : -1, w, h, d: 10 + Math.random() * 8, off: 30 + w / 2 + Math.random() * 18, z: DESPAWN_Z - Math.floor(i / 2) * 17 - Math.random() * 5, tile: Math.random() < 0.5 }; }), 300, [stuccoIM, roofIM], (b, i) => {
+    const x = b.s * (ROAD_W / 2 + b.off);
+    dummy.rotation.set(0, 0, 0); dummy.position.set(x, 0, b.z); dummy.scale.set(b.w, b.h, b.d); dummy.updateMatrix(); stuccoIM.setMatrixAt(i, dummy.matrix);
+    dummy.position.set(x, b.h + 0.2, b.z); dummy.scale.set(b.tile ? b.w + 0.6 : 0.001, 1, b.d + 0.6); dummy.updateMatrix(); roofIM.setMatrixAt(i, dummy.matrix);
+  });
+  const stuccoGroup = strips[strips.length - 1].group;
+  // green overhead freeway signs
+  const freewaySignMat = (() => {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d');
+    g.fillStyle = '#0f6b3c'; g.fillRect(0, 0, 512, 160); g.strokeStyle = '#ffffff'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 144);
+    g.fillStyle = '#fff'; g.font = '700 46px Arial, Helvetica, sans-serif'; g.fillText('Ocean Ave', 34, 72); g.font = '700 30px Arial, Helvetica, sans-serif'; g.fillText('Harbor  ·  Sunset Blvd', 34, 122);
+    g.fillStyle = '#f2c200'; g.fillRect(400, 30, 80, 40); g.fillStyle = '#111'; g.font = '700 26px Arial'; g.fillText('EXIT', 408, 60);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return new THREE.MeshLambertMaterial({ map: t });
+  })();
+  const gantryIM = new THREE.InstancedMesh(mergeParts([[new THREE.BoxGeometry(0.4, 7.4, 0.4), -(ROAD_W / 2 + 2.8), 3.7, 0], [new THREE.BoxGeometry(0.4, 7.4, 0.4), ROAD_W / 2 + 2.8, 3.7, 0], [new THREE.BoxGeometry(ROAD_W + 6, 0.35, 0.35), 0, 7.2, 0]]), mat(0x8c9096, { metalness: 0.6, roughness: 0.5 }), 2);
+  const gsignIM = new THREE.InstancedMesh(new THREE.PlaneGeometry(9, 2.8), freewaySignMat, 2);
+  makeStrip([{ z: DESPAWN_Z - 120 }, { z: DESPAWN_Z - 270 }], 300, [gantryIM, gsignIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(0, 0, it.z); dummy.updateMatrix(); gantryIM.setMatrixAt(i, dummy.matrix);
+    dummy.position.set(3, 6.1, it.z + 0.25); dummy.updateMatrix(); gsignIM.setMatrixAt(i, dummy.matrix);
+  });
+  const gantryGroup = strips[strips.length - 1].group;
+  // a hazy downtown skyline and sun-baked hills on the horizon
+  const skylineIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), mat(0x6f8299, { metalness: 0.2, roughness: 0.45 }), 14);
+  for (let i = 0; i < 14; i++) {
+    const h = 40 + Math.random() * 90;
+    dummy.position.set(30 + Math.random() * 140, -1, -330 - Math.random() * 120); dummy.rotation.set(0, Math.random() * 0.4, 0); dummy.scale.set(14 + Math.random() * 14, h, 14 + Math.random() * 14); dummy.updateMatrix(); skylineIM.setMatrixAt(i, dummy.matrix);
+  }
+  skylineIM.frustumCulled = false; scene.add(skylineIM);
+  const warmHillIM = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 12, 7), matte(0x9c7b4c, { flatShading: true }), 10);
+  for (let i = 0; i < 10; i++) {
+    dummy.position.set(-60 - Math.random() * 240, -8, -280 - Math.random() * 180); dummy.rotation.set(0, Math.random() * 3, 0); dummy.scale.set(60 + Math.random() * 70, 30 + Math.random() * 35, 40 + Math.random() * 50); dummy.updateMatrix(); warmHillIM.setMatrixAt(i, dummy.matrix);
+  }
+  warmHillIM.frustumCulled = false; scene.add(warmHillIM);
+  MAPS.coast = { name: 'Sunset Coast', desc: 'A warm, hazy coastal freeway at golden hour: palm trees, stucco, a skyline in the smog and freeway signs overhead.', night: false, top: 0x3a7fd4, hor: 0xf4d4a0, fog: [110, 420], hemi: [0xffe6c4, 0x7a6a4a, 0.62], light: [0xffd9a0, 2.9], dir: [-0.65, 0.5, -0.6], sunCol: [1, 0.78, 0.5], glow: 0.55, exposure: 1.12, ground: dryTex, shoulder: 0xb5a88e, env: ['#3a7fd4', '#f4d4a0', '#a08a60', '#6a5a3a'], show: [palmGroup, stuccoGroup, gantryGroup, skylineIM, warmHillIM, cloudIM, ...lampGroups] };
+  ALL_MAP_PROPS.push(palmGroup, stuccoGroup, gantryGroup, skylineIM, warmHillIM);
+
   // ---------- blood: splatter and stains where the bodies hit the road ----------
   const SPLATS = 180, splatIM = new THREE.InstancedMesh(new THREE.CircleGeometry(0.5, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x6e0808, transparent: true, opacity: 0.85, depthWrite: false }), SPLATS);
   splatIM.frustumCulled = false; splatIM.count = 0; scene.add(splatIM);
@@ -1967,6 +2057,7 @@ body {
   }
 
   function reset() {
+    clearWasted();
     cars.forEach(c => scene.remove(c.mesh));
     cars = []; sparks = [];
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
@@ -2228,7 +2319,7 @@ body {
     cars.forEach(c => { if (c.police && c.z < 70) { c.z = 70 + Math.random() * 30; c.x = laneX(Math.floor(Math.random() * LANES)); c.loose = false; c.vx = 0; c.yaw = 0; c.yawRate = 0; } });
     hazards = hazards.filter(h => { if (Math.abs(h.z) < 80) { scene.remove(h.mesh); return false; } return true; }); if (roadblock && !hazards.includes(roadblock)) roadblock = null;
     const lost = Math.round(loot * 0.1); loot -= lost;
-    state = 'play'; timeScale = 1; wreckTimer = 0; shake = 0;
+    state = 'play'; timeScale = 1; wreckTimer = 0; shake = 0; clearWasted();
     flash(); showPop(`${heistLives} ${heistLives === 1 ? 'LIFE' : 'LIVES'} LEFT`, true); feed(`LIFE LOST · LOOT −${money(lost)}`, 0, 'lost');
   }
   function updateHeist(dt) {
@@ -2544,13 +2635,15 @@ body {
       el.classList.toggle('pit', !!(c.pit && c.pit.phase !== 'line'));
     });
   }
+  function showWasted(t) { $('wastedText').textContent = t; stage.classList.add('wasted'); Sound.crash && 0; }
+  const clearWasted = () => stage.classList.remove('wasted');
   function busted() {
     const p = player;
     if (p.wrecked) return;
     endReason = 'busted';
     p.wrecked = true; state = 'wreck'; wreckTimer = 0; timeScale = 0.6;
     loseChain(); updateChainHud();
-    feed('BUSTED', 0, 'lost'); showPop('BUSTED!', true);
+    feed('BUSTED', 0, 'lost'); showWasted('BUSTED');
     flash();
   }
 
@@ -2988,7 +3081,7 @@ body {
     const p = player;
     if (p.wrecked) return;
     p.wrecked = true; state = 'wreck'; wreckTimer = 0;
-    timeScale = 0.55; shake = 0.9; flash();
+    timeScale = 0.4; shake = 0.9; flash(); showWasted('WASTED');
     p.hull = 0; updateHull();
     loseChain(); updateChainHud();
     Sound.crash(impact > 16 || !hit);
@@ -3191,7 +3284,7 @@ body {
         wreckTimer += realDt;
         const sp = Math.hypot(player.v, player.vx);
         const ragDone = !ragdoll || (wreckTimer > 1.4 && ragdollSpeed() < 1.5);
-        if ((wreckTimer > 0.7 && sp < 4 && (player.y < 0.05 || onAir) && ragDone) || wreckTimer > (ragdoll ? 3.6 : 1.6)) { if (mode === 'heist' && heistLives > 1 && !heistWon) heistRespawn(); else gameOver(); }
+        if (wreckTimer > 2.6 && ((sp < 4 && (player.y < 0.05 || onAir) && ragDone) || wreckTimer > (ragdoll ? 4.2 : 2.8))) { if (mode === 'heist' && heistLives > 1 && !heistWon) heistRespawn(); else gameOver(); }
       }
     } else if (state === 'menu' || state === 'garage') {
       scroll(27 * dt);
@@ -3214,6 +3307,25 @@ body {
   setMode(mode);
   setDiff(save.diff || 'normal');
   setMap(save.map || 'highway');
+  // ---------- title screen ----------
+  let titleOn = true, titleMapI = 0, titleTimer = null;
+  const TITLE_MAPS = ['coast', 'highway', 'city', 'ocean', 'desert'];
+  function titleCycle() {
+    if (!titleOn || onWater || onSnow || onAir) return;
+    const id = TITLE_MAPS[titleMapI++ % TITLE_MAPS.length];
+    mapOverride = id; applyMap(id); $('tMapName').textContent = MAPS[id].name.toUpperCase();
+  }
+  function dismissTitle() {
+    if (!titleOn) return;
+    titleOn = false; clearInterval(titleTimer); Sound.init();
+    $('titleOv').classList.add('gone'); $('startOv').hidden = false;
+    if (!onWater && !onSnow && !onAir) { mapOverride = null; applyMap(save.map); }
+    setTimeout(() => $('titleOv').hidden = true, 650);
+  }
+  $('startOv').hidden = true;
+  titleCycle(); titleTimer = setInterval(titleCycle, 4500);
+  $('titleOv').addEventListener('click', dismissTitle);
+  addEventListener('keydown', e => { if (titleOn) { e.preventDefault(); e.stopImmediatePropagation(); dismissTitle(); } }, true);
   reset();
   requestAnimationFrame(frame);
 })();
