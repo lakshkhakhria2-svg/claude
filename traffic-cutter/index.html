@@ -31,7 +31,8 @@ body {
 }
 .wrap { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-block: 10px; box-sizing: border-box; }
 .stage { position: relative; flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1100px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px #ffffff14, 0 20px 60px #000a; background: #05060b; }
-.stage canvas { display: block; width: 100%; height: 100%; }
+.stage canvas { display: block; width: 100%; height: 100%; filter: saturate(1.18) contrast(1.09); }
+.grade { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,0.38) 100%), linear-gradient(180deg, rgba(255,170,80,0.06), transparent 35%, transparent 70%, rgba(20,10,40,0.08)); }
 .hud { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: none; font-variant-numeric: tabular-nums; }
 .gauge { background: #0b0d14cc; border: 1px solid #ffffff1a; border-radius: 4px; padding: 4px 8px; text-align: center; min-width: 54px; }
 .gauge b { display: block; font-family: var(--display); font-weight: 400; font-size: 20px; line-height: 1.1; }
@@ -46,6 +47,7 @@ body {
 .heisthud.on { display: flex; }
 .heisthud b { font-family: var(--display); font-weight: 400; font-size: 13px; color: var(--amber); }
 .heisthud strong { color: #7cff6b; font-family: var(--display); font-weight: 400; font-size: 14px; }
+.heisthud strong.lives { color: #ff4d5e; letter-spacing: .15em; }
 .heisthud i { display: block; height: 5px; background: #ffffff1a; border-radius: 3px; overflow: hidden; }
 .heisthud em { display: block; height: 100%; width: 0; background: var(--amber); }
 .pop { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); font-family: var(--display); font-size: 26px; color: var(--cyan); text-shadow: 0 2px 0 #000, 0 0 18px #29d3ff88; pointer-events: none; white-space: nowrap; opacity: 0; }
@@ -208,6 +210,7 @@ body {
 
 <div class="wrap">
   <div class="stage" id="stage">
+    <div class="grade" aria-hidden="true"></div>
     <div class="hud">
       <div class="gauge speed"><b id="hSpeed">0</b><span>mph</span></div>
       <div class="gauge"><b id="hScore">0</b><span>score</span></div>
@@ -218,7 +221,7 @@ body {
     <div class="tier" id="hTier"></div>
     <div class="chain" id="chain"><b id="chainMult">x1</b><span><em id="chainPot">0</em> pts at stake</span><small id="chainCount"></small></div>
     <div class="suspect" id="suspectHud"><div class="sh-top"><b>SUSPECT</b><span id="sLvl">LV 1</span></div><i><em id="sHealth"></em></i><div class="sh-row"><span id="sDist"></span><span id="sTime"></span></div></div>
-    <div class="heisthud" id="heistHud"><b id="heistStage"></b><span id="heistGoal"></span><i><em id="heistBar"></em></i><span>LOOT <strong id="heistLoot"></strong></span></div>
+    <div class="heisthud" id="heistHud"><b id="heistStage"></b><span id="heistGoal"></span><i><em id="heistBar"></em></i><span>LOOT <strong id="heistLoot"></strong></span><span>LIVES <strong id="heistLives" class="lives"></strong></span></div>
     <div class="feed" id="feed" aria-live="polite"></div>
     <button class="mute" id="muteBtn" aria-label="Sound" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="cross" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="flash" id="flash"></div>
@@ -325,7 +328,7 @@ body {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.prepend(renderer.domElement);
   const scene = new THREE.Scene();
   const HAZE = 0xc4d8ea;
@@ -366,7 +369,7 @@ body {
   scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff1dc, 2.4);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -26, right: 26, top: 34, bottom: -34, near: 1, far: 150 });
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
@@ -399,6 +402,11 @@ body {
     // worn tyre tracks in each lane
     g.globalAlpha = 0.12; g.fillStyle = '#1e2024';
     for (let l = 0; l < 5; l++) for (const o of [0.28, 0.72]) g.fillRect((l + o) / 5 * s - 9, 0, 18, s);
+    // patch repairs, oil stains and cracks so it reads like a real, used road
+    for (let i = 0; i < 6; i++) { g.globalAlpha = 0.25 + Math.random() * 0.2; g.fillStyle = Math.random() < 0.5 ? '#2a2c30' : '#4a4d53'; g.fillRect(Math.random() * s, Math.random() * s, 30 + Math.random() * 70, 20 + Math.random() * 60); }
+    for (let i = 0; i < 14; i++) { const x = Math.random() * s, y = Math.random() * s, r = 6 + Math.random() * 16, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(10,10,12,0.45)'); gr.addColorStop(1, 'rgba(10,10,12,0)'); g.globalAlpha = 1; g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+    g.strokeStyle = '#1c1d21'; g.lineWidth = 1.2; g.globalAlpha = 0.55;
+    for (let i = 0; i < 18; i++) { let x = Math.random() * s, y = Math.random() * s; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += (Math.random() - 0.5) * 22; y += Math.random() * 16; g.lineTo(x, y); } g.stroke(); }
     g.globalAlpha = 1;
   }, 1, 600 / ROAD_TILE);
   const grassTex = canvasTex(256, (g, s) => {
@@ -416,7 +424,7 @@ body {
   ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.03, -150); ground.receiveShadow = true;
   scene.add(ground);
 
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 3, 600), new THREE.MeshLambertMaterial({ map: asphaltTex }));
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 3, 600), new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: 0.8, metalness: 0, envMapIntensity: 0.6 }));
   road.rotation.x = -Math.PI / 2; road.position.set(0, 0, -150); road.receiveShadow = true;
   scene.add(road);
   const shoulder = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 7, 600), matte(0x8c8a80));
@@ -824,6 +832,7 @@ body {
       const pts = p.driftT * deg * 7 * (p.v / MPS / 100 + 0.5);
       addChainStep(`DRIFT ${p.driftT.toFixed(1)}s · ${deg}°`, pts);
       p.nitro = Math.min(1, p.nitro + Math.min(0.3, p.driftT * 0.08) * S.nitroGain);
+      if (p.driftT > 1) { p.v += Math.min(6, p.driftT * 2); showPop('DRIFT BOOST', false); }   // a long slide fires you out of it
       runStats.drifts = (runStats.drifts || 0) + 1;
     }
     p.driftT = 0; p.driftAngSum = 0;
@@ -841,7 +850,7 @@ body {
   const playerGlass = new THREE.MeshStandardMaterial({ color: lin(0x1a2433), metalness: 0.6, roughness: 0.1, transparent: true, opacity: 0.45, depthWrite: false });
   const trailerMat = mat(0xeeeeec, { roughness: 0.5 });
   const stripeMat = mat(0xf5f5f5, { roughness: 0.3 });
-  const paint = color => mat(color, { metalness: 0.45, roughness: 0.28, envMapIntensity: 1.2 });
+  const paint = color => new THREE.MeshPhysicalMaterial({ color: lin(color), metalness: 0.55, roughness: 0.34, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.35 });   // glossy clear-coated paint
   const paintCache = new Map();
   const paintFor = c => { if (!paintCache.has(c)) paintCache.set(c, paint(c)); return paintCache.get(c); };
 
@@ -864,9 +873,9 @@ body {
     skis: { pitch: 60, w: 0.8, l: 1.85, mass: 0.55, bike: true, ski: true },
     snowboard: { pitch: 60, w: 0.8, l: 1.6, mass: 0.55, bike: true, ski: true },
     raceskis: { pitch: 60, w: 0.8, l: 1.85, mass: 0.55, bike: true, ski: true },
-    jetski: { pitch: 110, w: 1.1, l: 3, mass: 0.7, bike: true, boat: true },
-    speedboat: { pitch: 46, w: 2.2, l: 6, mass: 1.4, boat: true, h: 0.5, cabH: 0.6, cabZ: 0.9, cabL: 2.6 },
-    powerboat: { pitch: 40, w: 2.4, l: 7.5, mass: 1.7, boat: true, h: 0.4, cabH: 0.55, cabZ: 0.6, cabL: 1.8 },
+    jetski: { pitch: 110, w: 0.95, l: 3, mass: 0.7, bike: true, boat: true },
+    speedboat: { pitch: 46, w: 1.95, l: 6, mass: 1.4, boat: true, h: 0.5, cabH: 0.6, cabZ: 0.9, cabL: 2.6 },
+    powerboat: { pitch: 40, w: 2.1, l: 7.5, mass: 1.7, boat: true, h: 0.4, cabH: 0.55, cabZ: 0.6, cabL: 1.8 },
   };
   const tireGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.28, 14).rotateZ(Math.PI / 2);
   const hubGeo = mergeParts([[new THREE.CylinderGeometry(0.22, 0.22, 0.3, 10), 0, 0, 0, 0, 0, Math.PI / 2], [new THREE.BoxGeometry(0.31, 0.36, 0.07)]]);
@@ -1088,7 +1097,7 @@ body {
     add(box(0.25, 0.12, 0.05), headMat, 0, 0.55, -L / 2 + 0.6);
     const wake = new THREE.Mesh(new THREE.PlaneGeometry(W * 1.6, L * 2.2).rotateX(-Math.PI / 2), foamMat); wake.position.set(0, 0.04, L * 1.4); g.add(wake);
     const bowFoam = new THREE.Mesh(new THREE.PlaneGeometry(W * 1.7, L * 0.4).rotateX(-Math.PI / 2), foamMat); bowFoam.position.set(0, 0.05, -L * 0.3); g.add(bowFoam);
-    g.userData = { id, w: W, l: L, mass, top, tails, blinkers, body: b, wheels: [], front: [], paint: body, boat: true, wake, ...extra };
+    g.userData = { id, w: W * 0.86, l: L * 0.94, mass, top, tails, blinkers, body: b, wheels: [], front: [], paint: body, boat: true, wake, ...extra };   // hulls taper, so the hitbox is a little slimmer than the model
     return g;
   }
   // buoys mark the lanes and the edge of the course
@@ -1198,12 +1207,35 @@ body {
 
   // ---------- the sky: planes in sky lanes, far above the countryside ----------
   const GROUND_Y_AIR = -130;
-  const airCloudIM = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), matte(0xffffff, { flatShading: true }), 90);
-  makeStrip(Array.from({ length: 90 }, (_, i) => {
-    const below = i % 3 === 0;
-    return { x: below ? (Math.random() - 0.5) * 200 : (i % 2 ? 1 : -1) * (ROAD_W / 2 + 34 + Math.random() * 130), y: below ? -45 - Math.random() * 50 : -25 + Math.random() * 45, z: DESPAWN_Z - Math.random() * 300, sx: 8 + Math.random() * 16, sy: 3 + Math.random() * 5, sz: 6 + Math.random() * 12 };
-  }), 300, [airCloudIM], (it, i) => {
-    dummy.position.set(it.x, it.y, it.z); dummy.rotation.set(0, it.x, 0); dummy.scale.set(it.sx, it.sy, it.sz); dummy.updateMatrix(); airCloudIM.setMatrixAt(i, dummy.matrix);
+  const fieldsTex = canvasTex(512, (g, S) => {   // patchwork farmland seen from above
+    const cols = ['#5f8f3e', '#78a34a', '#a7b65a', '#c9b56a', '#8a6f45', '#4f7d38', '#9cc06a', '#b9a55a'];
+    for (let y = 0; y < S; y += 64) for (let x = 0; x < S; x += 64) {
+      const w = 64, h = 64; g.fillStyle = cols[Math.floor(Math.random() * cols.length)]; g.fillRect(x, y, w, h);
+      if (Math.random() < 0.5) { g.fillStyle = cols[Math.floor(Math.random() * cols.length)]; g.fillRect(x, y, w / 2, h); }
+      g.fillStyle = 'rgba(0,0,0,0.12)'; for (let k = 4; k < w; k += 6) g.fillRect(x + k, y, 1, h);   // furrows
+    }
+    g.strokeStyle = '#3d6b2c'; g.lineWidth = 4; for (let k = 0; k <= S; k += 64) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k, S); g.moveTo(0, k); g.lineTo(S, k); g.stroke(); }   // hedges
+    g.strokeStyle = '#d8d2c0'; g.lineWidth = 5; g.beginPath(); g.moveTo(0, 190); g.lineTo(S, 330); g.stroke();   // a road
+    g.strokeStyle = '#4a8cc4'; g.lineWidth = 9; g.beginPath(); g.moveTo(140, 0); g.bezierCurveTo(60, 180, 330, 300, 260, S); g.stroke();   // a river
+  }, 8, 8);
+  // soft billboard clouds beside the lanes and a sea of cloud below
+  const skyCloudTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    for (let k = 0; k < 16; k++) {
+      const x = 50 + Math.random() * 156, y = 90 + Math.random() * 80, r = 30 + Math.random() * 50;
+      const gr = g.createRadialGradient(x, y - r * 0.2, 0, x, y, r); gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.6, 'rgba(244,248,255,0.7)'); gr.addColorStop(1, 'rgba(225,235,248,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+  })();
+  const skyCloudMat = new THREE.MeshBasicMaterial({ map: skyCloudTex, transparent: true, depthWrite: false });
+  const airCloudIM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), skyCloudMat, 40);
+  const seaCloudIM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), skyCloudMat, 60);
+  const airClouds = [...Array.from({ length: 40 }, (_, i) => ({ k: 0, i, x: (i % 2 ? 1 : -1) * (ROAD_W / 2 + 40 + Math.random() * 140), y: -15 + Math.random() * 40, z: DESPAWN_Z - Math.random() * 300, s: 30 + Math.random() * 40 })),
+    ...Array.from({ length: 60 }, (_, i) => ({ k: 1, i, x: (Math.random() - 0.5) * 420, y: -38 - Math.random() * 12, z: DESPAWN_Z - Math.random() * 300, s: 45 + Math.random() * 55 }))];
+  makeStrip(airClouds, 300, [airCloudIM, seaCloudIM], it => {
+    dummy.position.set(it.x, it.y, it.z); dummy.rotation.set(0, it.k ? it.x : 0, 0); dummy.scale.set(it.s, it.k ? 1 : it.s * 0.55, it.k ? it.s : 1); dummy.updateMatrix();
+    (it.k ? seaCloudIM : airCloudIM).setMatrixAt(it.i, dummy.matrix);
   });
   const airCloudGroup = strips[strips.length - 1].group;
   const skyLaneIM = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.22), new THREE.MeshBasicMaterial({ color: 0x5fe3ff }), (LANES - 1) * 12);
@@ -1217,9 +1249,16 @@ body {
   });
   const skyEdgeGroup = strips[strips.length - 1].group;
   skyLaneGroup.visible = skyEdgeGroup.visible = false;
-  MAPS.sky = { name: 'Open Sky', night: false, top: 0x2563c4, hor: 0xcfe3f5, fog: [140, 520], hemi: [0xdbe8ff, 0x6a8a5a, 0.85], light: [0xfff4e0, 2.2], dir: [-0.5, 0.75, -0.45], sunCol: [1, 0.95, 0.85], glow: 0.3, exposure: 1.05, ground: grassTex, shoulder: 0x8c8a80, env: ['#2563c4', '#cfe3f5', '#e8eef6', '#6a8a5a'], show: [airCloudGroup, cloudIM] };
+  MAPS.sky = { name: 'Open Sky', night: false, top: 0x1d58c0, hor: 0xb8d3ef, fog: [220, 760], hemi: [0xdbe8ff, 0x6a8a5a, 0.85], light: [0xfff4e0, 2.2], dir: [-0.5, 0.75, -0.45], sunCol: [1, 0.95, 0.85], glow: 0.3, exposure: 1.05, ground: fieldsTex, shoulder: 0x8c8a80, env: ['#2563c4', '#cfe3f5', '#e8eef6', '#6a8a5a'], show: [airCloudGroup, cloudIM] };
   ALL_MAP_PROPS.push(airCloudGroup);
   // planes: a fuselage, wings, a tail and either a propeller or jet engines
+  const strobeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const contrailGeo = new THREE.PlaneGeometry(0.35, 18).rotateX(-Math.PI / 2);
+  const contrailMat = (() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 128; const g = c.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 128);
+    return new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide });
+  })();
   const PLANE_STYLE = { street: 'light', hatch: 'light', muscle: 'light', coupe: 'light', super: 'light', suv: 'twin', truck: 'cargo', police: 'police', interceptor: 'police' };
   function makePlane(id, color, isPlayer) {
     const style = CAR_SPECS[id].plane ? id : PLANE_STYLE[id] || 'light';
@@ -1230,7 +1269,7 @@ body {
     const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
     const S = { propplane: [5, 0.42, 4.6, 1.3, 1.2], jet: [6.5, 0.45, 3.6, 2.2, 1.5], light: [4.8, 0.4, 4.4, 1.2, 1.1], twin: [6.4, 0.5, 5.2, 1.5, 1.6], cargo: [12, 0.95, 6.8, 3, 5], police: [6, 0.45, 4.4, 1.6, 1.6] }[style];
     const [L, r, span, chord, mass] = S;
-    const hullMat = style === 'police' || style === 'cargo' || style === 'twin' ? white : body;
+    const hullMat = style === 'police' ? white : body;
     add(new THREE.CylinderGeometry(r, r * 0.55, L * 0.8, 12).rotateX(Math.PI / 2), hullMat, 0, 0, L * 0.08);
     add(new THREE.ConeGeometry(r, L * 0.22, 12).rotateX(-Math.PI / 2), style === 'jet' ? mat(0x30343c) : hullMat, 0, 0, -L * 0.42);
     const wingZ = style === 'jet' ? L * 0.05 : -L * 0.06;
@@ -1253,6 +1292,12 @@ body {
     add(box(0.12, 0.1, 0.12), mat(0xff2020, { emissive: 0xff2020, emissiveIntensity: 2 }), -span / 2, 0, wingZ);   // nav lights
     add(box(0.12, 0.1, 0.12), mat(0x20ff40, { emissive: 0x20ff40, emissiveIntensity: 2 }), span / 2, 0, wingZ);
     const blinkers = isPlayer ? [] : [-1, 1].map(x => add(blinkGeo, blinkOff, x * (span / 2 - 0.2), 0.08, wingZ + chord / 2));
+    if (!isPlayer) {
+      for (const x of [-span / 2, span / 2]) add(box(0.22, 0.22, 0.22), strobeMat, x, 0.05, wingZ + 0.15);
+      add(box(0.2, 0.2, 0.2), strobeMat, 0, r * 1.05, -L * 0.1);
+      for (const x of [-span / 2 + 0.1, span / 2 - 0.1]) { const t = new THREE.Mesh(contrailGeo, contrailMat); t.position.set(x, 1.15, L / 2 + 9); g.add(t); }
+      g.scale.setScalar(1.15);   // a touch bigger than you, so they read at a distance
+    }
     g.userData = { id, w: style === 'cargo' ? 3 : Math.min(2.4, span * 0.5), l: L, mass, top: 2, tails, blinkers, body: b, wheels: [], front: [], paint: body, plane: true, prop };
     return g;
   }
@@ -1644,17 +1689,17 @@ body {
     { id: 'suv', name: 'Bastion', price: 12000, upMul: 1.4, desc: 'A rolling wall. Shrugs off scrapes and shoves traffic aside.', vmax: 72, accel: 0.9, brake: 0.95, lat: 0.85, armor: 0.55, wreck: 5, tank: 1 },
     { id: 'coupe', name: 'Stinger', price: 20000, upMul: 1.8, desc: 'Low, quick and sharp. A proper all-rounder at speed.', vmax: 87, accel: 1.25, brake: 1.2, lat: 1.15, armor: 1, wreck: 0, tank: 1.15 },
     { id: 'super', name: 'Wraith', price: 45000, upMul: 2.4, desc: 'Top-tier pace, huge brakes and the biggest nitro tank.', vmax: 96, accel: 1.55, brake: 1.35, lat: 1.25, armor: 1.05, wreck: 0, tank: 1.35 },
-    { id: 'sprite', name: 'Sprite 250', price: 7000, upMul: 1.2, bike: true, desc: 'Motorbike. Light and twitchy: splits lanes between cars, but any hit hurts. Hold E to wheelie.', vmax: 72, accel: 1.5, brake: 1.15, lat: 1.5, armor: 1.7, wreck: -6, tank: 1.1 },
-    { id: 'viper', name: 'Viper 600', price: 18000, upMul: 1.7, bike: true, desc: 'Motorbike. A sharp sport bike that fires out of gaps. Fragile. Hold E to wheelie.', vmax: 88, accel: 1.8, brake: 1.25, lat: 1.6, armor: 1.6, wreck: -5.5, tank: 1.2 },
+    { id: 'sprite', name: 'Sprite 250', price: 7000, upMul: 1.2, bike: true, desc: 'Motorbike. Light and twitchy: splits lanes between cars, but any hit hurts. Hold E to wheelie.', vmax: 72, accel: 1.5, brake: 1.15, lat: 1.5, armor: 1.35, wreck: -3, tank: 1.1 },
+    { id: 'viper', name: 'Viper 600', price: 18000, upMul: 1.7, bike: true, desc: 'Motorbike. A sharp sport bike that fires out of gaps. Fragile. Hold E to wheelie.', vmax: 88, accel: 1.8, brake: 1.25, lat: 1.6, armor: 1.3, wreck: -3, tank: 1.2 },
     { id: 'propplane', name: 'Skyhopper', price: 9000, upMul: 1.3, plane: true, desc: 'Plane. A little prop plane. Fly the sky lanes and weave through the air traffic.', vmax: 80, accel: 1.2, brake: 0.9, lat: 1.15, armor: 1.2, wreck: -2, tank: 1.1 },
     { id: 'jet', name: 'Falcon Jet', price: 42000, upMul: 2.4, plane: true, desc: 'Plane. A fighter jet with enormous speed and a big afterburner tank.', vmax: 110, accel: 1.9, brake: 1, lat: 1.1, armor: 1.1, wreck: -1, tank: 1.4 },
     { id: 'skis', name: 'Freeride Skis', price: 5000, upMul: 1.1, bike: true, ski: true, desc: 'Skis. Carve between the cars on a snowy mountain pass. Light and fragile. Hold E to tuck.', vmax: 70, accel: 1.3, brake: 1.1, lat: 1.45, armor: 1.8, wreck: -7, tank: 1 },
     { id: 'snowboard', name: 'Shred Board', price: 11000, upMul: 1.4, bike: true, ski: true, desc: 'Snowboard. Quicker than skis and great at carving. Hold E to tuck.', vmax: 78, accel: 1.4, brake: 1, lat: 1.55, armor: 1.75, wreck: -6.5, tank: 1.15 },
     { id: 'raceskis', name: 'Downhill Racer', price: 30000, upMul: 2, bike: true, ski: true, desc: 'Race skis. A downhill racer in a full tuck: frightening speed and a big boost tank. Hold E to tuck.', vmax: 95, accel: 1.8, brake: 1.15, lat: 1.4, armor: 1.7, wreck: -6, tank: 1.35 },
-    { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 0.8, lat: 1.35, armor: 0.9, wreck: 2, tank: 1.1 },
-    { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 0.75, lat: 0.95, armor: 0.5, wreck: 7, tank: 1.15 },
-    { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 0.8, lat: 1.05, armor: 0.5, wreck: 7, tank: 1.35 },
-    { id: 'comet', name: 'Comet 1000', price: 40000, upMul: 2.2, bike: true, desc: 'Motorbike. A superbike with savage pace and a huge nitro tank. One mistake ends it. Hold E to wheelie.', vmax: 100, accel: 2.1, brake: 1.35, lat: 1.65, armor: 1.5, wreck: -5, tank: 1.4 },
+    { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 1, lat: 1.35, armor: 0.9, wreck: 2, tank: 1.1 },
+    { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 1, lat: 1.1, armor: 0.5, wreck: 7, tank: 1.15 },
+    { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 1.05, lat: 1.15, armor: 0.5, wreck: 7, tank: 1.35 },
+    { id: 'comet', name: 'Comet 1000', price: 40000, upMul: 2.2, bike: true, desc: 'Motorbike. A superbike with savage pace and a huge nitro tank. One mistake ends it. Hold E to wheelie.', vmax: 100, accel: 2.1, brake: 1.35, lat: 1.65, armor: 1.25, wreck: -2.5, tank: 1.4 },
   ];
   const carById = id => CARS.find(c => c.id === id) || CARS[0];
   const freshLevels = () => ({ engine: 0, brakes: 0, handling: 0, nitro: 0, armor: 0 });
@@ -1919,7 +1964,8 @@ body {
     if (playerMesh && playerMesh.userData.occ) playerMesh.userData.occ.visible = true;
     bestAnnounced = false; score = 0; distance = 0; nearMisses = 0; p_rpm = 0.2; p_throttle = 0; resetScoring(); resetPolice(); resetChase(); topSpeed = 0; spawnAcc = 0; shake = 0; timeScale = 1; wreckTimer = 0;
     updateHull();
-    for (let i = 0; i < 7; i++) spawnCar(-25 - i * 32);
+    if (onWater || onAir) for (let i = 0; i < 4; i++) spawnCar(-40 - i * 60);
+    else for (let i = 0; i < 7; i++) spawnCar(-25 - i * 32);
   }
 
   function start() {
@@ -2084,7 +2130,7 @@ body {
   }
   const MODE_DESC = {
     endless: 'Weave through traffic for points. Drive fast enough and the police come after you.',
-    heist: 'Rob the bank and escape with the loot: through the city, across the harbour, over the mountains, through the sky and across the desert to the border. Pick your vehicle for each kind of ground below. Every hit costs you loot.',
+    heist: 'Rob the bank and escape with the loot: through the city, across the harbour, over the mountains, through the sky and across the desert to the border. You get 3 lives. Pick your vehicle for each kind of ground below. Every hit costs you loot.',
     chase: "You're the cop. Hitting traffic damages your cruiser; ramming the getaway car doesn't. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
   };
   function refreshModeDesc() {
@@ -2124,7 +2170,7 @@ body {
   }
   $('heistLoad').addEventListener('change', e => { const t = e.target.dataset.t; if (!t) return; save.heist = { ...(save.heist || {}), [t]: e.target.value }; persist(); });
   const LOOT = 120000;
-  let heistStage = 0, heistStartD = 0, loot = 0, heistWon = false;
+  let heistStage = 0, heistStartD = 0, loot = 0, heistWon = false, heistLives = 3;
   function heistVehicle(i) {
     const h = HEIST[i], id = heistPick(h.t);
     mapOverride = h.map;
@@ -2134,7 +2180,7 @@ body {
     return id;
   }
   function startHeist() {   // called from start() before reset()
-    heistStage = 0; loot = LOOT; heistWon = false;
+    heistStage = 0; loot = LOOT; heistWon = false; heistLives = 3;
     heistVehicle(0);
   }
   function heistAfterReset() {
@@ -2150,11 +2196,26 @@ body {
     cars.forEach(c => scene.remove(c.mesh)); cars = [];
     hazards.forEach(h => scene.remove(h.mesh)); hazards = []; roadblock = null;
     clearDriftFx();
-    for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
+    if (onWater || onAir) for (let i = 0; i < 4; i++) spawnCar(-50 - i * 60);
+    else for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
     heat = Math.max(heat, 3 + heistStage * 0.5); chased = true; policeTimer = 1.2; escapeTimer = 0;
     flash(); shake = Math.max(shake, 0.5);
     showPop(HEIST[heistStage].msg, true); feed(`STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].place}`, 0, 'lost');
     addBonus(`HANDOFF ${heistStage}`, 1500 * heistStage);
+  }
+  // lose a life instead of the run: back on your feet in the same stage, cops pushed back
+  function heistRespawn() {
+    heistLives--;
+    const p = player, ud = playerMesh.userData;
+    clearRagdoll(); if (ud.occ) ud.occ.visible = true; if (ud.rider) ud.rider.visible = true;
+    Object.assign(p, { wrecked: false, hull: 100, v: Math.max(28, Math.min(p.v, 35)), vx: 0, x: laneX(2), y: 0, vy: 0, roll: 0, rollRate: 0, yaw: 0, yawRate: 0, steer: 0, slide: 0, air: false, onRamp: null, airSpin: 0, airSpinRate: 0, landSpin: 0, wheelie: 0, drifting: false, driftAngle: 0, nitro: Math.max(p.nitro, 0.5) });
+    updateHull(); bust = 0; endReason = 'wrecked';
+    cars = cars.filter(c => { if (!c.police && Math.abs(c.z) < 60) { scene.remove(c.mesh); return false; } return true; });
+    cars.forEach(c => { if (c.police && c.z < 70) { c.z = 70 + Math.random() * 30; c.x = laneX(Math.floor(Math.random() * LANES)); c.loose = false; c.vx = 0; c.yaw = 0; c.yawRate = 0; } });
+    hazards = hazards.filter(h => { if (Math.abs(h.z) < 80) { scene.remove(h.mesh); return false; } return true; }); if (roadblock && !hazards.includes(roadblock)) roadblock = null;
+    const lost = Math.round(loot * 0.1); loot -= lost;
+    state = 'play'; timeScale = 1; wreckTimer = 0; shake = 0;
+    flash(); showPop(`${heistLives} ${heistLives === 1 ? 'LIFE' : 'LIVES'} LEFT`, true); feed(`LIFE LOST · LOOT −${money(lost)}`, 0, 'lost');
   }
   function updateHeist(dt) {
     const p = player;
@@ -2170,6 +2231,7 @@ body {
     setText('heistStage', `STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].place}`);
     setText('heistGoal', `${carById(playerMesh.userData.id).name} · ${Math.ceil(left)} m to ${nxt ? 'the ' + nxt.place.toLowerCase() : 'the border'}`);
     setText('heistLoot', money(loot));
+    setText('heistLives', '♥'.repeat(heistLives) + '♡'.repeat(3 - heistLives));
     setWidth('heistBar', 1 - left / HEIST[heistStage].len);
   }
 
@@ -2641,7 +2703,9 @@ body {
   // Arcade highway handling: steering sets a sideways speed, the car's angle just follows it.
   function drivePlayer(p, dt) {
     const steerIn = p.air ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    p.steer += clamp(steerIn - p.steer, -(steerIn ? 7 : 12) * dt, (steerIn ? 7 : 12) * dt);
+    const moto = p.bike && !p.ski && !onWater;   // motorbikes lean into a turn instead of snapping sideways
+    const sRate = moto ? (steerIn ? 4.2 : 6.5) : onWater ? (steerIn ? 5.5 : 7) : (steerIn ? 7 : 12);
+    p.steer += clamp(steerIn - p.steer, -sRate * dt, sRate * dt);
 
     const boosting = keys.nitro && p.nitro > 0 && !keys.down;
     let a;
@@ -2655,14 +2719,18 @@ body {
     p.v = clamp(p.v + a * dt, V_MIN, V_NITRO);
     // handbrake: throw the back out and slide; keep steering into it to hold the drift
     const steerDir = keys.right ? 1 : keys.left ? -1 : 0, hb = keys.handbrake && !p.air && p.v > 12;
+    // each kind of vehicle slides its own way: bikes kick the back wheel out, boats and skis swing right round
+    const DR = moto ? { max: 0.5, bleed: 2.4, push: 0.7 } : onWater ? { max: 0.9, bleed: 2, push: 0.95 } : p.ski ? { max: 0.95, bleed: 2.6, push: 0.85 } : onAir ? { max: 0.55, bleed: 1.2, push: 0.8 } : { max: 0.78, bleed: 2.8, push: 0.9 };
     if (hb && steerDir && !p.drifting) { p.drifting = true; p.driftT = 0; p.driftAngSum = 0; p.driftDir = steerDir; }
     if (p.drifting) {
-      if (steerDir) p.driftDir = steerDir;
-      const want = hb ? -p.driftDir * 0.72 : steerDir === p.driftDir ? -p.driftDir * 0.42 : 0;
-      p.driftAngle += (want - p.driftAngle) * Math.min(1, dt * (hb ? 4 : 3));
-      p.v = Math.max(V_MIN, p.v - (hb ? 7 : 2.2) * dt);
+      const into = steerDir === p.driftDir, counter = steerDir === -p.driftDir;
+      // handbrake or steering into it holds the angle; counter-steer straightens you up
+      const want = -p.driftDir * (hb ? DR.max : into ? DR.max * 0.8 : 0);
+      p.driftAngle += (want - p.driftAngle) * Math.min(1, dt * (counter ? 6 : hb ? 4.5 : into ? 2.5 : 5));
+      p.v = Math.max(V_MIN, p.v - (hb ? DR.bleed * 1.2 : DR.bleed * 0.4) * dt * (0.5 + Math.abs(p.driftAngle) / DR.max * 0.5));
+      p.nitro = Math.min(1, p.nitro + 0.06 * Math.abs(p.driftAngle) / DR.max * S.nitroGain * dt);   // sliding charges your nitro
       p.driftT += dt; p.driftAngSum += Math.abs(p.driftAngle) * dt;
-      if (!hb && Math.abs(p.driftAngle) < 0.08) endDrift(p);
+      if (!hb && Math.abs(p.driftAngle) < 0.06) endDrift(p);
     } else p.driftAngle *= Math.exp(-6 * dt);
     p.accel += (a - p.accel) * Math.min(1, dt * 4);
     p.boosting = boosting;
@@ -2673,17 +2741,20 @@ body {
     const wantW = p.bike && keys.wheelie && p.v > 9 && !keys.down ? 0.5 : 0;
     p.wheelie += (wantW - p.wheelie) * Math.min(1, dt * (wantW ? 3 : 7));
     if (p.wheelie > 0.3) { p.wheelieT += dt; if (p.wheelieT >= 1) { p.wheelieT -= 1; addChainStep(p.ski ? 'TUCK' : onWater ? 'NOSE UP' : 'WHEELIE', 120 * (p.v / MPS / 100)); } } else p.wheelieT = 0;
-    const latMax = (6 + p.v * 0.06) * S.lat * (1 - p.wheelie * 0.9) * (p.drifting ? 1.3 : 1);
+    const latK = moto ? 0.8 + 0.2 * S.lat : S.lat;   // bikes' handling stat helps, but no longer makes them teleport across lanes
+    const latMax = (6 + p.v * (moto ? 0.05 : 0.06)) * latK * (1 - p.wheelie * 0.9) * (p.drifting ? 1.25 : 1);
     const prevVx = p.vx;
-    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * S.lat * (p.drifting ? 0.45 : 1) * (onWater ? 0.62 : onSnow ? 0.78 : onAir ? 0.85 : 1);
-    p.vx += clamp(p.steer * latMax - p.vx, -latAcc * dt, latAcc * dt);
+    const latAcc = p.slide > 0 ? 9 : (steerIn ? 34 : 46) * latK * (p.drifting ? 0.6 : 1) * (moto ? 0.8 : onWater ? 0.88 : onSnow ? 0.78 : onAir ? 0.85 : 1);
+    // in a drift you carve an arc toward the slide, and the steering trims it
+    const vxT = p.drifting ? (p.driftDir * DR.push * Math.abs(p.driftAngle) / DR.max + p.steer * 0.35) * latMax : p.steer * latMax;
+    p.vx += clamp(vxT - p.vx, -latAcc * dt, latAcc * dt);
     if (flatT > 0) p.vx += (Math.sin(time * 9) * 6 + (Math.random() - 0.5) * 18) * dt;   // flat tyres pull and shimmy
     p.x += p.vx * dt;
     p.latA += ((p.vx - prevVx) / dt - p.latA) * Math.min(1, dt * 10);
 
     // the car points along its motion; after a hit it keeps some spin before the tyres catch it
     const prevYaw = p.yaw;
-    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * (onWater ? 2.6 : onSnow ? 2.3 : 1.8) + p.driftAngle;
+    const yawTarget = -Math.atan2(p.vx, Math.max(p.v, 5)) * (moto ? 1.2 : onWater ? 1.6 : onSnow ? 2.3 : 1.8) + p.driftAngle;
     if (p.slide > 0) { p.yaw += p.yawRate * dt; p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 3); }
     else p.yaw += (yawTarget - p.yaw) * Math.min(1, dt * 16);
     p.yawRate = p.slide > 0 ? p.yawRate * Math.exp(-4 * dt) : (p.yaw - prevYaw) / dt;
@@ -2881,7 +2952,7 @@ body {
 
     if (!p.wrecked) {
       spawnAcc += Math.max(0, p.v - 22) * dt + 1.5 * dt;
-      const gap = (24 - difficulty * 11) * DIF().gap;
+      const gap = (24 - difficulty * 11) * DIF().gap * (onWater || onAir ? 2 : 1);   // open water and open sky are quieter than a motorway
       if (spawnAcc > gap && roadblock && !roadblock.done) spawnAcc = 0;
       if (spawnAcc > gap) spawnAcc = spawnCar(SPAWN_Z - Math.random() * 20) ? 0 : gap * 0.7;
     }
@@ -2951,7 +3022,7 @@ body {
       + (runStats.lost ? row('Chains lost', '−' + n(runStats.lost), 'neg') : '');
     $('finalStats').textContent = `${(distance / 1609).toFixed(2)} miles · ${nearMisses} near misses · best chain x${runStats.bestMult}` + (runStats.threads ? ` · ${runStats.threads} needle threads` : '') + ` · top ${Math.round(topSpeed)} mph`;
     const kept = mode === 'heist' ? Math.round(heistWon ? loot : loot * 0.2) : 0;
-    if (mode === 'heist') $('breakdown').innerHTML += row(heistWon ? 'Loot escaped with' : 'Loot you hid before getting caught', money(kept)) + row('Stages cleared', `${heistStage + (heistWon ? 1 : 0)} of ${HEIST.length}`);
+    if (mode === 'heist') $('breakdown').innerHTML += row(heistWon ? 'Loot escaped with' : 'Loot you hid before getting caught', money(kept)) + row('Stages cleared', `${heistStage + (heistWon ? 1 : 0)} of ${HEIST.length}`) + row('Lives left', heistWon ? heistLives : 0);
     const earned = Math.round(score / 12 * DIF().pay) + kept;
     save.cash += earned; persist(); applyLoadout();
     $('earned').textContent = '+' + money(earned) + (DIF().pay !== 1 ? ` (${DIF().name} ×${DIF().pay})` : '');
@@ -2986,7 +3057,7 @@ body {
     p.bodyRoll += (clamp((p.wrecked ? 0 : p.latA) * 0.0016, -0.045, 0.045) - p.bodyRoll) * Math.min(1, dt * 14);
     p.bodyPitch += (clamp(p.accel * 0.0012, -0.045, 0.015) - p.bodyPitch) * Math.min(1, dt * 14);
     if (ud.bike) {
-      const lean = p.wrecked ? 0 : clamp(-p.vx * 0.065, -0.6, 0.6), w = p.wheelie, zr = p.l * 0.36;
+      const lean = p.wrecked ? 0 : clamp(-p.steer * 0.5 * clamp(p.v / 30, 0.3, 1) - p.vx * 0.025, -0.7, 0.7), w = p.wheelie, zr = p.l * 0.36;
       ud.body.rotation.set(w, 0, lean);
       ud.body.position.set(0, zr * Math.sin(w), zr - zr * Math.cos(w));
     } else ud.body.rotation.set(p.bodyPitch, 0, p.bodyRoll);
@@ -3013,6 +3084,7 @@ body {
     const copPhase = Math.floor(time * 7) % 2 === 0;
     copRed.emissiveIntensity = copPhase ? 3 : 0.15; copBlue.emissiveIntensity = copPhase ? 0.15 : 3;
     rampBeacon.emissiveIntensity = Math.floor(time * 3) % 2 ? 3 : 0.2;
+    strobeMat.color.setScalar(time % 1 < 0.12 ? 3 : 0.35);
     copGlowR.opacity = copPhase ? 0.32 : 0.04; copGlowB.opacity = copPhase ? 0.04 : 0.32;
     for (const c of cars) {
       c.mesh.position.set(c.x, onWater ? Math.sin(time * 2.2 + c.z * 0.13) * 0.06 : onAir ? Math.sin(time * 1.6 + c.z * 0.11) * 0.25 : 0, c.z);
@@ -3084,7 +3156,7 @@ body {
     p_rpm += (rpmTarget - p_rpm) * Math.min(1, dt * 12);
     p_throttle += (thr - p_throttle) * Math.min(1, dt * 8);
     const id = playerMesh ? playerMesh.userData.id : save.car;
-    Sound.update({ rpm: p_rpm, throttle: p_throttle, speed: playing ? p.v : 0, boost: playing && p.boosting, on: (playing || (idle && state === 'garage')) && !CAR_SPECS[id].ski, pitch: CAR_SPECS[id].pitch, screech: playing && p.drifting,
+    Sound.update({ rpm: p_rpm, throttle: p_throttle, speed: playing ? p.v : 0, boost: playing && p.boosting, on: (playing || (idle && state === 'garage')) && !CAR_SPECS[id].ski, pitch: CAR_SPECS[id].pitch, screech: playing && p.drifting && !onWater && !onAir,
       siren: mode === 'chase' ? (playing ? 0.3 : 0) : (playing || state === 'wreck') ? activeCops().reduce((m, c) => Math.max(m, clamp(1 - Math.hypot(c.z, c.x - p.x) / 160, 0, 1)), 0) : 0 });
   }
   let last = performance.now();
@@ -3105,7 +3177,7 @@ body {
         wreckTimer += realDt;
         const sp = Math.hypot(player.v, player.vx);
         const ragDone = !ragdoll || (wreckTimer > 1.4 && ragdollSpeed() < 1.5);
-        if ((wreckTimer > 0.7 && sp < 4 && player.y < 0.05 && ragDone) || wreckTimer > (ragdoll ? 3.6 : 1.6)) gameOver();
+        if ((wreckTimer > 0.7 && sp < 4 && (player.y < 0.05 || onAir) && ragDone) || wreckTimer > (ragdoll ? 3.6 : 1.6)) { if (mode === 'heist' && heistLives > 1 && !heistWon) heistRespawn(); else gameOver(); }
       }
     } else if (state === 'menu' || state === 'garage') {
       scroll(27 * dt);
