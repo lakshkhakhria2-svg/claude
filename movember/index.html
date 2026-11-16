@@ -133,6 +133,7 @@ button:active { transform: scale(.97); }
 .alert strong { display: block; font: 400 clamp(28px, 7vw, 40px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
 .alert span { display: block; margin-top: 6px; font-size: 15px; font-weight: 600; }
 .alert b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.alert .push { margin-top: 8px; font-size: 17px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; }
 @keyframes siren { 0%, 100% { box-shadow: 0 0 0 0 rgba(229,32,26,.7); transform: scale(1); } 50% { box-shadow: 0 0 0 14px rgba(229,32,26,0); transform: scale(1.012); } }
 .paceline { margin: 0; font-size: 14px; color: var(--muted); }
 .paceline b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -185,6 +186,7 @@ footer p { margin: 0 0 6px; }
   <section class="alert" id="behind" role="alert" aria-live="assertive">
     <strong>We are behind!</strong>
     <span id="behindText"></span>
+    <span class="push" id="behindPush"></span>
   </section>
   <header>
     <div class="eyebrow">Movember 2026 · Gym challenge</div>
@@ -350,6 +352,14 @@ footer p { margin: 0 0 6px; }
   }
   const myKey = () => { const n = cleanName($("name").value); return n ? "n:" + n.toLowerCase() : ""; };
 
+  const PUSHES = [
+    "Every set counts. Go lift one now.",
+    "Your name on the board starts with one rep.",
+    "Squad, we are closer than it looks. Hit the gym.",
+    "Someone out there needs us to lift. Go.",
+    "Grab a training partner and head in today."
+  ];
+
   function renderPace(total) {
     const el = $("paceLine"), now = new Date();
     if (total >= GOAL) { el.hidden = false; el.innerHTML = "<b>Goal smashed.</b> All 525,600 kg lifted."; $("behind").classList.remove("on"); return; }
@@ -360,6 +370,7 @@ footer p { margin: 0 0 6px; }
     const alert = $("behind");
     alert.classList.toggle("on", diff < 0);
     $("behindText").innerHTML = "<b>" + fmt(-diff) + " kg</b> short of an even pace through November. Get in the gym and close the gap.";
+    $("behindPush").textContent = PUSHES[now.getDate() % PUSHES.length];
     el.innerHTML = diff >= 0
       ? "<b>" + fmt(diff) + " kg ahead</b> of an even pace through November."
       : "<b>" + fmt(-diff) + " kg behind</b> an even pace through November. Every set closes the gap.";
