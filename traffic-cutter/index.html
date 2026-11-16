@@ -447,25 +447,25 @@ body {
   const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ roughness: 0.85, ...extra, color: lin(color), ...(extra.emissive !== undefined ? { emissive: lin(extra.emissive) } : {}) });
   const flat = color => new THREE.MeshBasicMaterial({ color });
 
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshLambertMaterial({ map: grassTex }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600, 6, 100), new THREE.MeshLambertMaterial({ map: grassTex }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.03, -150); ground.receiveShadow = true;
   scene.add(ground);
 
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 3, 600), new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: 0.8, metalness: 0, envMapIntensity: 0.6 }));
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 3, 600, 1, 150), new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: 0.8, metalness: 0, envMapIntensity: 0.6 }));
   road.rotation.x = -Math.PI / 2; road.position.set(0, 0, -150); road.receiveShadow = true;
   scene.add(road);
-  const shoulder = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 7, 600), matte(0x8c8a80));
+  const shoulder = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 7, 600, 1, 150), matte(0x8c8a80));
   shoulder.rotation.x = -Math.PI / 2; shoulder.position.set(0, -0.015, -150); shoulder.receiveShadow = true;
   scene.add(shoulder);
 
-  const lineGeo = new THREE.PlaneGeometry(0.2, 600);
+  const lineGeo = new THREE.PlaneGeometry(0.2, 600, 1, 150);
   const edgeL = new THREE.Mesh(lineGeo, mat(0xe8b923)); edgeL.rotation.x = -Math.PI / 2; edgeL.position.set(-ROAD_W / 2, 0.01, -150); edgeL.receiveShadow = true; scene.add(edgeL);
   const edgeR = new THREE.Mesh(lineGeo, mat(0xf2f2f2)); edgeR.rotation.x = -Math.PI / 2; edgeR.position.set(ROAD_W / 2, 0.01, -150); edgeR.receiveShadow = true; scene.add(edgeR);
 
   // concrete jersey barriers
   const barrierShape = new THREE.Shape();
   barrierShape.moveTo(-0.35, 0); barrierShape.lineTo(0.35, 0); barrierShape.lineTo(0.2, 0.3); barrierShape.lineTo(0.12, 0.9); barrierShape.lineTo(-0.12, 0.9); barrierShape.lineTo(-0.2, 0.3); barrierShape.closePath();
-  const barrierGeo = new THREE.ExtrudeGeometry(barrierShape, { depth: 600, bevelEnabled: false });
+  const barrierGeo = new THREE.ExtrudeGeometry(barrierShape, { depth: 600, steps: 150, bevelEnabled: false });
   const barriers = [-1, 1].map(s => { const b = new THREE.Mesh(barrierGeo, mat(0xc9c6bd)); b.position.set(s * (ROAD_W / 2 + 2.4), 0, -450); b.castShadow = b.receiveShadow = true; scene.add(b); return b; });
 
   // lane dashes (instanced, recycled)
@@ -963,6 +963,7 @@ body {
 
   function makeCar(id, color, isPlayer) {
     if (CAR_SPECS[id].ski) return makeSkier(id, color, isPlayer);
+    if (onSnow && !isPlayer && !CAR_SPECS[id].ramp) return makeSnowTraffic(id, color);
     if (CAR_SPECS[id].plane || (onAir && !CAR_SPECS[id].ramp)) return makePlane(id, color, isPlayer);
     if (CAR_SPECS[id].boat || (onWater && !CAR_SPECS[id].ramp)) return makeBoat(id, color, isPlayer);
     if (CAR_SPECS[id].bike) return makeBike(id, color, isPlayer);
@@ -1147,8 +1148,8 @@ body {
   const snowTex = canvasTex(256, (g, s) => { g.fillStyle = '#eef3f8'; g.fillRect(0, 0, s, s); speckle(g, 7000, s, ['#ffffff', '#dfe7f0', '#d2dce8', '#f6f9fc'], 0.7, 3); }, 30, 600 / GRASS_TILE);
   const snowRoadTex = canvasTex(512, (g, s) => {
     g.fillStyle = '#d9e1ea'; g.fillRect(0, 0, s, s); speckle(g, 9000, s, ['#eef3f8', '#c6d0dc', '#b9c4d2', '#ffffff'], 0.6, 3);
-    g.fillStyle = 'rgba(120,135,155,0.28)';
-    for (let i = 0; i < 5; i++) { const x = (i + 0.5) * s / 5; g.fillRect(x - 26, 0, 9, s); g.fillRect(x + 17, 0, 9, s); }   // packed tyre tracks
+    g.fillStyle = 'rgba(140,155,175,0.16)';
+    for (let x = 0; x < s; x += 6) g.fillRect(x, 0, 2, s);   // groomed corduroy
   }, 1, 600 / ROAD_TILE);
   snowRoadTex.repeat.copy(asphaltTex.repeat); snowRoadTex.offset = asphaltTex.offset;   // scrolls with the road
   const snowPineIM = new THREE.InstancedMesh(new THREE.ConeGeometry(2.2, 7, 7).translate(0, 4.5, 0), matte(0x2d4a36, { flatShading: true }), 70);
@@ -1221,6 +1222,9 @@ body {
     onWater = water; onSnow = snow; onAir = air;
     for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !water && !air;
     skyLaneGroup.visible = skyEdgeGroup.visible = air;
+    for (const o of [edgeL, edgeR, dashMesh, ...barriers]) o.visible = !water && !air && !snow;
+    fencePoleGroup.visible = snow; fenceNets.forEach(n => n.visible = snow);
+    clearHoops();
     ground.position.y = air ? GROUND_Y_AIR : -0.03; ground.scale.setScalar(air ? 4 : 1);
     buoyLaneGroup.visible = buoyEdgeGroup.visible = water;
     oceanGroup.position.y = water ? -WATER_Y - 0.12 : 0;   // bring the sea up to road level
@@ -1389,8 +1393,181 @@ body {
     dummy.position.set(-60 - Math.random() * 240, -8, -280 - Math.random() * 180); dummy.rotation.set(0, Math.random() * 3, 0); dummy.scale.set(60 + Math.random() * 70, 30 + Math.random() * 35, 40 + Math.random() * 50); dummy.updateMatrix(); warmHillIM.setMatrixAt(i, dummy.matrix);
   }
   warmHillIM.frustumCulled = false; scene.add(warmHillIM);
-  MAPS.coast = { name: 'Sunset Coast', desc: 'A warm, hazy coastal freeway at golden hour: palm trees, stucco, a skyline in the smog and freeway signs overhead.', night: false, top: 0x3a7fd4, hor: 0xf4d4a0, fog: [110, 420], hemi: [0xffe6c4, 0x7a6a4a, 0.62], light: [0xffd9a0, 2.9], dir: [-0.65, 0.5, -0.6], sunCol: [1, 0.78, 0.5], glow: 0.55, exposure: 1.12, ground: dryTex, shoulder: 0xb5a88e, env: ['#3a7fd4', '#f4d4a0', '#a08a60', '#6a5a3a'], show: [palmGroup, stuccoGroup, gantryGroup, skylineIM, warmHillIM, cloudIM, ...lampGroups] };
+  MAPS.coast = { name: 'Sunset Coast', desc: 'A warm, hazy coastal freeway at golden hour: palm trees, stucco, a skyline in the smog and freeway signs overhead.', night: false, top: 0x3a7fd4, hor: 0xf4d4a0, fog: [110, 420], hemi: [0xffe6c4, 0x7a6a4a, 0.62], light: [0xffd9a0, 2.9], dir: [-0.65, 0.5, -0.6], sunCol: [1, 0.78, 0.5], glow: 0.55, exposure: 1.12, ground: dryTex, shoulder: 0xb5a88e, env: ['#3a7fd4', '#f4d4a0', '#a08a60', '#6a5a3a'], show: [palmGroup, stuccoGroup, skylineIM, warmHillIM, cloudIM, ...lampGroups] };
   ALL_MAP_PROPS.push(palmGroup, stuccoGroup, gantryGroup, skylineIM, warmHillIM);
+  gantryGroup.visible = false;
+
+  // ---------- Sunset Coast interchanges: slip lanes, overpasses, a rail bridge and varied exit signs ----------
+  const SIGN_NAMES = [['Vista Del Mar', 'Beach Cities'], ['Palm Canyon Dr', 'Airport'], ['Harbor Blvd', 'Port · Docks'], ['Mirada Ave', 'Downtown'], ['Rosewood St', 'Old Town'], ['Pacific Hwy', 'North Coast'],
+    ['Del Rey Blvd', 'Marina'], ['Bayview Rd', 'University'], ['Canyon Rd', 'Hills · Observatory'], ['Marina Way', 'Pier · Boardwalk'], ['Grand Ave', 'Civic Center'], ['Arroyo Pkwy', 'Stadium']];
+  function makeSignMat(name, sub, no, gore) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d');
+    g.fillStyle = '#0f6b3c'; g.fillRect(0, 0, 512, 160); g.strokeStyle = '#ffffff'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 144);
+    g.fillStyle = '#f2c200'; g.fillRect(24, 22, 118, 36); g.fillStyle = '#111'; g.font = '700 24px Arial, Helvetica, sans-serif'; g.fillText('EXIT ' + no, 32, 49);
+    g.fillStyle = '#fff'; g.font = '700 42px Arial, Helvetica, sans-serif'; g.fillText(name, 30, 104);
+    g.font = '700 26px Arial, Helvetica, sans-serif'; g.fillText(gore ? 'EXIT ONLY  ↗' : sub + '   ½ MILE', 30, 140);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return new THREE.MeshLambertMaterial({ map: t });
+  }
+  const rampRoadTex = canvasTex(256, (g, S) => {
+    g.fillStyle = '#44464b'; g.fillRect(0, 0, S, S); speckle(g, 7000, S, ['#55585f', '#2b2d32'], 0.7, 2);
+    g.fillStyle = '#f2f2f2'; g.fillRect(10, 0, 8, S); g.fillStyle = '#e8b923'; g.fillRect(S - 18, 0, 8, S);
+  }, 1, 1);
+  const rampMat = new THREE.MeshStandardMaterial({ map: rampRoadTex, roughness: 0.82 }), bridgeConcrete = mat(0xcfc8b8, { roughness: 0.9 }), bridgeSteel = mat(0x5b6168, { metalness: 0.6, roughness: 0.45 });
+  const smooth = t => t * t * (3 - 2 * t);
+  function bezier(a, b, c, d, n) { const out = []; for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t; out.push([0, 1, 2].map(k => u * u * u * a[k] + 3 * u * u * t * b[k] + 3 * u * t * t * c[k] + t * t * t * d[k])); } return out; }
+  // a road surface along a path, with walls and pillars where it is up in the air
+  function rampRoad(pts, w, parent) {
+    const pos = [], uv = [], idx = [], wall = [], widx = []; let along = 0;
+    pts.forEach((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+      let nx = -(b[2] - a[2]), nz = b[0] - a[0]; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l;
+      if (i) along += Math.hypot(p[0] - pts[i - 1][0], p[2] - pts[i - 1][2]);
+      for (const s of [1, -1]) { pos.push(p[0] + nx * w / 2 * s, p[1] + 0.03, p[2] + nz * w / 2 * s); uv.push(s > 0 ? 0 : 1, along / 10); }
+      for (const s of [1, -1]) { const x = p[0] + nx * (w / 2 + 0.15) * s, z = p[2] + nz * (w / 2 + 0.15) * s; wall.push(x, p[1] - 0.6, z, x, p[1] + 0.85, z); }
+      if (i) { const k = (i - 1) * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); const q = (i - 1) * 4; widx.push(q, q + 4, q + 1, q + 1, q + 4, q + 5, q + 2, q + 3, q + 6, q + 3, q + 7, q + 6); }
+      if (p[1] > 2 && i % 4 === 0) { const col = new THREE.Mesh(new THREE.BoxGeometry(0.9, p[1], 0.9), bridgeConcrete); col.position.set(p[0], p[1] / 2 - 0.3, p[2]); col.castShadow = true; parent.add(col); }
+    });
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+    const road = new THREE.Mesh(g, rampMat); road.receiveShadow = true; parent.add(road);
+    const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wall, 3)); wg.setIndex(widx); wg.computeVertexNormals();
+    const wm = new THREE.Mesh(wg, new THREE.MeshLambertMaterial({ color: lin(0xd9d2c2), side: THREE.DoubleSide })); wm.castShadow = true; parent.add(wm);
+  }
+  const DECK_Y = 8, DECK_TOP = DECK_Y + 0.6, EDGE = ROAD_W / 2 + 5;
+  function makeOverpass(parent, rail) {
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(260, 1.2, 12), rail ? bridgeSteel : bridgeConcrete); deck.position.y = DECK_Y; deck.castShadow = deck.receiveShadow = true; parent.add(deck);
+    if (rail) {
+      for (let x = -ROAD_W / 2 - 6; x <= ROAD_W / 2 + 6; x += 3) for (const z of [-5.6, 5.6]) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.25, 3.2, 0.25), bridgeSteel); m.position.set(x, DECK_TOP + 1.6, z); parent.add(m); const d = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4.2, 0.2), bridgeSteel); d.position.set(x + 1.5, DECK_TOP + 1.6, z); d.rotation.z = 0.75; parent.add(d); }
+      for (const z of [-5.6, 5.6]) { const top = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 14, 0.35, 0.35), bridgeSteel); top.position.set(0, DECK_TOP + 3.2, z); parent.add(top); }
+      for (const z of [-1.2, 1.2]) { const r = new THREE.Mesh(new THREE.BoxGeometry(260, 0.15, 0.12), mat(0x9a9ea4, { metalness: 0.8 })); r.position.set(0, DECK_TOP + 0.1, z); parent.add(r); }
+    } else {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(260, 0.05, 9), rampMat); top.position.y = DECK_TOP + 0.01; parent.add(top);
+      for (const z of [-5.7, 5.7]) { const p = new THREE.Mesh(new THREE.BoxGeometry(260, 1, 0.4), bridgeConcrete); p.position.set(0, DECK_TOP + 0.5, z); parent.add(p); }
+    }
+    for (const x of [-EDGE + 0.5, EDGE - 0.5, -45, 45, -95, 95]) for (const z of [-3.5, 3.5]) { const c = new THREE.Mesh(new THREE.BoxGeometry(1.4, DECK_Y, 1.4), bridgeConcrete); c.position.set(x, DECK_Y / 2 - 0.6, z); c.castShadow = true; parent.add(c); }
+  }
+  function makeGantry(parent, z, m) {
+    const g = new THREE.Mesh(mergeParts([[new THREE.BoxGeometry(0.4, 7.4, 0.4), -(ROAD_W / 2 + 2.8), 3.7, 0], [new THREE.BoxGeometry(0.4, 7.4, 0.4), ROAD_W / 2 + 2.8, 3.7, 0], [new THREE.BoxGeometry(ROAD_W + 6, 0.35, 0.35), 0, 7.2, 0]]), bridgeSteel);
+    g.position.z = z; g.castShadow = true; parent.add(g);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.5), m); sign.position.set(ROAD_W / 2 - 4.5, 6.1, z + 0.25); parent.add(sign);
+    return sign;
+  }
+  const coastGroup = new THREE.Group(); scene.add(coastGroup);
+  MAPS.coast.show.push(coastGroup); ALL_MAP_PROPS.push(coastGroup); coastGroup.visible = false;
+  const crossCars = [];
+  const interchanges = [];
+  function dressInterchange(ic) {   // a new exit number and name every time one comes round again
+    const [name, sub] = SIGN_NAMES[Math.floor(Math.random() * SIGN_NAMES.length)], no = 10 + Math.floor(Math.random() * 80);
+    if (ic.signs) { ic.signs[0].material = makeSignMat(name, sub, no, false); ic.signs[1].material = makeSignMat(name, sub, no, true); }
+  }
+  for (const [kind, z0] of [['ic', -260], ['rail', -560], ['ic', -860]]) {
+    const g = new THREE.Group(), ic = { g, z: z0, kind }; coastGroup.add(g);
+    makeOverpass(g, kind === 'rail');
+    if (kind === 'ic') {
+      // exit slip lane on the right climbs up to the overpass; an on-ramp comes down on the left
+      rampRoad([[EDGE, 0, 200], [EDGE, 0, 130], ...bezier([EDGE, 0, 120], [EDGE + 1, 0, 60], [40, DECK_TOP, 46], [40, DECK_TOP, 6], 22).map(p => [p[0], DECK_TOP * smooth(Math.max(0, Math.min(1, p[1] / DECK_TOP))), p[2]])], 5.5, g);
+      rampRoad([...bezier([-40, DECK_TOP, -6], [-40, DECK_TOP, -46], [-EDGE - 1, 0, -60], [-EDGE, 0, -120], 22).map(p => [p[0], DECK_TOP * smooth(Math.max(0, Math.min(1, p[1] / DECK_TOP))), p[2]]), [-EDGE, 0, -130], [-EDGE, 0, -200]], 5.5, g);
+      ic.signs = [makeGantry(g, 280, null), makeGantry(g, 190, null)];
+      dressInterchange(ic);
+      for (let k = 0; k < 3; k++) { const car = makeCar(['hatch', 'street', 'suv'][k], CAR_COLORS[(k * 3 + 1) % CAR_COLORS.length], false); car.position.set(-100 + k * 70, DECK_TOP, k % 2 ? 2.2 : -2.2); car.rotation.y = k % 2 ? Math.PI / 2 : -Math.PI / 2; g.add(car); crossCars.push({ car, dir: k % 2 ? -1 : 1, v: 12 + Math.random() * 6 }); }
+    }
+    interchanges.push(ic);
+  }
+  const IC_PERIOD = 900;
+  let coastD = 0;
+  const bendU = { value: new THREE.Vector3() };
+  function updateCoast(dz, dt) {
+    coastD += dz;
+    for (const ic of interchanges) {
+      ic.z += dz;
+      if (ic.z > DESPAWN_Z + 210) { ic.z -= IC_PERIOD; dressInterchange(ic); }
+      ic.g.position.z = ic.z;
+    }
+    for (const c of crossCars) { c.car.position.x += c.dir * c.v * dt; if (c.car.position.x > 125) c.car.position.x = -125; if (c.car.position.x < -125) c.car.position.x = 125; }
+    // the freeway winds and rolls ahead of you (a visual bend, the driving stays the same)
+    const on = curMap === MAPS.coast, mtn = curMap === MAPS.snow;
+    const tx = on ? 0.0008 * Math.sin(coastD / 650) : mtn ? 0.0007 * Math.sin(coastD / 420) : 0, ty = on ? 0.0002 * Math.sin(coastD / 480 + 1.3) : mtn ? -0.00008 : 0, tz = mtn ? 0.16 : 0;   // the mountain falls away ahead of you
+    const k = Math.min(1, dt * 2);
+    bendU.value.x += (tx - bendU.value.x) * k; bendU.value.y += (ty - bendU.value.y) * k; bendU.value.z += (tz - bendU.value.z) * k;
+  }
+  // bend everything drawn in the world by the same curve (sky and screen effects excluded)
+  const BEND_VERTEX = `vec4 mvPosition = vec4( transformed, 1.0 );
+#ifdef USE_INSTANCING
+	mvPosition = instanceMatrix * mvPosition;
+#endif
+vec4 bendW = modelMatrix * mvPosition;
+float bendD = min( bendW.z, 0.0 );
+bendW.x += uBend.x * bendD * bendD; bendW.y += uBend.y * bendD * bendD + uBend.z * bendD;
+mvPosition = viewMatrix * bendW;
+gl_Position = projectionMatrix * mvPosition;`;
+  function bendMaterial(m) {
+    if (!m || m.userData.bent || m.isShaderMaterial) return;
+    m.userData.bent = true;
+    m.onBeforeCompile = sh => { sh.uniforms.uBend = bendU; sh.vertexShader = 'uniform vec3 uBend;\n' + sh.vertexShader.replace('#include <project_vertex>', BEND_VERTEX); };
+    m.needsUpdate = true;
+  }
+  function bendScene() { scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(bendMaterial); }); }
+
+  // ---------- the mountain: other skiers, snowcats, ski patrol police and orange safety fencing ----------
+  function makeSnowTraffic(id, color) {
+    if (id === 'police' || id === 'interceptor') {   // ski patrol cop: hi-vis jacket and lights on the helmet
+      const g = makeSkier('skis', 0xd4ff1e, false), ud = g.userData;
+      for (const [x, m] of [[-0.09, copRed], [0.09, copBlue]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.1), m); l.position.set(x, 1.72, -0.26); ud.rider.add(l); }
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.1, 0.29), mat(0x1a4fd0)); stripe.position.set(0, 1.2, -0.08); stripe.rotation.x = -0.45; ud.rider.add(stripe);
+      ud.id = id; return g;
+    }
+    if (CAR_SPECS[id] && CAR_SPECS[id].truck) {   // a snowcat grooming the piste
+      const g = new THREE.Group(); g.rotation.order = 'YXZ'; const b = new THREE.Group(); g.add(b);
+      const body = paintFor(0xd8401c), add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; b.add(o); return o; };
+      for (const x of [-1, 1]) add(new THREE.BoxGeometry(0.7, 0.9, 5.2), trimMat, x * 1.0, 0.45, 0);
+      add(new THREE.BoxGeometry(2.4, 0.9, 4.2), body, 0, 1.25, 0.2);
+      add(new THREE.BoxGeometry(2.0, 1.1, 1.8), body, 0, 2.2, -0.5); add(new THREE.BoxGeometry(2.02, 0.6, 1.6), glassMat, 0, 2.3, -0.5);
+      add(new THREE.BoxGeometry(3.0, 0.8, 0.4), mat(0x9a9ea4), 0, 0.5, -2.9);   // blade
+      add(new THREE.BoxGeometry(2.8, 0.3, 1.2), mat(0x9a9ea4), 0, 0.3, 3.1);    // tiller
+      const tails = [add(new THREE.BoxGeometry(0.3, 0.15, 0.06), tailMat, 0, 1.4, 2.32)];
+      const blinkers = [-1, 1].map(x => add(blinkGeo, blinkOff, x * 1.22, 1.5, 2.0));
+      add(new THREE.BoxGeometry(0.25, 0.18, 0.25), rampBeacon, 0, 2.85, -0.5);
+      g.userData = { id, w: 2.6, l: 6.4, mass: 4, top: 2.8, tails, blinkers, body: b, wheels: [], front: [], paint: body };
+      return g;
+    }
+    const g = makeSkier(Math.random() < 0.4 ? 'snowboard' : 'skis', color, false);
+    g.userData.id = id; return g;
+  }
+  const fencePoleIM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 6).translate(0, 0.7, 0), mat(0x222222), 80);
+  makeStrip(Array.from({ length: 80 }, (_, i) => ({ s: i % 2 ? 1 : -1, z: DESPAWN_Z - Math.floor(i / 2) * 7.5 })), 300, [fencePoleIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(it.s * (ROAD_W / 2 + 2.2), 0, it.z); dummy.updateMatrix(); fencePoleIM.setMatrixAt(i, dummy.matrix);
+  });
+  const fencePoleGroup = strips[strips.length - 1].group;
+  const fenceNets = [-1, 1].map(s => { const n = new THREE.Mesh(new THREE.PlaneGeometry(600, 1.1, 150, 1), new THREE.MeshBasicMaterial({ color: 0xff4a00, transparent: true, opacity: 0.92, side: THREE.DoubleSide })); n.rotation.y = Math.PI / 2; n.position.set(s * (ROAD_W / 2 + 2.2), 0.75, -150); scene.add(n); return n; });
+  fencePoleGroup.visible = false; fenceNets.forEach(n => n.visible = false);
+
+  // ---------- sky stage: fly through the hoops (no air traffic) ----------
+  const hoopGeo = new THREE.TorusGeometry(2.3, 0.22, 10, 36);
+  const hoopMat = new THREE.MeshStandardMaterial({ color: lin(0xffc21a), emissive: lin(0xff9a00), emissiveIntensity: 1.6, metalness: 0.4, roughness: 0.3 });
+  const hoopDone = new THREE.MeshBasicMaterial({ color: 0x5cff7a, transparent: true, opacity: 0.5 });
+  let hoops = [], hoopLane = 2, hoopAcc = 0, hoopStreak = 0;
+  function clearHoops() { hoops.forEach(h => scene.remove(h.mesh)); hoops = []; hoopAcc = 0; hoopStreak = 0; }
+  function updateHoops(p, dt) {
+    if (!onAir || p.wrecked) return;
+    hoopAcc += p.v * dt;
+    if (hoopAcc > 55 + Math.random() * 25 || !hoops.length) {
+      hoopAcc = 0;
+      hoopLane = clamp(hoopLane + [-2, -1, 1, 2][Math.floor(Math.random() * 4)], 0, LANES - 1);   // a slalom across the sky lanes
+      const mesh = new THREE.Mesh(hoopGeo, hoopMat); mesh.position.set(laneX(hoopLane), 1.15, SPAWN_Z + 40); scene.add(mesh);
+      hoops.push({ mesh, x: laneX(hoopLane), z: SPAWN_Z + 40, done: false });
+    }
+    for (const h of hoops) {
+      h.z += p.v * dt; h.mesh.position.z = h.z; h.mesh.rotation.z += dt * 0.6;
+      if (!h.done && h.z > 0) {
+        h.done = true;
+        if (Math.abs(p.x - h.x) < 1.9) {
+          hoopStreak++; h.mesh.material = hoopDone; h.mesh.scale.setScalar(1.25);
+          addChainStep(`HOOP${hoopStreak > 1 ? ' x' + hoopStreak : ''}`, 250 + hoopStreak * 60);
+          p.nitro = Math.min(1, p.nitro + 0.12 * S.nitroGain); Sound.whoosh && Sound.whoosh(1);
+        } else { hoopStreak = 0; loseChain(); updateChainHud(); feed('HOOP MISSED', 0, 'lost'); if (mode === 'heist') { const lost = Math.min(loot, 2000); loot -= lost; } }
+      }
+    }
+    hoops = hoops.filter(h => { if (h.z > DESPAWN_Z) { scene.remove(h.mesh); return false; } return true; });
+  }
 
   // ---------- blood: splatter and stains where the bodies hit the road ----------
   const SPLATS = 180, splatIM = new THREE.InstancedMesh(new THREE.CircleGeometry(0.5, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x6e0808, transparent: true, opacity: 0.85, depthWrite: false }), SPLATS);
@@ -1572,6 +1749,7 @@ body {
     const body = paintFor(color), W = 2.5;
     const add = (geo, m, x, y, z, shadow = true) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = shadow; b.add(o); return o; };
     if (onWater) addHull(b, W + 0.5, 12.6, 1.2, body, -0.75);   // floating ramp barge
+    else if (onSnow) add(new THREE.BoxGeometry(W + 0.6, 0.6, 12.4), mat(0xf2f6fa), 0, 0.3, 0);   // a snow kicker on a sled
     else {
     add(new THREE.BoxGeometry(W, 2.3, 2.7), body, 0, 1.55, -4.65);                       // cab, low enough to clear from the lip
     add(new THREE.BoxGeometry(W - 0.3, 0.8, 0.05), glassMat, 0, 2.05, -6.02, false);
@@ -1583,7 +1761,7 @@ body {
     for (const x of [-1, 1]) add(lamp, headMat, x * 0.9, 1.0, -6.02, false);
     const tails = [-1, 1].map(x => add(lamp, tailMat, x * 0.95, 0.5, 6.02, false));
     const blinkers = [-1, 1].map(x => add(blinkGeo, blinkOff, x * (W / 2 + 0.02), 0.6, 5.7, false));
-    if (!onWater) for (const z of [-4.6, 2.5, 4.6]) for (const x of [-1, 1]) { const t = new THREE.Mesh(tireGeo, wheelMat); t.position.set(x * (W / 2 - 0.1), 0.36, z); g.add(t); }
+    if (!onWater && !onSnow) for (const z of [-4.6, 2.5, 4.6]) for (const x of [-1, 1]) { const t = new THREE.Mesh(tireGeo, wheelMat); t.position.set(x * (W / 2 - 0.1), 0.36, z); g.add(t); }
     for (const x of [-1, 1]) { const strip = new THREE.Mesh(rampEdgeGeo, rampGlowMat); strip.position.x = x * (W / 2 - 0.05); b.add(strip); }
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.1), rampSignMat); sign.position.set(0, 3.55, -3.4); b.add(sign);
     for (const x of [-1, 1]) add(new THREE.BoxGeometry(0.25, 0.2, 0.25), rampBeacon, x * 1.0, 2.82, -5.6, false);
@@ -2043,7 +2221,7 @@ body {
   }
 
   function reset() {
-    clearWasted();
+    clearWasted(); clearHoops();
     cars.forEach(c => scene.remove(c.mesh));
     cars = []; sparks = [];
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
@@ -2071,6 +2249,7 @@ body {
   }
 
   function spawnCar(z) {
+    if (onAir) return true;   // the sky stage is a hoop course, not traffic
     const r = Math.random();
     const type = r < 0.15 ? 'truck' : r < 0.45 ? 'street' : r < 0.65 ? 'hatch' : r < 0.82 ? 'suv' : r < 0.92 ? 'muscle' : 'coupe';
     const rampT = type === 'truck' && !onAir && Math.random() < 0.45;
@@ -2085,13 +2264,17 @@ body {
     const lane = free[Math.floor(Math.random() * free.length)];
     const mesh = makeCar(rampT ? 'ramptruck' : type, color, false);
     scene.add(mesh);
-    const v = (rampT ? 38 + Math.random() * 8 : truck ? 42 + Math.random() * 14 : 48 + Math.random() * 38) * MPS;
-    cars.push({ mesh, color, lane, target: lane, x: laneX(lane), z, vx: 0, v, cruise: v, yaw: 0, yawRate: 0,
+    const base = (rampT ? 38 + Math.random() * 8 : truck ? 42 + Math.random() * 14 : 52 + Math.random() * 26) * MPS;
+    const v = truck ? base : laneSpeed(lane, base);
+    cars.push({ mesh, color, lane, laneWas: lane, base: truck ? 0 : base, truckish: truck, target: lane, x: laneX(lane), z, vx: 0, v, cruise: v, yaw: 0, yawRate: 0,
       w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: z > 0, spin: 0, ramp: rampT });
     return true;
   }
 
-  const laneClear = (lane, car) => !cars.some(c => c !== car && (c.lane === lane || c.target === lane) && Math.abs(c.z - car.z) < (c.l + car.l) / 2 + 8);
+  const laneClear = (lane, car) => !cars.some(c => c !== car && (c.lane === lane || c.target === lane) && Math.abs(c.z - car.z) < (c.l + car.l) / 2 + 12)
+    && !(player && Math.abs(player.x - laneX(lane)) < 3.2 && car.z > -45 && car.z < 14);   // never pull across your nose
+  // lanes flow at different speeds, fast on the left, so there's always a current to swim through
+  const laneSpeed = (lane, base) => base + (LANES - 1 - lane - 2) * 1.6;
 
   let bestAnnounced = false;
   function checkBest() {
@@ -2242,11 +2425,11 @@ body {
 
   // ---------- bank heist: escape with the loot by car, bike, boat and skis ----------
   const HEIST = [
-    { t: 'road', map: 'city', place: 'CITY', len: 1300, msg: 'GO GO GO! Get out of the city' },
+    { t: 'road', map: 'coast', place: 'CITY', len: 1300, msg: 'GO GO GO! Get out of the city' },
     { t: 'water', map: 'ocean', place: 'HARBOUR', len: 1400, msg: 'TO THE BOAT!' },
-    { t: 'snow', map: 'snow', place: 'MOUNTAINS', len: 1300, msg: 'UP THE MOUNTAIN!' },
-    { t: 'air', map: 'sky', place: 'SKY', len: 1600, msg: 'TAKE OFF!' },
-    { t: 'road', map: 'desert', place: 'DESERT', len: 1300, msg: 'LAND IT AND RUN FOR THE BORDER!' },
+    { t: 'snow', map: 'snow', place: 'MOUNTAINS', len: 1300, msg: 'SKI DOWN THE MOUNTAIN! SKI PATROL ON YOUR TAIL' },
+    { t: 'air', map: 'sky', place: 'SKY', len: 1600, msg: 'TAKE OFF! FLY THROUGH THE HOOPS' },
+    { t: 'road', map: 'coast', place: 'COAST HIGHWAY', len: 1300, msg: 'LAND IT AND RUN FOR THE BORDER!' },
   ];
   // the vehicle you take on each kind of ground: anything you own, or the crew's free default
   const HEIST_TERRAINS = [['road', 'Road'], ['water', 'Water'], ['snow', 'Snow'], ['air', 'Air']];
@@ -2936,12 +3119,15 @@ body {
     if (c.blink > 0) {
       c.blink -= dt;
       if (c.blink <= 0) { if (laneClear(c.target, c)) c.lane = c.target; else c.target = c.lane; }
-    } else if (c.lane === c.target && c.z < -20 && c.z > -150 && Math.random() < (0.12 + difficulty * 0.25) * DIF().swerve * dt) {
+    } else if (c.lane === c.target && c.z < -45 && c.z > -170 && !c.truckish && Math.random() < (0.08 + difficulty * 0.12) * DIF().swerve * dt) {
+      // only change lanes well ahead of you, with a long signal, so you can read them
       const t = c.lane + (Math.random() < 0.5 ? -1 : 1);
-      if (t >= 0 && t < LANES && laneClear(t, c)) { c.target = t; c.blink = save.diff === 'hard' ? 0.55 : 1.0; }
+      if (t >= 0 && t < LANES && laneClear(t, c)) { c.target = t; c.blink = save.diff === 'hard' ? 1.0 : 1.6; }
     }
-    const want_vx = c.blink > 0 ? 0 : clamp((laneX(c.lane) - c.x) * 1.6, -3.2, 3.2);
-    c.vx += (want_vx - c.vx) * Math.min(1, dt * 4);
+    if (c.lane !== c.laneWas) { c.laneWas = c.lane; if (c.base) c.cruise = laneSpeed(c.lane, c.base); }
+    // a slow, smooth drift across: about two and a half seconds per lane
+    const want_vx = c.blink > 0 ? 0 : clamp((laneX(c.lane) - c.x) * 1.2, -2.2, 2.2);
+    c.vx += (want_vx - c.vx) * Math.min(1, dt * 2.5);
     c.x += c.vx * dt;
     c.yaw = -Math.atan2(c.vx, Math.max(c.v, 3));
     c.yawRate = 0;
@@ -2961,6 +3147,7 @@ body {
     updateDriftFx(dt, Math.max(0, p.v) * dt);
     updateOcean(dt, Math.max(0, p.v) * dt);
     updateSnow(dt, Math.max(0, p.v) * dt);
+    updateHoops(p, dt);
     barrier(p);
     if (!p.wrecked) topSpeed = Math.max(topSpeed, p.v / MPS);
 
@@ -3131,7 +3318,9 @@ body {
     layoutDashes();
     scrollTotal += dz;
     scrollStrips();
+    updateCoast(dz, lastFrameDt);
   }
+  let lastFrameDt = 0.016;
   layoutDashes();
 
   function syncCar(mesh, body, spin, steer) {
@@ -3181,6 +3370,7 @@ body {
     copGlowR.opacity = copPhase ? 0.32 : 0.04; copGlowB.opacity = copPhase ? 0.04 : 0.32;
     for (const c of cars) {
       c.mesh.position.set(c.x, onWater ? Math.sin(time * 2.2 + c.z * 0.13) * 0.06 : onAir ? Math.sin(time * 1.6 + c.z * 0.11) * 0.25 : 0, c.z);
+      if (onSnow && c.mesh.userData.ski) c.mesh.userData.body.rotation.z = clamp(-c.vx * 0.2, -0.6, 0.6);
       if (onAir && c.mesh.userData.plane) { c.mesh.userData.body.rotation.z = clamp(-c.vx * 0.15, -0.6, 0.6); if (c.mesh.userData.prop) c.mesh.userData.prop.rotation.z += dt * 40; }
       c.mesh.rotation.y = c.yaw;
       const dir = c.target - c.lane;
@@ -3253,13 +3443,15 @@ body {
       siren: mode === 'chase' ? (playing ? 0.3 : 0) : (playing || state === 'wreck') ? activeCops().reduce((m, c) => Math.max(m, clamp(1 - Math.hypot(c.z, c.x - p.x) / 160, 0, 1)), 0) : 0 });
   }
   let last = performance.now();
+  let bendCheckT = 0;
   function frame(now) {
     const rawDt = (now - last) / 1000;
     const realDt = Math.min(0.05, rawDt); last = now;
     adaptResolution(rawDt);
     timeScale = Math.min(1, timeScale + realDt * 2);
     const dt = realDt * (player.wrecked ? timeScale : 1);
-    time += dt;
+    time += dt; lastFrameDt = dt;
+    bendCheckT -= realDt; if (bendCheckT <= 0) { bendCheckT = 1; bendScene(); }   // newly made materials pick up the road bend
     if (state === 'play' || state === 'wreck' || state === 'over') {
       // fixed sub-steps keep collisions solid at high speed
       const steps = Math.ceil(dt / 0.01);
