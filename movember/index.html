@@ -128,6 +128,12 @@ button:active { transform: scale(.97); }
 .track i { display: block; height: 100%; width: 0; border-radius: 5px; background: var(--plate); transition: width .6s ease; }
 .next.done .track i { background: var(--good); }
 #burst { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+.alert { display: none; border-radius: 12px; padding: 16px 18px; background: #e5201a; color: #fff; border: 3px solid #ffd400; box-shadow: 0 0 0 0 rgba(229,32,26,.7); animation: siren 1.1s ease-in-out infinite; }
+.alert.on { display: block; }
+.alert strong { display: block; font: 400 clamp(28px, 7vw, 40px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
+.alert span { display: block; margin-top: 6px; font-size: 15px; font-weight: 600; }
+.alert b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+@keyframes siren { 0%, 100% { box-shadow: 0 0 0 0 rgba(229,32,26,.7); transform: scale(1); } 50% { box-shadow: 0 0 0 14px rgba(229,32,26,0); transform: scale(1.012); } }
 .paceline { margin: 0; font-size: 14px; color: var(--muted); }
 .paceline b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .you { margin: 12px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; }
@@ -171,11 +177,15 @@ footer p { margin: 0 0 6px; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 8px; font-size: 14px; }
 .bump { animation: bump .5s ease; }
 @keyframes bump { 40% { transform: scale(1.04); } }
-@media (prefers-reduced-motion: reduce) { .bump { animation: none; } button { transition: none; } .track i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .alert { animation: none; } .bump { animation: none; } button { transition: none; } .track i { transition: none; } }
 </style>
 </head>
 <body>
 <main class="wrap">
+  <section class="alert" id="behind" role="alert" aria-live="assertive">
+    <strong>We are behind!</strong>
+    <span id="behindText"></span>
+  </section>
   <header>
     <div class="eyebrow">Movember 2026 · Gym challenge</div>
     <h1>Johnson's Movember Challenge
@@ -342,11 +352,14 @@ footer p { margin: 0 0 6px; }
 
   function renderPace(total) {
     const el = $("paceLine"), now = new Date();
-    if (total >= GOAL) { el.hidden = false; el.innerHTML = "<b>Goal smashed.</b> All 525,600 kg lifted."; return; }
-    if (now.getMonth() !== 10) { el.hidden = true; return; }
+    if (total >= GOAL) { el.hidden = false; el.innerHTML = "<b>Goal smashed.</b> All 525,600 kg lifted."; $("behind").classList.remove("on"); return; }
+    if (now.getMonth() !== 10) { el.hidden = true; $("behind").classList.remove("on"); return; }
     const elapsed = Math.min(1, (now - new Date(now.getFullYear(), 10, 1)) / (30 * 86400000));
     const diff = total - GOAL * elapsed;
     el.hidden = false;
+    const alert = $("behind");
+    alert.classList.toggle("on", diff < 0);
+    $("behindText").innerHTML = "<b>" + fmt(-diff) + " kg</b> short of an even pace through November. Get in the gym and close the gap.";
     el.innerHTML = diff >= 0
       ? "<b>" + fmt(diff) + " kg ahead</b> of an even pace through November."
       : "<b>" + fmt(-diff) + " kg behind</b> an even pace through November. Every set closes the gap.";
