@@ -2505,11 +2505,11 @@ gl_Position = projectionMatrix * mvPosition;`;
 
   // ---------- bank heist: escape with the loot by car, bike, boat and skis ----------
   const HEIST = [
-    { t: 'road', map: 'coast', place: 'CITY', len: 1300, msg: 'GO GO GO! Get out of the city' },
-    { t: 'water', map: 'ocean', place: 'HARBOUR', len: 1400, msg: 'TO THE BOAT!' },
-    { t: 'snow', map: 'snow', place: 'MOUNTAINS', len: 1300, msg: 'SKI DOWN THE MOUNTAIN! SKI PATROL ON YOUR TAIL' },
-    { t: 'air', map: 'sky', place: 'SKY', len: 1600, msg: 'TAKE OFF! FLY THROUGH THE HOOPS' },
-    { t: 'road', map: 'coast', place: 'COAST HIGHWAY', len: 1300, msg: 'LAND IT AND RUN FOR THE BORDER!' },
+    { t: 'road', map: 'coast', place: 'CITY', len: 2800, msg: 'GO GO GO! Get out of the city' },
+    { t: 'water', map: 'ocean', place: 'HARBOUR', len: 2800, msg: 'TO THE BOAT!' },
+    { t: 'snow', map: 'snow', place: 'MOUNTAINS', len: 2600, msg: 'SKI DOWN THE MOUNTAIN! SKI PATROL ON YOUR TAIL' },
+    { t: 'air', map: 'sky', place: 'SKY', len: 3000, msg: 'TAKE OFF! FLY THROUGH THE HOOPS' },
+    { t: 'road', map: 'coast', place: 'COAST HIGHWAY', len: 3000, msg: 'LAND IT AND RUN FOR THE BORDER!' },
   ];
   // the vehicle you take on each kind of ground: anything you own, or the crew's free default
   const HEIST_TERRAINS = [['road', 'Road'], ['water', 'Water'], ['snow', 'Snow'], ['air', 'Air']];
@@ -2884,7 +2884,9 @@ gl_Position = projectionMatrix * mvPosition;`;
       el.classList.toggle('pit', !!(c.pit && c.pit.phase !== 'line'));
     });
   }
-  function showWasted(t) { $('wastedText').textContent = t; stage.classList.add('wasted'); Sound.crash && 0; }
+  const spareLife = () => mode === 'heist' && heistLives > 1 && !heistWon;   // a life left: no WASTED screen, just get back in
+  function showWasted(t) {
+    if (spareLife()) { showPop(t === 'BUSTED' ? 'BUSTED! LIFE LOST' : 'WRECKED! LIFE LOST', true); return; } $('wastedText').textContent = t; stage.classList.add('wasted'); Sound.crash && 0; }
   const clearWasted = () => stage.classList.remove('wasted');
   function busted() {
     const p = player;
@@ -3542,7 +3544,8 @@ gl_Position = projectionMatrix * mvPosition;`;
         wreckTimer += realDt;
         const sp = Math.hypot(player.v, player.vx);
         const ragDone = !ragdoll || (wreckTimer > 1.4 && ragdollSpeed() < 1.5);
-        if (wreckTimer > 2.6 && ((sp < 4 && (player.y < 0.05 || onAir) && ragDone) || wreckTimer > (ragdoll ? 4.2 : 2.8))) { if (mode === 'heist' && heistLives > 1 && !heistWon) heistRespawn(); else gameOver(); }
+        if (spareLife() && wreckTimer > 1.3) heistRespawn();
+        else if (wreckTimer > 2.6 && ((sp < 4 && (player.y < 0.05 || onAir) && ragDone) || wreckTimer > (ragdoll ? 4.2 : 2.8))) { if (mode === 'heist' && heistLives > 1 && !heistWon) heistRespawn(); else gameOver(); }
       }
     } else if (state === 'menu' || state === 'garage') {
       scroll(27 * dt);
