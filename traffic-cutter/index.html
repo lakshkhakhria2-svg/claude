@@ -1442,6 +1442,9 @@ body {
     const wm = new THREE.Mesh(wg, new THREE.MeshLambertMaterial({ color: lin(0xd9d2c2), side: THREE.DoubleSide })); wm.castShadow = true; parent.add(wm);
   }
   const DECK_Y = 8, DECK_TOP = DECK_Y + 0.6, EDGE = ROAD_W / 2 + 5, EXIT_GORE = 125, EXIT_OPEN = 215, MERGE_START = 125, MERGE_END = 215;
+  // the slip lane is a flyover you can drive: it climbs beside the freeway, crosses the overpass and comes back down
+  const FLY_LEN = 215, FLY_UP = 165, FLY_TOP = 40, FLY_X = laneX(5);
+  const flyH = l => { const a = Math.abs(l); if (a >= FLY_UP) return 0; if (a <= FLY_TOP) return DECK_TOP; const t = (FLY_UP - a) / (FLY_UP - FLY_TOP); return DECK_TOP * t * t * (3 - 2 * t); };
   function makeOverpass(parent, rail) {
     const deck = new THREE.Mesh(new THREE.BoxGeometry(260, 1.2, 12), rail ? bridgeSteel : bridgeConcrete); deck.position.y = DECK_Y; deck.castShadow = deck.receiveShadow = true; parent.add(deck);
     if (rail) {
@@ -1450,7 +1453,7 @@ body {
       for (const z of [-1.2, 1.2]) { const r = new THREE.Mesh(new THREE.BoxGeometry(260, 0.15, 0.12), mat(0x9a9ea4, { metalness: 0.8 })); r.position.set(0, DECK_TOP + 0.1, z); parent.add(r); }
     } else {
       const top = new THREE.Mesh(new THREE.BoxGeometry(260, 0.05, 9), rampMat); top.position.y = DECK_TOP + 0.01; parent.add(top);
-      for (const z of [-5.7, 5.7]) { const p = new THREE.Mesh(new THREE.BoxGeometry(260, 1, 0.4), bridgeConcrete); p.position.set(0, DECK_TOP + 0.5, z); parent.add(p); }
+      for (const z of [-5.7, 5.7]) for (const [x0, x1] of [[-130, FLY_X - 2.1], [FLY_X + 2.1, 130]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 1, 0.4), bridgeConcrete); p.position.set((x0 + x1) / 2, DECK_TOP + 0.5, z); parent.add(p); }   // gap for the flyover
     }
     for (const x of [-EDGE + 0.5, EDGE - 0.5, -45, 45, -95, 95]) for (const z of [-3.5, 3.5]) { const c = new THREE.Mesh(new THREE.BoxGeometry(1.4, DECK_Y, 1.4), bridgeConcrete); c.position.set(x, DECK_Y / 2 - 0.6, z); c.castShadow = true; parent.add(c); }
   }
@@ -1475,8 +1478,12 @@ body {
     if (kind === 'ic') {
       // exit slip lane on the right climbs up to the overpass; an on-ramp comes down on the left
       const XR = laneX(5), XL = laneX(-1), lift = p => [p[0], DECK_TOP * smooth(Math.max(0, Math.min(1, p[1] / DECK_TOP))), p[2]];
-      // exit: a full lane opens beside lane 4, splits off at the gore and climbs to the overpass
-      rampRoad([[XR, 0, 222], [XR, 0, 175], [XR, 0, EXIT_GORE], ...bezier([XR, 0, EXIT_GORE - 5], [XR + 2, 0, 70], [40, DECK_TOP, 46], [40, DECK_TOP, 6], 24).map(lift)], 3.8, g, 5);
+      // the flyover: a full lane opens beside lane 4, climbs, runs across the overpass deck and comes back down to merge
+      const flyPts = []; for (let l = FLY_LEN + 7; l >= -FLY_LEN - 7; l -= 5) flyPts.push([FLY_X, flyH(l), l]);
+      const wi = flyPts.map(q => q[1] > 0.6);
+      rampRoad(flyPts, 3.8, g, wi.indexOf(true), wi.lastIndexOf(true));
+      for (const q of flyPts) if (q[1] > 2 && Math.abs(q[2]) > 8 && Math.round(q[2]) % 20 === 0) { const col = new THREE.Mesh(new THREE.BoxGeometry(1.1, q[1], 1.1), bridgeConcrete); col.position.set(FLY_X, q[1] / 2 - 0.4, q[2]); col.castShadow = true; g.add(col); }
+      for (const k of [0, 1, 2]) { const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 10), mat(k % 2 ? 0x111111 : 0xffc21a)); barrel.position.set(ROAD_W / 2 + 0.25, 0.45, FLY_UP - 25 + k * 0.8); g.add(barrel); }   // crash cushion where the walls start
       // on-ramp: comes down from the overpass and merges into lane 0
       rampRoad([...bezier([-40, DECK_TOP, -6], [-40, DECK_TOP, -46], [XL - 2, 0, -70], [XL, 0, -MERGE_START + 5], 24).map(lift), [XL, 0, -MERGE_START], [XL, 0, -175], [XL, 0, -222]], 3.8, g, 0, 23);
       for (const k of [0, 1, 2]) { const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.9, 10), mat(k % 2 ? 0x111111 : 0xffc21a)); barrel.position.set(ROAD_W / 2 + 1.8 + k * 0.45, 0.45, EXIT_GORE - 1 - k * 0.9); g.add(barrel); }   // crash cushion at the gore
@@ -1509,6 +1516,18 @@ body {
       for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
     }, 520);
   }
+  function flyoverBonus(ic) {
+    const e = ic.exit;
+    addChainStep(`FLYOVER · EXIT ${e.no} ${e.name.toUpperCase()}`, 900);
+    if (mode === 'heist') { cars.filter(c => c.police).forEach(c => c.z = 999); escapeTimer = 0; feed('COPS STUCK BELOW', 0, 'bonus'); }
+    else if (chased && heatStars() <= 3) { addBonus('LOST THEM ON THE FLYOVER', 1500); heat = Math.min(heat, 0.5); chased = false; cars.filter(c => c.police).forEach(c => c.z = 999); }
+  }
+  // where you are on the flyover (null when you're not beside one)
+  function flyoverAt(p) {
+    if (!exitIc || p.x < ROAD_W / 2 + 0.3) return null;
+    const l = -exitIc.z;
+    return { h: flyH(l), dh: (flyH(l + 0.5) - flyH(l - 0.5)) };
+  }
   function takeExit(ic) {
     const e = ic.exit;
     addChainStep(`EXIT ${e.no} · ${e.name.toUpperCase()}`, 600);
@@ -1535,16 +1554,15 @@ body {
       if (ic.z > DESPAWN_Z + 230) { ic.z -= IC_PERIOD; dressInterchange(ic); }
       ic.g.position.z = ic.z;
       if (ic.kind !== 'ic' || !live) continue;
-      if (ic.z + EXIT_OPEN > -460 && ic.z + 60 < 160) gapR = ic;
+      if (ic.z + FLY_LEN > -460 && ic.z - FLY_LEN < 160) gapR = ic;
       if (ic.z - 60 > -460 && ic.z - MERGE_END < 160) gapL = ic;
-      if (ic.z + EXIT_GORE < 0 && ic.z + EXIT_OPEN > 0) exitIc = ic;   // you're alongside the exit lane
-      // the split: stay in the exit lane past the gore and you take the exit
-      if (!ic.decided && ic.z + EXIT_GORE >= 0) { ic.decided = true; if (state === 'play' && player && !player.wrecked && player.x > ROAD_W / 2 + 0.6) takeExit(ic); }
+      if (Math.abs(ic.z) < FLY_LEN) exitIc = ic;   // you're alongside the flyover
+      // crossing the overpass on the flyover: a bonus, and it can shake the cops
+      if (!ic.decided && ic.z >= 0) { ic.decided = true; if (state === 'play' && player && !player.wrecked && player.y > DECK_TOP - 1) flyoverBonus(ic); }
       // traffic uses the junction too: some cars in lane 4 take the exit, cars join from the on-ramp
       for (const c of cars) {
         if (c.police || c.suspect || c.ramp || c.loose || c.truckish) continue;
         const lz = c.z - ic.z;
-        if (c.lane === 4 && !c.exitChecked && lz < EXIT_OPEN - 5 && lz > EXIT_GORE + 40) { c.exitChecked = true; if (Math.random() < 0.3) { c.lane = c.target = 5; c.exiting = ic; } }
         if (c.exiting === ic && lz < EXIT_GORE) { c.lane = c.target = 8; }
       }
       if (!ic.merged && ic.z - MERGE_END + 20 > -290) {
@@ -1557,7 +1575,7 @@ body {
     for (const c of cars) if (c.merging && c.lane === -1 && c.blink <= 0) c.lane = 0;
     cars = cars.filter(c => { if (c.exiting && c.x > ROAD_W / 2 + 7) { scene.remove(c.mesh); return false; } return true; });
     // open the barriers where the slip lanes are
-    setGap(barrierClipR, gapR ? gapR.z + 60 : 1e6, gapR ? gapR.z + EXIT_OPEN : 1e6);
+    setGap(barrierClipR, gapR ? gapR.z - FLY_LEN : 1e6, gapR ? gapR.z + FLY_LEN : 1e6);
     setGap(barrierClipL, gapL ? gapL.z - MERGE_END : 1e6, gapL ? gapL.z - 60 : 1e6);
     if (detourEnd && distance > detourEnd && state === 'play') { detourEnd = 0; routeTo(null, 'Merging onto', 'SUNSET COAST FWY'); }
     for (const c of crossCars) { c.car.position.x += c.dir * c.v * dt; if (c.car.position.x > 125) c.car.position.x = -125; if (c.car.position.x < -125) c.car.position.x = 125; }
@@ -3125,10 +3143,12 @@ gl_Position = projectionMatrix * mvPosition;`;
     p.landSpin *= Math.exp(-7 * dt);
     // ramp trucks: ride up the ramp, launch off the lip
     if (p.air) return airborneStep(p, dt);
-    const r = rampUnder(p);
+    const r = rampUnder(p), fly = flyoverAt(p);
     if (r) {
       const rel = Math.max(0, p.v - r.c.v);
       p.y = rampH(r.u); p.vy = rampSlope(r.u) * rel; p.onRamp = r.c;
+    } else if (fly && (fly.h > 0.02 || p.y < 0.3)) {
+      p.y = fly.h; p.vy = -fly.dh * p.v; p.onRamp = null;
     } else if (p.onRamp || p.y > 0.05) {
       p.onRamp = null; p.air = true; p.airT = 0; p.airSpin = 0; p.airSpinRate = 0; p.jumped = 0;
       if (p.vy > 2) Sound.whoosh(1);
@@ -3153,10 +3173,15 @@ gl_Position = projectionMatrix * mvPosition;`;
 
   function barrier(p) {
     const half = p.w / 2 * Math.abs(Math.cos(p.yaw)) + p.l / 2 * Math.abs(Math.sin(p.yaw));
-    const lim = BARRIER_X - half, limR = (exitIc ? laneX(5) + 1.9 : BARRIER_X) - half;   // the exit lane opens up beside lane 4
-    if (p.x <= limR && p.x >= -lim) return;
-    const side = Math.sign(p.x);
-    p.x = side > 0 ? limR : -lim;
+    let limL = -(BARRIER_X - half), limR = BARRIER_X - half;
+    if (exitIc) {   // beside a flyover: the lane opens up, but where it is up in the air there are walls either side
+      const l = -exitIc.z, a = Math.abs(l), open = clamp((FLY_LEN - a) / 20, 0, 1), up = flyH(l) > 1.2, onFly = p.x > ROAD_W / 2 + 0.3;
+      limR = (BARRIER_X + (FLY_X + 1.9 - BARRIER_X) * open) - half;
+      if (up && onFly) limL = ROAD_W / 2 + 0.35 + half;
+      else if (up) limR = ROAD_W / 2 + 0.25 - half;
+    }
+    let side;
+    if (p.x > limR) { side = 1; p.x = limR; } else if (p.x < limL) { side = -1; p.x = limL; } else return;
     const into = p.vx * side;
     if (into > 0) {
       p.vx = -p.vx * 0.35;
