@@ -1526,6 +1526,11 @@ body {
   function takeExit(ic) {
     const e = ic.exit;
     addChainStep(`EXIT ${e.no} · ${e.name.toUpperCase()}`, 600);
+    if (mode === 'heist') {   // in the heist an exit is a quick loop round the junction and back on: it buys you a breather
+      addBonus('OFF-RAMP SHORTCUT', 1500); cars.filter(c => c.police).forEach(c => c.z = 999); escapeTimer = 0;
+      routeTo('coast', `EXIT ${e.no} · ${e.name}`, 'BACK ON THE FREEWAY');
+      return;
+    }
     if (chased && heatStars() <= 3) { addBonus('LOST THEM ON THE OFF-RAMP', 1500); heat = Math.min(heat, 0.5); chased = false; cars.filter(c => c.police).forEach(c => c.z = 999); }
     detourEnd = distance + 2200;
     routeTo(e.dest, `EXIT ${e.no} · ${e.name}`, '→ ' + e.sub.toUpperCase());
@@ -1533,7 +1538,7 @@ body {
   let coastD = 0;
   const bendU = { value: new THREE.Vector3() };
   let exitIc = null, detourEnd = 0;
-  const exitsLive = () => curMap === MAPS.coast && mode !== 'heist' && !onWater && !onSnow && !onAir;
+  const exitsLive = () => curMap === MAPS.coast && !onWater && !onSnow && !onAir;
   function updateCoast(dz, dt) {
     coastD += dz;
     exitIc = null;
