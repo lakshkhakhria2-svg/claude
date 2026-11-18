@@ -3630,8 +3630,8 @@ gl_Position = projectionMatrix * mvPosition;`;
     setWidth('nosBar', p.nitro);
     camera.updateProjectionMatrix();
     const rp = ragdoll && wrecked ? ragdoll.named.pelvis.p : null;
-    const tPos = rp ? new THREE.Vector3(rp.x + 4, Math.max(rp.y + 3.5, 4.5), rp.z + 9) : wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * (onAir ? 0.97 : 0.8) - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4 + p.y * 0.8, 8.4 - speedT * 1.2 + p.y * (p.air ? 0.5 : 0.08));
-    const tLook = rp ? new THREE.Vector3(rp.x, rp.y + 0.3, rp.z) : wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * (onAir ? 0.98 : 0.9) - Math.sin(p.yaw) * 3, 1.0 + p.y * (p.air ? 0.4 : 0.9), -14);
+    const tPos = rp ? new THREE.Vector3(rp.x + 4, Math.max(rp.y + 3.5, 4.5), rp.z + 9) : wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * (onAir ? 0.97 : 0.8) - Math.sin(p.yaw) * 1.5, (onSnow ? 5.6 : 3.3) - speedT * 0.4 + p.y * 0.8, (onSnow ? 10.5 : 8.4) - speedT * 1.2 + p.y * (p.air ? 0.5 : 0.08));
+    const tLook = rp ? new THREE.Vector3(rp.x, rp.y + 0.3, rp.z) : wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * (onAir ? 0.98 : 0.9) - Math.sin(p.yaw) * 3, (onSnow ? -4.5 : 1.0) + p.y * (p.air ? 0.4 : 0.9), onSnow ? -32 : -14);   // on the mountain, sit higher and look down the slope so you can see what's coming
     camPos.lerp(tPos, 1 - Math.exp(-dt * (wrecked ? 2 : 14)));
     camLook.lerp(tLook, 1 - Math.exp(-dt * (wrecked ? 3 : 16)));
     camera.position.copy(camPos);
