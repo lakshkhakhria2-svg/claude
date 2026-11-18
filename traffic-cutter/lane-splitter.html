@@ -1178,7 +1178,7 @@ body {
   const snowTrunkIM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.3, 1.2, 6).translate(0, 0.6, 0), matte(0x4a3424), 70);
   snowPineIM.castShadow = true;
   makeStrip(Array.from({ length: 70 }, (_, i) => ({ x: (i % 2 ? 1 : -1) * (ROAD_W / 2 + 6 + Math.random() * 45), z: DESPAWN_Z - Math.random() * 300, s: 0.7 + Math.random() * 0.8 })), 300, [snowPineIM, snowCapIM, snowTrunkIM], (it, i) => {
-    dummy.position.set(it.x, 0, it.z); dummy.rotation.set(0, it.x, 0); dummy.scale.setScalar(it.s); dummy.updateMatrix();
+    dummy.position.set(it.x, Math.max(0, Math.abs(it.x) - (ROAD_W / 2 + 2.2)) * 0.45, it.z); dummy.rotation.set(0, it.x, 0); dummy.scale.setScalar(it.s); dummy.updateMatrix();
     snowPineIM.setMatrixAt(i, dummy.matrix); snowCapIM.setMatrixAt(i, dummy.matrix); snowTrunkIM.setMatrixAt(i, dummy.matrix);
   });
   const pineGroup = strips[strips.length - 1].group;
@@ -1242,7 +1242,7 @@ body {
     const water = kind === 'water', snow = kind === 'snow', air = kind === 'air', changed = water !== onWater || snow !== onSnow || air !== onAir;
     onWater = water; onSnow = snow; onAir = air;
     for (const o of [road, shoulder, edgeL, edgeR, dashMesh, ...barriers, deck, deckLip]) o.visible = !water && !air;
-    skyLaneGroup.visible = skyEdgeGroup.visible = air;
+    skyLaneGroup.visible = air; skyEdgeGroup.visible = false;
     for (const o of [edgeL, edgeR, dashMesh, ...barriers]) o.visible = !water && !air && !snow;
     fencePoleGroup.visible = snow; fenceNets.forEach(n => n.visible = snow);
     clearHoops();
@@ -1435,11 +1435,17 @@ body {
     g.fillStyle = '#44464b'; g.fillRect(0, 0, S, S); speckle(g, 7000, S, ['#55585f', '#2b2d32'], 0.7, 2);
     g.fillStyle = '#f2f2f2'; g.fillRect(10, 0, 8, S); g.fillStyle = '#e8b923'; g.fillRect(S - 18, 0, 8, S);
   }, 1, 1);
+  const flyRoadTex = canvasTex(256, (g, S) => {
+    g.fillStyle = '#44464b'; g.fillRect(0, 0, S, S); speckle(g, 7000, S, ['#55585f', '#2b2d32'], 0.7, 2);
+    g.fillStyle = '#e8b923'; g.fillRect(6, 0, 5, S); g.fillStyle = '#f2f2f2'; g.fillRect(S - 11, 0, 5, S);
+    g.fillRect(S / 2 - 3, 0, 6, S * 0.45);   // dashed centre line
+  }, 1, 1);
+  const flyRoadMat = new THREE.MeshStandardMaterial({ map: flyRoadTex, roughness: 0.82, side: THREE.DoubleSide });
   const rampMat = new THREE.MeshStandardMaterial({ map: rampRoadTex, roughness: 0.82, side: THREE.DoubleSide }), bridgeConcrete = mat(0xcfc8b8, { roughness: 0.9 }), bridgeSteel = mat(0x5b6168, { metalness: 0.6, roughness: 0.45 });
   const smooth = t => t * t * (3 - 2 * t);
   function bezier(a, b, c, d, n) { const out = []; for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t; out.push([0, 1, 2].map(k => u * u * u * a[k] + 3 * u * u * t * b[k] + 3 * u * t * t * c[k] + t * t * t * d[k])); } return out; }
   // a road surface along a path, with walls and pillars where it is up in the air
-  function rampRoad(pts, w, parent, wallFrom = 0, wallTo = 1e9) {
+  function rampRoad(pts, w, parent, wallFrom = 0, wallTo = 1e9, roadMat = rampMat) {
     const pos = [], uv = [], idx = [], wall = [], widx = []; let along = 0;
     pts.forEach((p, i) => {
       const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
@@ -1451,13 +1457,13 @@ body {
       if (p[1] > 2 && i % 4 === 0 && Math.abs(p[0]) > ROAD_W / 2 + 3.5) { const col = new THREE.Mesh(new THREE.BoxGeometry(0.9, p[1], 0.9), bridgeConcrete); col.position.set(p[0], p[1] / 2 - 0.3, p[2]); col.castShadow = true; parent.add(col); }
     });
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-    const road = new THREE.Mesh(g, rampMat); road.receiveShadow = true; parent.add(road);
+    const road = new THREE.Mesh(g, roadMat); road.receiveShadow = true; parent.add(road);
     const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wall, 3)); wg.setIndex(widx); wg.computeVertexNormals();
     const wm = new THREE.Mesh(wg, new THREE.MeshLambertMaterial({ color: lin(0xd9d2c2), side: THREE.DoubleSide })); wm.castShadow = true; parent.add(wm);
   }
   const DECK_Y = 8, DECK_TOP = DECK_Y + 0.6, EDGE = ROAD_W / 2 + 5, EXIT_GORE = 125, EXIT_OPEN = 215, MERGE_START = 125, MERGE_END = 215;
   // the slip lane is a flyover you can drive: it climbs beside the freeway, crosses the overpass and comes back down
-  const FLY_LEN = 215, FLY_UP = 165, FLY_TOP = 40, FLY_X = laneX(5);
+  const FLY_LEN = 215, FLY_UP = 165, FLY_TOP = 40, FLY_X = (laneX(5) + laneX(6)) / 2, FLY_W = 7.6, FLY_OUT = laneX(6) + 1.9;   // two lanes wide
   const flyH = l => { const a = Math.abs(l); if (a >= FLY_UP) return 0; if (a <= FLY_TOP) return DECK_TOP; const t = (FLY_UP - a) / (FLY_UP - FLY_TOP); return DECK_TOP * t * t * (3 - 2 * t); };
   function makeOverpass(parent, rail) {
     const deck = new THREE.Mesh(new THREE.BoxGeometry(260, 1.2, 12), rail ? bridgeSteel : bridgeConcrete); deck.position.y = DECK_Y; deck.castShadow = deck.receiveShadow = true; parent.add(deck);
@@ -1467,9 +1473,9 @@ body {
       for (const z of [-1.2, 1.2]) { const r = new THREE.Mesh(new THREE.BoxGeometry(260, 0.15, 0.12), mat(0x9a9ea4, { metalness: 0.8 })); r.position.set(0, DECK_TOP + 0.1, z); parent.add(r); }
     } else {
       const top = new THREE.Mesh(new THREE.BoxGeometry(260, 0.05, 9), rampMat); top.position.y = DECK_TOP + 0.01; parent.add(top);
-      for (const z of [-5.7, 5.7]) for (const [x0, x1] of [[-130, FLY_X - 2.1], [FLY_X + 2.1, 130]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 1, 0.4), bridgeConcrete); p.position.set((x0 + x1) / 2, DECK_TOP + 0.5, z); parent.add(p); }   // gap for the flyover
+      for (const z of [-5.7, 5.7]) for (const [x0, x1] of [[-130, FLY_X - FLY_W / 2 - 0.3], [FLY_X + FLY_W / 2 + 0.3, 130]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 1, 0.4), bridgeConcrete); p.position.set((x0 + x1) / 2, DECK_TOP + 0.5, z); parent.add(p); }   // gap for the flyover
     }
-    for (const x of [-EDGE + 0.5, EDGE - 0.5, -45, 45, -95, 95]) for (const z of [-3.5, 3.5]) { const c = new THREE.Mesh(new THREE.BoxGeometry(1.4, DECK_Y, 1.4), bridgeConcrete); c.position.set(x, DECK_Y / 2 - 0.6, z); c.castShadow = true; parent.add(c); }
+    for (const x of [-(ROAD_W / 2 + 9.5), ROAD_W / 2 + 9.5, -45, 45, -95, 95]) for (const z of [-3.5, 3.5]) { const c = new THREE.Mesh(new THREE.BoxGeometry(1.4, DECK_Y, 1.4), bridgeConcrete); c.position.set(x, DECK_Y / 2 - 0.6, z); c.castShadow = true; parent.add(c); }
   }
   function makeGantry(parent, z, m) {
     const g = new THREE.Mesh(mergeParts([[new THREE.BoxGeometry(0.4, 7.4, 0.4), -(ROAD_W / 2 + 2.8), 3.7, 0], [new THREE.BoxGeometry(0.4, 7.4, 0.4), ROAD_W / 2 + 2.8, 3.7, 0], [new THREE.BoxGeometry(ROAD_W + 6, 0.35, 0.35), 0, 7.2, 0]]), bridgeSteel);
@@ -1483,7 +1489,7 @@ body {
   const interchanges = [];
   function dressInterchange(ic) {   // a new exit number and name every time one comes round again
     const [name, sub, dest] = SIGN_NAMES[Math.floor(Math.random() * SIGN_NAMES.length)], no = 10 + Math.floor(Math.random() * 80);
-    ic.decided = false; ic.merged = false; ic.exit = { name, sub, dest, no };
+    ic.decided = false; ic.taken = false; ic.merged = false; ic.exit = { name, sub, dest, no };
     if (ic.signs) { ic.signs[0].material = makeSignMat(name, sub, no, false); ic.signs[1].material = makeSignMat(name, sub, no, true); }
   }
   for (const [kind, z0] of [['ic', -260], ['rail', -560], ['ic', -860]]) {
@@ -1495,7 +1501,8 @@ body {
       // the flyover: a full lane opens beside lane 4, climbs, runs across the overpass deck and comes back down to merge
       const flyPts = []; for (let l = FLY_LEN + 7; l >= -FLY_LEN - 7; l -= 5) flyPts.push([FLY_X, flyH(l), l]);
       const wi = flyPts.map(q => q[1] > 0.6);
-      rampRoad(flyPts, 3.8, g, wi.indexOf(true), wi.lastIndexOf(true));
+      rampRoad(flyPts, FLY_W, g, wi.indexOf(true), wi.lastIndexOf(true), flyRoadMat);
+      // (two lanes, with a dashed line down the middle: see flyRoadMat)
       for (const q of flyPts) if (q[1] > 2 && Math.abs(q[2]) > 8 && Math.round(q[2]) % 20 === 0) { const col = new THREE.Mesh(new THREE.BoxGeometry(1.1, q[1], 1.1), bridgeConcrete); col.position.set(FLY_X, q[1] / 2 - 0.4, q[2]); col.castShadow = true; g.add(col); }
       for (const k of [0, 1, 2]) { const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 10), mat(k % 2 ? 0x111111 : 0xffc21a)); barrel.position.set(ROAD_W / 2 + 0.25, 0.45, FLY_UP - 25 + k * 0.8); g.add(barrel); }   // crash cushion where the walls start
       // on-ramp: comes down from the overpass and merges into lane 0
@@ -1526,7 +1533,7 @@ body {
       bendU.value.set(0, 0, 0);   // the new road starts straight
       cars.forEach(c => { if (!c.police) scene.remove(c.mesh); }); cars = cars.filter(c => c.police);
       hazards.forEach(h => scene.remove(h.mesh)); hazards = []; roadblock = null; clearDriftFx();
-      player.x = clamp(player.x, laneX(0), laneX(4));
+      player.x = clamp(player.x, laneX(0), laneX(4)); player.y = 0; player.vy = 0; player.air = false;
       for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
     }, 520);
   }
@@ -1545,13 +1552,9 @@ body {
   function takeExit(ic) {
     const e = ic.exit;
     addChainStep(`EXIT ${e.no} · ${e.name.toUpperCase()}`, 600);
-    if (mode === 'heist') {   // in the heist an exit is a quick loop round the junction and back on: it buys you a breather
-      addBonus('OFF-RAMP SHORTCUT', 1500); cars.filter(c => c.police).forEach(c => c.z = 999); escapeTimer = 0;
-      routeTo('coast', `EXIT ${e.no} · ${e.name}`, 'BACK ON THE FREEWAY');
-      return;
-    }
-    if (chased && heatStars() <= 3) { addBonus('LOST THEM ON THE OFF-RAMP', 1500); heat = Math.min(heat, 0.5); chased = false; cars.filter(c => c.police).forEach(c => c.z = 999); }
-    detourEnd = distance + 2200;
+    if (mode === 'heist') { addBonus('OFF-RAMP SHORTCUT', 1500); cars.filter(c => c.police).forEach(c => c.z = 999); escapeTimer = 0; }
+    else if (chased && heatStars() <= 3) { addBonus('LOST THEM ON THE OFF-RAMP', 1500); heat = Math.min(heat, 0.5); chased = false; cars.filter(c => c.police).forEach(c => c.z = 999); }
+    detourEnd = distance + 3000;
     routeTo(e.dest, `EXIT ${e.no} · ${e.name}`, '→ ' + e.sub.toUpperCase());
   }
   let coastD = 0;
@@ -1572,6 +1575,7 @@ body {
       if (ic.z - 60 > -460 && ic.z - MERGE_END < 160) gapL = ic;
       if (Math.abs(ic.z) < FLY_LEN) exitIc = ic;   // you're alongside the flyover
       // crossing the overpass on the flyover: a bonus, and it can shake the cops
+      if (!ic.taken && ic.z >= FLY_UP - 5) { ic.taken = true; if (state === 'play' && player && !player.wrecked && player.x > ROAD_W / 2 + 0.6) takeExit(ic); }
       if (!ic.decided && ic.z >= 0) { ic.decided = true; if (state === 'play' && player && !player.wrecked && player.y > DECK_TOP - 1) flyoverBonus(ic); }
       // traffic uses the junction too: some cars in lane 4 take the exit, cars join from the on-ramp
       for (const c of cars) {
@@ -1591,11 +1595,11 @@ body {
     // open the barriers where the slip lanes are
     setGap(barrierClipR, gapR ? gapR.z - FLY_LEN : 1e6, gapR ? gapR.z + FLY_LEN : 1e6);
     setGap(barrierClipL, gapL ? gapL.z - MERGE_END : 1e6, gapL ? gapL.z - 60 : 1e6);
-    if (detourEnd && distance > detourEnd && state === 'play') { detourEnd = 0; routeTo(null, 'Merging onto', 'SUNSET COAST FWY'); }
+    if (detourEnd && distance > detourEnd && state === 'play' && curTerrain() === 'road') { detourEnd = 0; routeTo(mode === 'heist' ? 'coast' : null, 'Merging onto', 'SUNSET COAST FWY'); }
     for (const c of crossCars) { c.car.position.x += c.dir * c.v * dt; if (c.car.position.x > 125) c.car.position.x = -125; if (c.car.position.x < -125) c.car.position.x = 125; }
     // the freeway winds and rolls ahead of you (a visual bend, the driving stays the same)
     const on = curMap === MAPS.coast, mtn = curMap === MAPS.snow;
-    const tx = on ? 0.0008 * Math.sin(coastD / 650) : mtn ? 0.0007 * Math.sin(coastD / 420) : 0, ty = on ? 0.0002 * Math.sin(coastD / 480 + 1.3) : mtn ? -0.00008 : 0, tz = mtn ? 0.16 : 0;   // the mountain falls away ahead of you
+    const tx = on ? 0.0008 * Math.sin(coastD / 650) : mtn ? 0.0007 * Math.sin(coastD / 420) : 0, ty = on ? 0.0002 * Math.sin(coastD / 480 + 1.3) : mtn ? -0.00008 : 0, tz = mtn ? 0.22 : 0;   // the mountain falls away ahead of you
     const k = Math.min(1, dt * 2);
     bendU.value.x += (tx - bendU.value.x) * k; bendU.value.y += (ty - bendU.value.y) * k; bendU.value.z += (tz - bendU.value.z) * k;
   }
@@ -1650,6 +1654,41 @@ gl_Position = projectionMatrix * mvPosition;`;
   const fenceNets = [-1, 1].map(s => { const n = new THREE.Mesh(new THREE.PlaneGeometry(600, 1.1, 150, 1), new THREE.MeshBasicMaterial({ color: 0xff4a00, transparent: true, opacity: 0.92, side: THREE.DoubleSide })); n.rotation.y = Math.PI / 2; n.position.set(s * (ROAD_W / 2 + 2.2), 0.75, -150); scene.add(n); return n; });
   fencePoleGroup.visible = false; fenceNets.forEach(n => n.visible = false);
 
+  // ---------- the mountain: snow banks rising either side, trees on the slopes, a chairlift ----------
+  const SNOW_EDGE = ROAD_W / 2 + 2.2, BANK = 0.45;
+  const bankY = x => Math.max(0, Math.abs(x) - SNOW_EDGE) * BANK;
+  const snowBanks = [-1, 1].map(s => {
+    const g = new THREE.PlaneGeometry(90, 600, 6, 150).rotateX(-Math.PI / 2), pa = g.attributes.position;
+    for (let i = 0; i < pa.count; i++) { const u = pa.getX(i) + 45; pa.setX(i, s * (SNOW_EDGE + u)); pa.setY(i, u * BANK); }
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ map: snowTex, side: THREE.DoubleSide })); m.position.z = -150; m.receiveShadow = true; scene.add(m); return m;
+  });
+  const LIFT_X = -(ROAD_W / 2 + 22);
+  const liftTowerIM = new THREE.InstancedMesh(mergeParts([[new THREE.BoxGeometry(0.6, 13, 0.6), 0, 6.5, 0], [new THREE.BoxGeometry(5, 0.4, 0.4), 0, 13, 0]]), mat(0x6a6f78, { metalness: 0.5, roughness: 0.5 }), 8);
+  const liftChairIM = new THREE.InstancedMesh(mergeParts([[new THREE.BoxGeometry(0.06, 2.4, 0.06), 0, -1.2, 0], [new THREE.BoxGeometry(1.6, 0.12, 0.6), 0, -2.4, 0], [new THREE.BoxGeometry(1.6, 0.6, 0.1), 0, -2.1, 0.28]]), mat(0x2b4c8a), 40);
+  makeStrip(Array.from({ length: 8 }, (_, i) => ({ z: DESPAWN_Z - i * 37.5 })), 300, [liftTowerIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(LIFT_X, bankY(LIFT_X), it.z); dummy.updateMatrix(); liftTowerIM.setMatrixAt(i, dummy.matrix);
+  });
+  const liftTowerGroup = strips[strips.length - 1].group;
+  makeStrip(Array.from({ length: 40 }, (_, i) => ({ s: i % 2 ? 1 : -1, z: DESPAWN_Z - Math.floor(i / 2) * 15 - (i % 2) * 7 })), 300, [liftChairIM], (it, i) => {
+    dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.position.set(LIFT_X + it.s * 2.3, bankY(LIFT_X) + 12.8, it.z); dummy.updateMatrix(); liftChairIM.setMatrixAt(i, dummy.matrix);
+  });
+  const liftChairGroup = strips[strips.length - 1].group;
+  const liftCables = [-1, 1].map(s => { const c = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 600, 1, 1, 150), mat(0x222222)); c.position.set(LIFT_X + s * 2.3, bankY(LIFT_X) + 12.8, -150); scene.add(c); return c; });
+  MAPS.snow.show.push(...snowBanks, liftTowerGroup, liftChairGroup, ...liftCables);
+  ALL_MAP_PROPS.push(...snowBanks, liftTowerGroup, liftChairGroup, ...liftCables);
+  [...snowBanks, liftTowerGroup, liftChairGroup, ...liftCables].forEach(o => o.visible = false);
+  // slalom gates for the ski stage (the hoop course reuses them)
+  const gateMats = [new THREE.MeshBasicMaterial({ color: 0xe0242a, side: THREE.DoubleSide }), new THREE.MeshBasicMaterial({ color: 0x1f5fe0, side: THREE.DoubleSide })];
+  const gatePoleGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.9, 6).translate(0, 0.95, 0);
+  const gateFlagGeo = (() => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(0.9, -0.3); sh.lineTo(0, -0.6); sh.closePath(); return new THREE.ShapeGeometry(sh); })();
+  let gateColour = 0;
+  function makeGate() {
+    const g = new THREE.Group(), m = gateMats[gateColour++ % 2];
+    for (const s of [-1, 1]) { const pole = new THREE.Mesh(gatePoleGeo, m); pole.position.x = s * 1.75; g.add(pole); const f = new THREE.Mesh(gateFlagGeo, m); f.position.set(s * 1.75, 1.85, 0); f.rotation.y = s > 0 ? Math.PI : 0; g.add(f); }
+    return g;
+  }
+
   // ---------- sky stage: fly through the hoops (no air traffic) ----------
   const hoopGeo = new THREE.TorusGeometry(1.75, 0.2, 10, 36);
   const hoopMat = new THREE.MeshStandardMaterial({ color: lin(0xffc21a), emissive: lin(0xff9a00), emissiveIntensity: 1.6, metalness: 0.4, roughness: 0.3 });
@@ -1657,30 +1696,31 @@ gl_Position = projectionMatrix * mvPosition;`;
   let hoops = [], hoopLane = 2, hoopAcc = 0, hoopStreak = 0, wind = 0, windTarget = 0, windT = 0;
   function clearHoops() { hoops.forEach(h => scene.remove(h.mesh)); hoops = []; hoopAcc = 0; hoopStreak = 0; wind = windTarget = 0; }
   function updateHoops(p, dt) {
-    if (!onAir || p.wrecked) return;
+    if (!(onAir || onSnow) || p.wrecked) return;
     hoopAcc += p.v * dt;
     // gusting crosswind shoves you off line
-    windT -= dt; if (windT <= 0) { windT = 2 + Math.random() * 3; windTarget = (Math.random() - 0.5) * 2 * (4 + Math.min(6, distance / 2500)); if (Math.abs(windTarget) > 5) feed(`CROSSWIND ${windTarget > 0 ? '→' : '←'}`, 0, 'lost'); }
-    wind += (windTarget - wind) * Math.min(1, dt * 1.5); p.vx += wind * dt;
+    if (onAir) windT -= dt; if (onAir && windT <= 0) { windT = 2 + Math.random() * 3; windTarget = (Math.random() - 0.5) * 2 * (4 + Math.min(6, distance / 2500)); if (Math.abs(windTarget) > 5) feed(`CROSSWIND ${windTarget > 0 ? '→' : '←'}`, 0, 'lost'); }
+    if (onAir) { wind += (windTarget - wind) * Math.min(1, dt * 1.5); p.vx += wind * dt; }
     if (hoopAcc > (hoops.length ? hoops[hoops.length - 1].gap : 0) || !hoops.length) {
       hoopAcc = 0;
-      let step; do { step = Math.floor(Math.random() * 7) - 3; } while (!step || hoopLane + step < 0 || hoopLane + step > LANES - 1);
+      let step; do { step = Math.floor(Math.random() * (onSnow ? 5 : 7)) - (onSnow ? 2 : 3); } while (!step || hoopLane + step < 0 || hoopLane + step > LANES - 1);
       hoopLane += step;   // a tight slalom, sometimes three lanes across
-      const mesh = new THREE.Mesh(hoopGeo, hoopMat); mesh.position.set(laneX(hoopLane), 1.15, SPAWN_Z + 40); scene.add(mesh);
+      const mesh = onSnow ? makeGate() : new THREE.Mesh(hoopGeo, hoopMat); mesh.position.set(laneX(hoopLane), onSnow ? 0 : 1.15, SPAWN_Z + 40); scene.add(mesh); bendScene();
       const gap = (30 + Math.abs(step) * 15 + Math.random() * 12) * Math.max(1, p.v / 45);   // tight, but always reachable at your speed
-      hoops.push({ gap, mesh, base: laneX(hoopLane), x: laneX(hoopLane), z: SPAWN_Z + 40, done: false, sway: Math.random() < 0.4 ? 1.6 + Math.random() * 1.2 : 0, ph: Math.random() * 6 });
+      hoops.push({ gap, mesh, base: laneX(hoopLane), x: laneX(hoopLane), z: SPAWN_Z + 40, done: false, sway: onAir && Math.random() < 0.4 ? 1.6 + Math.random() * 1.2 : 0, ph: Math.random() * 6 });
     }
     for (const h of hoops) {
-      h.z += p.v * dt; h.mesh.rotation.z += dt * 0.6;
+      h.z += p.v * dt; if (onAir) h.mesh.rotation.z += dt * 0.6;
       if (h.sway && !h.done) h.x = clamp(h.base + Math.sin(time * 1.6 + h.ph) * h.sway, laneX(0), laneX(LANES - 1));   // some hoops slide side to side
-      h.mesh.position.set(h.x, 1.15, h.z);
+      h.mesh.position.set(h.x, onSnow ? 0 : 1.15, h.z);
       if (!h.done && h.z > 0) {
         h.done = true;
-        if (Math.abs(p.x - h.x) < 1.3) {
-          hoopStreak++; h.mesh.material = hoopDone; h.mesh.scale.setScalar(1.25);
-          addChainStep(`HOOP${hoopStreak > 1 ? ' x' + hoopStreak : ''}`, 250 + hoopStreak * 60);
+        if (Math.abs(p.x - h.x) < (onSnow ? 1.75 : 1.3)) {
+          hoopStreak++; if (onAir) { h.mesh.material = hoopDone; h.mesh.scale.setScalar(1.25); } else h.mesh.scale.y = 0.6;
+          addChainStep(`${onSnow ? 'GATE' : 'HOOP'}${hoopStreak > 1 ? ' x' + hoopStreak : ''}`, 250 + hoopStreak * 60);
           p.nitro = Math.min(1, p.nitro + 0.12 * S.nitroGain); Sound.whoosh && Sound.whoosh(1);
-        } else { hoopStreak = 0; loseChain(); updateChainHud(); feed('HOOP MISSED', 0, 'lost'); damage(7, 'hoop'); flash(); if (mode === 'heist') { const lost = Math.min(loot, 2000); loot -= lost; } }
+        } else if (onSnow) { hoopStreak = 0; feed('GATE MISSED', 0, 'lost'); }
+        else { hoopStreak = 0; loseChain(); updateChainHud(); feed('HOOP MISSED', 0, 'lost'); damage(4, 'hoop'); if (mode === 'heist') { const lost = Math.min(loot, 2000); loot -= lost; } }
       }
     }
     hoops = hoops.filter(h => { if (h.z > DESPAWN_Z) { scene.remove(h.mesh); return false; } return true; });
@@ -2338,7 +2378,7 @@ gl_Position = projectionMatrix * mvPosition;`;
   }
 
   function reset() {
-    clearWasted(); clearHoops(); detourEnd = 0; if (mapOverride && mode !== 'heist') { mapOverride = null; applyMap(save.map); }
+    clearWasted(); clearHoops(); detourEnd = 0; try { clearHandoff(); } catch (e) {} if (mapOverride && mode !== 'heist') { mapOverride = null; applyMap(save.map); }
     cars.forEach(c => scene.remove(c.mesh));
     cars = []; sparks = [];
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
@@ -2571,16 +2611,31 @@ gl_Position = projectionMatrix * mvPosition;`;
     return id;
   }
   function startHeist() {   // called from start() before reset()
-    heistStage = 0; loot = LOOT; heistWon = false; heistLives = 3;
+    heistStage = 0; loot = LOOT; heistWon = false; heistLives = 3; clearHandoff(); heistSwapping = false;
     heistVehicle(0);
   }
   function heistAfterReset() {
     heistStartD = 0; heat = 3.2; chased = true; policeTimer = 0.5;
     showPop('BANK JOB! ' + HEIST[0].msg, true); feed('ALARM TRIPPED · 3★', 0, 'lost');
   }
+  // the next vehicle waits for you at the end of each stage; drive into it and you swap over
+  let handoff = null, heistSwapping = false;
+  const padMat = new THREE.MeshBasicMaterial({ color: 0x5cff7a, transparent: true, opacity: 0.35, depthWrite: false });
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0x5cff7a, transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide });
+  function clearHandoff() { if (handoff) scene.remove(handoff.g); handoff = null; }
+  function makeHandoff() {
+    const id = heistPick(HEIST[heistStage + 1].t), g = new THREE.Group();
+    const keep = [onWater, onSnow, onAir]; onWater = onSnow = onAir = false;   // build it as itself, not as local traffic
+    const v = makeCar(id, save.color, false); [onWater, onSnow, onAir] = keep;
+    v.rotation.y = 0; g.add(v);
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(3.4, 32).rotateX(-Math.PI / 2), padMat); pad.position.y = 0.06; g.add(pad);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 14, 24, 1, true), beamMat); beam.position.y = 7; g.add(beam);
+    scene.add(g); bendScene();
+    handoff = { g, beam, id };
+  }
   function heistSwap() {
     const p = player, keep = { v: p.v, x: p.x, hull: p.hull };
-    heistStage++; heistStartD = distance;
+    heistStage++; heistStartD = distance; detourEnd = 0;
     const spec = CAR_SPECS[heistVehicle(heistStage)];
     Object.assign(p, { w: spec.w, l: spec.l, mass: spec.mass, bike: !!spec.bike, ski: !!spec.ski, plane: !!spec.plane, wheelie: 0, drifting: false, driftAngle: 0, slide: 0, yaw: 0, yawRate: 0, vx: 0, air: false, onRamp: null, y: 0, vy: 0, airSpin: 0, landSpin: 0 });
     p.v = Math.max(28, keep.v * 0.85); p.hull = Math.min(100, Math.max(keep.hull, 50) + 25); updateHull();
@@ -2590,7 +2645,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     if (onWater || onAir) for (let i = 0; i < 4; i++) spawnCar(-50 - i * 60);
     else for (let i = 0; i < 6; i++) spawnCar(-45 - i * 32);
     heat = Math.max(heat, 3 + heistStage * 0.5); chased = true; policeTimer = 1.2; escapeTimer = 0;
-    flash(); shake = Math.max(shake, 0.5);
+    shake = Math.max(shake, 0.25); clearHandoff();
     showPop(HEIST[heistStage].msg, true); feed(`STAGE ${heistStage + 1}/${HEIST.length} · ${HEIST[heistStage].place}`, 0, 'lost');
     addBonus(`HANDOFF ${heistStage}`, 1500 * heistStage);
   }
@@ -2613,8 +2668,21 @@ gl_Position = projectionMatrix * mvPosition;`;
     if (p.wrecked || heistWon) return;
     heat = Math.max(heat, 2.5 + heistStage * 0.5); chased = true;   // they never stop looking for you
     const left = HEIST[heistStage].len - (distance - heistStartD);
+    if (heistSwapping) return;
+    // show the next vehicle waiting up ahead, in whichever lane you're in
+    if (heistStage < HEIST.length - 1 && left < 280) {
+      if (!handoff) makeHandoff();
+      handoff.g.position.set(handoff.g.position.x + (p.x - handoff.g.position.x) * Math.min(1, dt * 3), 0, -left - 6);
+      handoff.beam.rotation.y += dt;
+    }
     if (left <= 0) {
-      if (heistStage < HEIST.length - 1) heistSwap();
+      if (heistStage < HEIST.length - 1) {
+        heistSwapping = true;   // a quick fade with a title card, then you're in the next vehicle at speed
+        const nx = HEIST[heistStage + 1];
+        $('exitLine1').textContent = `STAGE ${heistStage + 2} / ${HEIST.length}`; $('exitLine2').textContent = `${nx.place} · ${carById(heistPick(nx.t)).name}`;
+        const el = $('exitFade'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+        setTimeout(() => { heistSwapping = false; if (state === 'play' && mode === 'heist' && !player.wrecked) heistSwap(); }, 480);
+      }
       else { heistWon = true; endReason = 'escaped'; addBonus('CLEAN GETAWAY', 15000); showPop('YOU GOT AWAY WITH IT!', true); flash(); gameOver(); }
       return;
     }
@@ -3109,6 +3177,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     else if (boosting) a = (24 * (1 - (p.v / V_NITRO) ** 2) + 4) * S.accel;
     else if (keys.up) a = 15 * S.accel * (1 - (p.v / S.vmax) ** 2);
     else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);   // engine braking
+    if (onSnow && !keys.down) a += 3.5;   // it's downhill: gravity keeps you rolling
     if (!boosting && p.v > S.vmax) a = Math.min(a, -6);           // bleed off nitro overspeed
     if (flatT > 0 && p.v > S.vmax * 0.68) a = Math.min(a, -8);    // blown tyres cap your speed
     p.v = clamp(p.v + a * dt, V_MIN, V_NITRO);
@@ -3187,10 +3256,11 @@ gl_Position = projectionMatrix * mvPosition;`;
 
   function barrier(p) {
     const half = p.w / 2 * Math.abs(Math.cos(p.yaw)) + p.l / 2 * Math.abs(Math.sin(p.yaw));
+    if (onAir) { p.x = clamp(p.x, -19, 19); if (Math.abs(p.x) >= 19) p.vx = 0; return; }   // open sky: no walls, just a soft limit
     let limL = -(BARRIER_X - half), limR = BARRIER_X - half;
     if (exitIc) {   // beside a flyover: the lane opens up, but where it is up in the air there are walls either side
       const l = -exitIc.z, a = Math.abs(l), open = clamp((FLY_LEN - a) / 20, 0, 1), up = flyH(l) > 1.2, onFly = p.x > ROAD_W / 2 + 0.3;
-      limR = (BARRIER_X + (FLY_X + 1.9 - BARRIER_X) * open) - half;
+      limR = (BARRIER_X + (FLY_OUT - BARRIER_X) * open) - half;
       if (up && onFly) limL = ROAD_W / 2 + 0.35 + half;
       else if (up) limR = ROAD_W / 2 + 0.25 - half;
     }
@@ -3205,7 +3275,7 @@ gl_Position = projectionMatrix * mvPosition;`;
         shake = Math.max(shake, Math.min(0.5, into * 0.04));
         burst(side * BARRIER_X, 0.6, 0, 25, 8);
         if (!p.wrecked) { Sound.scrape(); loseChain(); }
-        if (!p.wrecked) { damage(into * 2.2, 'wall'); flash(); p.slide = 0.4; }
+        if (!p.wrecked && into > 6) { damage(into * 1.2, 'wall'); flash(); p.slide = 0.3; }   // only a real slam into the wall hurts
       }
     }
     if (Math.random() < 0.7) burst(side * BARRIER_X, 0.4, (Math.random() - 0.5) * p.l, 2, 6);
@@ -3480,7 +3550,14 @@ gl_Position = projectionMatrix * mvPosition;`;
       if (!p.wrecked && !p.air && p.v > 12 && Math.random() < dt * (4 + Math.abs(p.vx) * 3)) puff(p.x + (Math.random() - 0.5) * 0.8, 0.9);
     }
     if (onWater) {
-      if (!p.air && !p.onRamp) { playerMesh.position.y += Math.sin(time * 5) * 0.04; ud.body.rotation.x += clamp(p.v / 450, 0, 0.09) + Math.sin(time * 6.5) * 0.012; }
+      if (!p.air && !p.onRamp) {
+        const sk = clamp(p.v / 40, 0, 1), hop = Math.pow(Math.max(0, Math.sin(time * 2.6)), 10) * 0.28 * sk;   // skipping over the chop
+        playerMesh.position.y += Math.sin(time * 5) * 0.04 + Math.sin(time * 11) * 0.025 * sk + hop;
+        ud.body.rotation.x += clamp(p.v / 450, 0, 0.09) + Math.sin(time * 6.5) * 0.012 + hop * 0.25;
+        ud.body.rotation.z = clamp(-p.vx * 0.05, -0.32, 0.32) + Math.sin(time * 3.1) * 0.02;   // bank into the turn
+        if (hop > 0.18 && Math.random() < 0.5) for (let k = 0; k < 3; k++) puff(p.x + (Math.random() - 0.5) * p.w * 2, -p.l * 0.2);
+        if (p.v > 20 && Math.abs(p.vx) > 2 && Math.random() < dt * 30) puff(p.x - Math.sign(p.vx) * p.w * 0.8, p.l * 0.1);   // spray off the outside of the turn
+      }
       ud.wake.visible = !p.air && !p.wrecked; ud.wake.scale.z = 0.5 + clamp(p.v / 50, 0, 1);
       if (!p.wrecked && !p.air && p.v > 12 && Math.random() < dt * (p.v / 3)) puff(p.x + (Math.random() - 0.5) * p.w * 1.4, p.l * 0.55);
     }
@@ -3515,8 +3592,8 @@ gl_Position = projectionMatrix * mvPosition;`;
     setWidth('nosBar', p.nitro);
     camera.updateProjectionMatrix();
     const rp = ragdoll && wrecked ? ragdoll.named.pelvis.p : null;
-    const tPos = rp ? new THREE.Vector3(rp.x + 4, Math.max(rp.y + 3.5, 4.5), rp.z + 9) : wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * 0.8 - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4 + p.y * 0.8, 8.4 - speedT * 1.2 + p.y * 0.5);
-    const tLook = rp ? new THREE.Vector3(rp.x, rp.y + 0.3, rp.z) : wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * 0.9 - Math.sin(p.yaw) * 3, 1.0, -14);
+    const tPos = rp ? new THREE.Vector3(rp.x + 4, Math.max(rp.y + 3.5, 4.5), rp.z + 9) : wrecked ? new THREE.Vector3(p.x * 0.6 + 3, 6, 12) : new THREE.Vector3(p.x * (onAir ? 0.97 : 0.8) - Math.sin(p.yaw) * 1.5, 3.3 - speedT * 0.4 + p.y * 0.8, 8.4 - speedT * 1.2 + p.y * (p.air ? 0.5 : 0.08));
+    const tLook = rp ? new THREE.Vector3(rp.x, rp.y + 0.3, rp.z) : wrecked ? new THREE.Vector3(p.x, 0.8, -2) : new THREE.Vector3(p.x * (onAir ? 0.98 : 0.9) - Math.sin(p.yaw) * 3, 1.0 + p.y * (p.air ? 0.4 : 0.9), -14);
     camPos.lerp(tPos, 1 - Math.exp(-dt * (wrecked ? 2 : 14)));
     camLook.lerp(tLook, 1 - Math.exp(-dt * (wrecked ? 3 : 16)));
     camera.position.copy(camPos);
