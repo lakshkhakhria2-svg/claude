@@ -345,7 +345,8 @@ body {
   // ---------- world constants (metres) ----------
   const LANES = 5, LANE_W = 3.6, ROAD_W = LANES * LANE_W;
   let onWater = false, onSnow = false, onAir = false;
-  let mapOverride = null;   // the bank heist picks the scenery for each stage   // on the sea in a boat / on a snowy pass on skis
+  let mapOverride = null;
+  let morphY = 0, heistMorph = null;   // the heist stage change: sink out of one world, rise into the next   // the bank heist picks the scenery for each stage   // on the sea in a boat / on a snowy pass on skis
   const laneX = i => (i - (LANES - 1) / 2) * LANE_W;
   const MPS = 0.447;           // mph -> m/s
   const SPAWN_Z = -260, DESPAWN_Z = 40;
@@ -1408,7 +1409,8 @@ body {
   // every exit really goes somewhere: [street, where it leads, the road you end up on]
   const SIGN_NAMES = [['Harbor Blvd', 'Ocean Bridge', 'ocean'], ['Vista Del Mar', 'Ocean Bridge', 'ocean'], ['Marina Way', 'Ocean Bridge', 'ocean'],
     ['Grand Ave', 'Downtown', 'city'], ['Mirada Ave', 'Downtown', 'city'], ['Arroyo Pkwy', 'Downtown', 'city'],
-    ['Canyon Rd', 'Desert', 'desert'], ['Palm Canyon Dr', 'Desert', 'desert'], ['Pacific Hwy', 'Countryside', 'highway'], ['Rosewood St', 'Countryside', 'highway']];
+    ['Canyon Rd', 'Desert', 'desert'], ['Palm Canyon Dr', 'Desert', 'desert'], ['Pacific Hwy', 'Countryside', 'highway'], ['Rosewood St', 'Countryside', 'highway'], ['Coast Hwy', 'Sunset Coast', 'coast'], ['Ocean Ave', 'Sunset Coast', 'coast']];
+  const EXIT_MAPS = ['coast', 'highway', 'city', 'desert'];   // the road network: every one of these has junctions
   function makeSignMat(name, sub, no, gore) {
     const c = document.createElement('canvas'); c.width = 512; c.height = 160; const g = c.getContext('2d');
     g.fillStyle = '#0f6b3c'; g.fillRect(0, 0, 512, 160); g.strokeStyle = '#ffffff'; g.lineWidth = 6; g.strokeRect(8, 8, 496, 144);
@@ -1470,15 +1472,18 @@ body {
     return sign;
   }
   const coastGroup = new THREE.Group(); scene.add(coastGroup);
-  MAPS.coast.show.push(coastGroup); ALL_MAP_PROPS.push(coastGroup); coastGroup.visible = false;
+  for (const k of ['coast', 'highway', 'city', 'desert']) MAPS[k].show.push(coastGroup);
+  ALL_MAP_PROPS.push(coastGroup); coastGroup.visible = false;
   const crossCars = [];
   const interchanges = [];
   function dressInterchange(ic) {   // a new exit number and name every time one comes round again
-    const [name, sub, dest] = SIGN_NAMES[Math.floor(Math.random() * SIGN_NAMES.length)], no = 10 + Math.floor(Math.random() * 80);
+    let here = mapOverride; try { here = here || save.map; } catch (e) {}
+    const options = SIGN_NAMES.filter(e => e[2] !== here);   // always somewhere else
+    const [name, sub, dest] = options[Math.floor(Math.random() * options.length)], no = 10 + Math.floor(Math.random() * 80);
     ic.decided = false; ic.taken = false; ic.merged = false; ic.exit = { name, sub, dest, no };
     if (ic.signs) { ic.signs[0].material = makeSignMat(name, sub, no, false); ic.signs[1].material = makeSignMat(name, sub, no, true); }
   }
-  for (const [kind, z0] of [['ic', -260], ['rail', -560], ['ic', -860]]) {
+  for (const [kind, z0] of [['ic', -420], ['rail', -1020], ['ic', -1620]]) {
     const g = new THREE.Group(), ic = { g, z: z0, kind }; coastGroup.add(g);
     makeOverpass(g, kind === 'rail');
     if (kind === 'ic') {
@@ -1502,7 +1507,7 @@ body {
     }
     interchanges.push(ic);
   }
-  const IC_PERIOD = 900;
+  const IC_PERIOD = 2400;
   const barrierClipR = [new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)];
   const barrierClipL = [new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)];
   function setGap(planes, zLo, zHi) { planes[0].constant = -zHi; planes[1].constant = zLo; }   // clips the stretch zLo..zHi
@@ -1535,18 +1540,42 @@ body {
     const l = -exitIc.z;
     return { h: flyH(l), dh: (flyH(l + 0.5) - flyH(l - 0.5)) };
   }
+  // drive down the ramp into a haze while the new highway fills in around you
+  let haze = null;
+  function driveOnto(dest, label) {
+    haze = { t: 0, dest, swapped: false };
+    showPop('→ ' + label.toUpperCase(), true);
+  }
+  function updateHaze(dt) {
+    if (!haze) return;
+    haze.t += dt;
+    const k = haze.t < 0.7 ? haze.t / 0.7 : haze.t < 0.9 ? 1 : Math.max(0, 1 - (haze.t - 0.9) / 1.3);
+    if (!haze.swapped && haze.t >= 0.7) {
+      haze.swapped = true;
+      mapOverride = haze.dest; applyMap(save.map); bendU.value.set(0, 0, 0);
+      cars.forEach(c => { if (!c.police && Math.abs(c.z) > 25) scene.remove(c.mesh); }); cars = cars.filter(c => c.police || Math.abs(c.z) <= 25);
+      hazards.forEach(h => scene.remove(h.mesh)); hazards = []; roadblock = null;
+      for (let i = 0; i < 6; i++) spawnCar(-60 - i * 34);
+      for (const ic of interchanges) if (ic.z < -300) dressInterchange(ic);   // signs ahead point on from here
+      if (!EXIT_MAPS.includes(haze.dest) && player.x > laneX(4)) player.x = laneX(4);   // no slip lane here: you come off the ramp into the right-hand lane
+      feed(`NOW ON ${curMap.name.toUpperCase()}`, 0, 'bonus');
+    }
+    const f = curMap.fog;
+    scene.fog.near = f[0] + (6 - f[0]) * k; scene.fog.far = f[1] + (55 - f[1]) * k;
+    if (haze.t > 2.2) { scene.fog.near = f[0]; scene.fog.far = f[1]; haze = null; }
+  }
   function takeExit(ic) {
     const e = ic.exit;
     addChainStep(`EXIT ${e.no} · ${e.name.toUpperCase()}`, 600);
     if (mode === 'heist') { addBonus('OFF-RAMP SHORTCUT', 1500); cars.filter(c => c.police).forEach(c => c.z = 999); escapeTimer = 0; }
     else if (chased && heatStars() <= 3) { addBonus('LOST THEM ON THE OFF-RAMP', 1500); heat = Math.min(heat, 0.5); chased = false; cars.filter(c => c.police).forEach(c => c.z = 999); }
-    detourEnd = distance + 3000;
-    routeTo(e.dest, `EXIT ${e.no} · ${e.name}`, '→ ' + e.sub.toUpperCase());
+    detourEnd = e.dest === 'ocean' ? distance + 3000 : 0;   // the Ocean Bridge has no junctions, so it brings you back round
+    driveOnto(e.dest, e.sub);
   }
   let coastD = 0;
   const bendU = { value: new THREE.Vector3() };
   let exitIc = null, detourEnd = 0;
-  const exitsLive = () => curMap === MAPS.coast && !onWater && !onSnow && !onAir;
+  const exitsLive = () => EXIT_MAPS.some(k => MAPS[k] === curMap) && !onWater && !onSnow && !onAir;
   function updateCoast(dz, dt) {
     coastD += dz;
     exitIc = null;
@@ -1581,7 +1610,7 @@ body {
     // open the barriers where the slip lanes are
     setGap(barrierClipR, gapR ? gapR.z - FLY_LEN : 1e6, gapR ? gapR.z + FLY_LEN : 1e6);
     setGap(barrierClipL, gapL ? gapL.z - MERGE_END : 1e6, gapL ? gapL.z - 60 : 1e6);
-    if (detourEnd && distance > detourEnd && state === 'play' && curTerrain() === 'road') { detourEnd = 0; routeTo(mode === 'heist' ? 'coast' : null, 'Merging onto', 'SUNSET COAST FWY'); }
+    if (detourEnd && distance > detourEnd && state === 'play' && curTerrain() === 'road') { detourEnd = 0; driveOnto('coast', 'Sunset Coast'); }
     for (const c of crossCars) { c.car.position.x += c.dir * c.v * dt; if (c.car.position.x > 125) c.car.position.x = -125; if (c.car.position.x < -125) c.car.position.x = 125; }
     // the freeway winds and rolls ahead of you (a visual bend, the driving stays the same)
     const on = curMap === MAPS.coast, mtn = curMap === MAPS.snow;
@@ -2104,9 +2133,9 @@ gl_Position = projectionMatrix * mvPosition;`;
     { id: 'viper', name: 'Viper 600', price: 18000, upMul: 1.7, bike: true, desc: 'Motorbike. A sharp sport bike that fires out of gaps. Fragile. Hold E to wheelie.', vmax: 88, accel: 1.8, brake: 1.25, lat: 1.6, armor: 1.3, wreck: -3, tank: 1.2 },
     { id: 'propplane', name: 'Skyhopper', price: 9000, upMul: 1.3, plane: true, desc: 'Plane. A little prop plane. Fly the sky lanes and weave through the air traffic.', vmax: 80, accel: 1.2, brake: 0.9, lat: 1.15, armor: 1.2, wreck: -2, tank: 1.1 },
     { id: 'jet', name: 'Falcon Jet', price: 42000, upMul: 2.4, plane: true, desc: 'Plane. A fighter jet with enormous speed and a big afterburner tank.', vmax: 110, accel: 1.9, brake: 1, lat: 1.1, armor: 1.1, wreck: -1, tank: 1.4 },
-    { id: 'skis', name: 'Freeride Skis', price: 5000, upMul: 1.1, bike: true, ski: true, desc: 'Skis. Carve between the cars on a snowy mountain pass. Light and fragile. Hold E to tuck.', vmax: 70, accel: 1.3, brake: 1.1, lat: 1.45, armor: 1.8, wreck: -7, tank: 1 },
-    { id: 'snowboard', name: 'Shred Board', price: 11000, upMul: 1.4, bike: true, ski: true, desc: 'Snowboard. Quicker than skis and great at carving. Hold E to tuck.', vmax: 78, accel: 1.4, brake: 1, lat: 1.55, armor: 1.75, wreck: -6.5, tank: 1.15 },
-    { id: 'raceskis', name: 'Downhill Racer', price: 30000, upMul: 2, bike: true, ski: true, desc: 'Race skis. A downhill racer in a full tuck: frightening speed and a big boost tank. Hold E to tuck.', vmax: 95, accel: 1.8, brake: 1.15, lat: 1.4, armor: 1.7, wreck: -6, tank: 1.35 },
+    { id: 'skis', name: 'Freeride Skis', price: 5000, upMul: 1.1, bike: true, ski: true, desc: 'Skis. Carve between the cars on a snowy mountain pass. Light and fragile. Hold E to tuck.', vmax: 70, accel: 1.3, brake: 1.1, lat: 1.45, armor: 1.3, wreck: -2, tank: 1 },
+    { id: 'snowboard', name: 'Shred Board', price: 11000, upMul: 1.4, bike: true, ski: true, desc: 'Snowboard. Quicker than skis and great at carving. Hold E to tuck.', vmax: 78, accel: 1.4, brake: 1, lat: 1.55, armor: 1.25, wreck: -2, tank: 1.15 },
+    { id: 'raceskis', name: 'Downhill Racer', price: 30000, upMul: 2, bike: true, ski: true, desc: 'Race skis. A downhill racer in a full tuck: frightening speed and a big boost tank. Hold E to tuck.', vmax: 95, accel: 1.8, brake: 1.15, lat: 1.4, armor: 1.25, wreck: -1.5, tank: 1.35 },
     { id: 'jetski', name: 'Wave Jet', price: 6000, upMul: 1.2, bike: true, boat: true, desc: 'Boat. A jet ski: tiny, twitchy and quick off the line. It slides on the water. Hold E to pop the nose up.', vmax: 74, accel: 1.6, brake: 1, lat: 1.35, armor: 0.9, wreck: 2, tank: 1.1 },
     { id: 'speedboat', name: 'Riptide', price: 15000, upMul: 1.5, boat: true, desc: 'Boat. An open speedboat with room for you and four mates. Loose on the water, so plan your moves.', vmax: 82, accel: 1.2, brake: 1, lat: 1.1, armor: 0.5, wreck: 7, tank: 1.15 },
     { id: 'powerboat', name: 'Thunder', price: 38000, upMul: 2.2, boat: true, desc: 'Boat. An offshore racing powerboat. Huge top speed, long slides and a big nitro tank.', vmax: 98, accel: 1.6, brake: 1.05, lat: 1.15, armor: 0.5, wreck: 7, tank: 1.35 },
@@ -2364,7 +2393,7 @@ gl_Position = projectionMatrix * mvPosition;`;
   }
 
   function reset() {
-    clearWasted(); clearHoops(); detourEnd = 0; try { clearHandoff(); } catch (e) {} if (mapOverride && mode !== 'heist') { mapOverride = null; applyMap(save.map); }
+    clearWasted(); clearHoops(); detourEnd = 0; try { clearHandoff(); haze = null; heistMorph = null; morphY = 0; } catch (e) {} if (mapOverride && mode !== 'heist') { mapOverride = null; applyMap(save.map); }
     cars.forEach(c => scene.remove(c.mesh));
     cars = []; sparks = [];
     debris.forEach(d => { d.life = 0; d.mesh.visible = false; });
@@ -2408,7 +2437,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     const mesh = makeCar(rampT ? 'ramptruck' : type, color, false);
     scene.add(mesh);
     const base = (rampT ? 38 + Math.random() * 8 : truck ? 42 + Math.random() * 14 : 52 + Math.random() * 26) * MPS;
-    const v = truck ? base : laneSpeed(lane, base);
+    const v = (truck ? base : laneSpeed(lane, base)) * (onSnow ? 1.15 : 1);   // skiers flow quicker, so you close on them gently
     cars.push({ mesh, color, lane, laneWas: lane, base: truck ? 0 : base, truckish: truck, target: lane, x: laneX(lane), z, vx: 0, v, cruise: v, yaw: 0, yawRate: 0,
       w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: z > 0, spin: 0, ramp: rampT });
     return true;
@@ -2597,7 +2626,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     return id;
   }
   function startHeist() {   // called from start() before reset()
-    heistStage = 0; loot = LOOT; heistWon = false; heistLives = 3; clearHandoff(); heistSwapping = false;
+    heistStage = 0; loot = LOOT; heistWon = false; heistLives = 3; clearHandoff(); heistSwapping = false; heistMorph = null; morphY = 0;
     heistVehicle(0);
   }
   function heistAfterReset() {
@@ -2613,7 +2642,6 @@ gl_Position = projectionMatrix * mvPosition;`;
     const id = heistPick(HEIST[heistStage + 1].t), g = new THREE.Group();
     const keep = [onWater, onSnow, onAir]; onWater = onSnow = onAir = false;   // build it as itself, not as local traffic
     const v = makeCar(id, save.color, false); [onWater, onSnow, onAir] = keep;
-    v.rotation.y = 0; g.add(v);
     const pad = new THREE.Mesh(new THREE.CircleGeometry(3.4, 32).rotateX(-Math.PI / 2), padMat); pad.position.y = 0.06; g.add(pad);
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 14, 24, 1, true), beamMat); beam.position.y = 7; g.add(beam);
     scene.add(g); bendScene();
@@ -2649,6 +2677,33 @@ gl_Position = projectionMatrix * mvPosition;`;
     state = 'play'; timeScale = 1; wreckTimer = 0; shake = 0; clearWasted();
     flash(); showPop(`${heistLives} ${heistLives === 1 ? 'LIFE' : 'LIVES'} LEFT`, true); feed(`LIFE LOST · LOOT −${money(lost)}`, 0, 'lost');
   }
+  const MORPH_DOWN = 0.6, MORPH_UP = 0.9, SINK = 2.8;
+  function morphBurst() {   // what you burst up out of
+    const p = player;
+    for (let k = 0; k < 14; k++) puff(p.x + (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3);
+    if (!onWater && !onSnow && !onAir) burst(p.x, 0.3, 0, 30, 8);
+    shake = Math.max(shake, 0.35);
+  }
+  function updateMorph(dt) {
+    if (!heistMorph) return;
+    const m = heistMorph; m.t += dt;
+    const sm = t => t * t * (3 - 2 * t);
+    if (!m.swapped) {
+      const k = Math.min(1, m.t / MORPH_DOWN);
+      morphY = -SINK * sm(k);
+      if (Math.random() < 0.6) puff(player.x + (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
+      const f = curMap.fog; scene.fog.near = f[0] + (5 - f[0]) * k; scene.fog.far = f[1] + (60 - f[1]) * k;
+      if (k >= 1) {
+        m.swapped = true; m.t = 0; heistSwapping = false;
+        if (state === 'play' && mode === 'heist' && !player.wrecked) { heistSwap(); morphBurst(); }
+      }
+    } else {
+      const k = Math.min(1, m.t / MORPH_UP);
+      morphY = -SINK * (1 - sm(k));
+      const f = curMap.fog; scene.fog.near = 5 + (f[0] - 5) * k; scene.fog.far = 60 + (f[1] - 60) * k;
+      if (k >= 1) { morphY = 0; heistMorph = null; scene.fog.near = f[0]; scene.fog.far = f[1]; }
+    }
+  }
   function updateHeist(dt) {
     const p = player;
     if (p.wrecked || heistWon) return;
@@ -2663,11 +2718,8 @@ gl_Position = projectionMatrix * mvPosition;`;
     }
     if (left <= 0) {
       if (heistStage < HEIST.length - 1) {
-        heistSwapping = true;   // a quick fade with a title card, then you're in the next vehicle at speed
-        const nx = HEIST[heistStage + 1];
-        $('exitLine1').textContent = `STAGE ${heistStage + 2} / ${HEIST.length}`; $('exitLine2').textContent = `${nx.place} · ${carById(heistPick(nx.t)).name}`;
-        const el = $('exitFade'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-        setTimeout(() => { heistSwapping = false; if (state === 'play' && mode === 'heist' && !player.wrecked) heistSwap(); }, 480);
+        heistSwapping = true; heistMorph = { t: 0, swapped: false };   // sink through the ground... (see updateMorph)
+        Sound.whoosh && Sound.whoosh(1);
       }
       else { heistWon = true; endReason = 'escaped'; addBonus('CLEAN GETAWAY', 15000); showPop('YOU GOT AWAY WITH IT!', true); flash(); gameOver(); }
       return;
@@ -3163,7 +3215,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     else if (boosting) a = (24 * (1 - (p.v / V_NITRO) ** 2) + 4) * S.accel;
     else if (keys.up) a = 15 * S.accel * (1 - (p.v / S.vmax) ** 2);
     else a = p.v < V_CRUISE ? 4 : -(0.6 + 0.00045 * p.v * p.v);   // engine braking
-    if (onSnow && !keys.down) a += 3.5;   // it's downhill: gravity keeps you rolling
+    if (onSnow && !keys.down) a += 2;   // it's downhill: gravity keeps you rolling
     if (!boosting && p.v > S.vmax) a = Math.min(a, -6);           // bleed off nitro overspeed
     if (flatT > 0 && p.v > S.vmax * 0.68) a = Math.min(a, -8);    // blown tyres cap your speed
     p.v = clamp(p.v + a * dt, V_MIN, V_NITRO);
@@ -3370,7 +3422,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     if (p.air) setText('hTier', `AIR ${p.airT.toFixed(1)}s${Math.abs(p.airSpin) > 2.6 ? ' · ' + Math.round(Math.abs(p.airSpin) / Math.PI) * 180 : ''}${p.jumped ? ' · OVER ' + p.jumped : ''}`);
     // player vs traffic
     for (const c of cars) {
-      if (p.onRamp === c) continue;
+      if (p.onRamp === c || heistMorph) continue;   // nothing can hit you mid-transition
       if (c.ramp && !p.air && Math.abs(p.x - c.x) <= 1.45) { const u = c.z + c.l / 2 + p.l * 0.4; if (u > -0.6 && u <= RAMP_LEN + 0.15) continue; }   // driving onto the ramp, not into the truck
       if (p.air || p.y > 0.05) { const top = c.ramp ? (Math.abs(c.z + c.l / 2 - RAMP_LEN / 2) < RAMP_LEN / 2 + 0.3 ? rampH(c.z + c.l / 2) : 2.5) : c.l > 8 ? 3.6 : 1.45; if (p.y > top - 0.25) continue; }
       const hit = collide(p, c);
@@ -3414,7 +3466,7 @@ gl_Position = projectionMatrix * mvPosition;`;
 
     if (!p.wrecked) {
       spawnAcc += Math.max(0, p.v - 22) * dt + 1.5 * dt;
-      const gap = (24 - difficulty * 11) * DIF().gap * (onWater || onAir ? 2 : 1);   // open water and open sky are quieter than a motorway
+      const gap = (24 - difficulty * 11) * DIF().gap * (onWater || onAir ? 2 : onSnow ? 1.7 : 1);   // open water and open sky are quieter than a motorway
       if (spawnAcc > gap && roadblock && !roadblock.done) spawnAcc = 0;
       if (spawnAcc > gap) spawnAcc = spawnCar(SPAWN_Z - Math.random() * 20) ? 0 : gap * 0.7;
     }
@@ -3513,7 +3565,7 @@ gl_Position = projectionMatrix * mvPosition;`;
   function sync(dt) {
     const p = player;
     const ud = playerMesh.userData;
-    playerMesh.position.set(p.x, p.y, 0);
+    playerMesh.position.set(p.x, p.y + morphY, 0);
     const jumpPitch = p.wrecked ? 0 : p.onRamp || p.air ? Math.atan2(p.vy, Math.max(p.v, 5)) * (p.air ? 0.6 : 1) : 0;
     playerMesh.rotation.set(jumpPitch, p.yaw + (p.wrecked ? 0 : p.airSpin + p.landSpin), p.roll);
     // suspension: lean out of turns, squat under throttle, dive under braking
@@ -3639,7 +3691,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     adaptResolution(rawDt);
     timeScale = Math.min(1, timeScale + realDt * 2);
     const dt = realDt * (player.wrecked ? timeScale : 1);
-    time += dt; lastFrameDt = dt;
+    time += dt; lastFrameDt = dt; updateHaze(realDt); updateMorph(realDt);
     bendCheckT -= realDt; if (bendCheckT <= 0) { bendCheckT = 1; bendScene(); }   // newly made materials pick up the road bend
     if (state === 'play' || state === 'wreck' || state === 'over') {
       // fixed sub-steps keep collisions solid at high speed
