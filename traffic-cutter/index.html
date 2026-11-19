@@ -33,14 +33,14 @@ body {
 .stage { position: relative; flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1100px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px #ffffff14, 0 20px 60px #000a; background: #05060b; }
 .stage canvas { display: block; width: 100%; height: 100%; filter: saturate(1.3) contrast(1.1) sepia(0.07); transition: filter 1.2s ease; }
 .grade { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,0.38) 100%), linear-gradient(180deg, rgba(255,175,90,0.1), rgba(255,200,140,0.03) 40%, transparent 70%, rgba(40,20,60,0.08)); }
-.stage.wasted canvas { filter: grayscale(1) contrast(1.2) brightness(0.8); }
+.stage.wasted canvas { filter: grayscale(1) contrast(1.55) brightness(0.78); }
 .exitfade { position: absolute; inset: 0; z-index: 8; background: #000; opacity: 0; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; text-align: center; }
 .exitfade.on { animation: exitf 1.3s ease forwards; }
 .exitfade small { font-size: 13px; letter-spacing: .25em; color: #9fe6a8; text-transform: uppercase; }
 .exitfade b { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 6vw, 44px); background: #0f6b3c; border: 3px solid #fff; padding: 6px 18px; }
 @keyframes exitf { 0% { opacity: 0; } 35% { opacity: 1; } 62% { opacity: 1; } 100% { opacity: 0; } }
-.wastedban { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); padding: 14px 0 18px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.72) 18%, rgba(0,0,0,0.72) 82%, transparent); text-align: center; pointer-events: none; opacity: 0; transition: opacity .6s ease .7s; }
-.wastedban b { font-family: Georgia, 'Times New Roman', serif; font-weight: 900; font-size: clamp(48px, 11vw, 96px); letter-spacing: .04em; color: #c8131c; -webkit-text-stroke: 2px #000; text-shadow: 0 4px 0 #000, 0 0 30px #000; }
+.wastedban { position: absolute; left: 12%; right: 8%; top: 50%; transform: translateY(-50%); padding: 10px 0 14px; background: rgba(28,28,28,0.62); text-align: center; pointer-events: none; opacity: 0; transition: opacity .6s ease .7s; }
+.wastedban b { display: inline-block; font-family: 'Arial Black', 'Helvetica Neue', Impact, sans-serif; font-weight: 900; font-size: clamp(44px, 9vw, 84px); line-height: 1; text-transform: lowercase; letter-spacing: -.02em; color: #d6321c; transform: scaleX(1.12) skewX(-4deg); text-shadow: 0 2px 0 rgba(0,0,0,0.45); }
 .stage.wasted .wastedban { opacity: 1; }
 .hud { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: none; font-variant-numeric: tabular-nums; }
 .gauge { background: #0b0d14cc; border: 1px solid #ffffff1a; border-radius: 4px; padding: 4px 8px; text-align: center; min-width: 54px; }
@@ -48,10 +48,17 @@ body {
 .gauge span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .gauge.speed b { color: var(--amber); }
 .gauge.combo b { color: var(--cyan); }
-.heistload { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: -2px 0 8px; }
-.heistload[hidden] { display: none; }
-.heistload label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: left; }
-.heistload select { font: inherit; font-size: 13px; letter-spacing: 0; text-transform: none; color: #fff; background: #0b0d14; border: 1px solid #ffffff2a; border-radius: 4px; padding: 5px 6px; }
+.heistload { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.hcard { background: #ffffff0a; border: 1px solid #ffffff1f; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+.hhead { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); }
+.hhead small { letter-spacing: .04em; text-transform: none; color: var(--muted); }
+.hpick { display: grid; grid-template-columns: 28px 1fr 28px; align-items: center; gap: 4px; }
+.hpick b { font-family: var(--display); font-weight: 400; font-size: 15px; text-align: center; }
+.harrow { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ffffff3a; background: #ffffff10; color: var(--paint); font-size: 16px; cursor: pointer; line-height: 1; }
+.harrow:disabled { opacity: .3; cursor: default; }
+.harrow:not(:disabled):hover { border-color: var(--amber); }
+.htag { font-size: 10px; color: #7be08a; text-align: center; }
+.hbars .bar { grid-template-columns: 70px 1fr; font-size: 10px; }
 .heisthud { position: absolute; top: 70px; left: 12px; width: 190px; background: #0b0d14cc; border: 1px solid #ffb62755; border-radius: 4px; padding: 6px 9px; display: none; flex-direction: column; gap: 3px; pointer-events: none; font-size: 11px; letter-spacing: .06em; color: var(--muted); }
 .heisthud.on { display: flex; }
 .heisthud b { font-family: var(--display); font-weight: 400; font-size: 13px; color: var(--amber); }
@@ -153,6 +160,40 @@ body {
 @keyframes tin { from { opacity: 0; transform: skewX(-8deg) translateY(30px) scale(.9); } }
 @keyframes tblink { 50% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) { .tlogo, .tpress { animation: none; } }
+.overlay.front { padding: 18px; align-items: stretch; }
+.fe { pointer-events: auto; display: grid; grid-template-columns: minmax(240px, 300px) 1fr; gap: 16px; width: min(1040px, 100%); margin: auto; max-height: 100%; }
+.fe-left, .fe-right { background: linear-gradient(180deg, #0b0d14f0, #0b0d14d8); border: 1px solid #ffffff1f; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.fe-right { overflow-y: auto; gap: 16px; }
+.fe-logo { margin: 0; font-family: var(--display); font-weight: 400; font-size: 46px; line-height: .92; transform: skewX(-8deg); letter-spacing: .01em; }
+.fe-logo em { font-style: normal; background: linear-gradient(180deg, #ffe08a, #ffb627 45%, #ff6a2b); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.fe-tag { margin: 0; font-size: 13px; line-height: 1.45; color: #c3c7d6; }
+.fe-play { font-size: 26px; padding: 16px; letter-spacing: .12em; box-shadow: 0 6px 24px #ffb62755; }
+.fe-play:hover { filter: brightness(1.08); }
+.fe-garage { font-size: 17px; letter-spacing: .1em; }
+.fe-wallet { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
+.fe-wallet div { background: #ffffff0a; border: 1px solid #ffffff17; border-radius: 6px; padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fe-wallet span { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.fe-wallet b { font-family: var(--display); font-weight: 400; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fe-controls summary { cursor: pointer; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.fe-controls .keys { margin-top: 8px; }
+.fe-sec { display: flex; flex-direction: column; gap: 8px; }
+.fe-sec h2 { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--amber); }
+.fe-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fe-modes .mode { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 12px; border: 1px solid #ffffff1f; border-radius: 6px; background: #ffffff08; }
+.fe-modes .mode b { font-family: var(--display); font-weight: 400; font-size: 17px; color: var(--paint); }
+.fe-modes .mode small { font-family: var(--ui); font-size: 11px; color: var(--muted); letter-spacing: 0; }
+.fe-modes .mode[aria-pressed="true"] { border-color: var(--amber); background: #ffb62718; box-shadow: none; }
+.modes.fe-maps { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; border: 0; overflow: visible; }
+.fe-maps .mode { height: 70px; border-radius: 6px; border: 2px solid transparent; display: flex; align-items: flex-end; padding: 7px 9px; font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000; background-size: cover; }
+.fe-maps .mode[aria-pressed="true"] { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); color: #fff; }
+.fe-maps [data-m="coast"] { background: linear-gradient(180deg, #3a7fd4 0%, #f4c88a 55%, #b39a5e 56%, #8a7a44 100%); }
+.fe-maps [data-m="highway"] { background: linear-gradient(180deg, #2f7fd6 0%, #c4d8ea 52%, #5a7f34 53%, #3f5f24 100%); }
+.fe-maps [data-m="city"] { background: linear-gradient(180deg, #03050c 0%, #1c2238 50%, #ff2d95 51%, #29d3ff 54%, #141925 55%, #0b0d14 100%); }
+.fe-maps [data-m="desert"] { background: linear-gradient(180deg, #040816 0%, #2e2846 52%, #6a3e2c 53%, #c9a46a 100%); }
+.fe-maps [data-m="ocean"] { background: linear-gradient(180deg, #2f6fc4 0%, #f3cfa2 50%, #2a6a96 51%, #123a5a 100%); }
+.fe-right .modes.diffs { border-radius: 6px; }
+.fe-right .hs ol { max-height: 150px; overflow-y: auto; }
+@media (max-width: 760px) { .fe { grid-template-columns: 1fr; overflow-y: auto; } .fe-right { overflow: visible; } .fe-modes { grid-template-columns: 1fr; } .heistload { grid-template-columns: 1fr; } .fe-logo { font-size: 36px; } }
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; padding: 12px; box-sizing: border-box; }
 .card { pointer-events: auto; background: #0b0d14e6; border: 1px solid #ffffff22; border-radius: 6px; padding: 22px 24px; max-width: 300px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
 .card h1 em { font-style: normal; color: var(--amber); }
@@ -222,6 +263,14 @@ body {
 .ubtn:focus-visible, .swatch:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .paintrow { display: flex; flex-direction: column; gap: 8px; padding-block: 12px; border-top: 1px solid #ffffff14; }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.skin { display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 4px; background: #ffffff0d; border: 1px solid #ffffff1f; border-radius: 4px; color: var(--paint); cursor: pointer; font: inherit; text-align: left; }
+.skin i { display: block; height: 34px; border-radius: 3px; background-size: 64px 64px; }
+.skin span { font-size: 11px; font-weight: 700; line-height: 1.1; }
+.skin small { font-size: 10px; color: #7be08a; }
+.skin.sel { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+.skin:disabled { opacity: .45; cursor: not-allowed; }
+.skin:not(:disabled):hover { border-color: #ffffff60; }
 .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ffffff30; cursor: pointer; padding: 0; }
 .swatch.sel { border-color: var(--paint); box-shadow: 0 0 0 2px var(--night), 0 0 0 4px var(--amber); }
 @media (min-width: 760px) { .overlay.garage { justify-content: flex-start; padding-left: 24px; } }
@@ -264,32 +313,50 @@ body {
       <div class="tpress">PRESS ANY KEY</div>
       <div class="tmapname" id="tMapName"></div>
     </div>
-    <div class="overlay" id="startOv">
-      <div class="card">
-        <h1>LANE <em>SPLITTER</em></h1>
-        <p>Rush-hour traffic at full speed. Shave past cars to build a near-miss chain and let it bank for multiplied points; get hit and the chain is lost.</p>
-        <div class="keys desk-only">
-          <kbd>← →</kbd><span>Steer (or A / D)</span>
-          <kbd>↑</kbd><span>Throttle (or W)</span>
-          <kbd>↓</kbd><span>Brake (or S)</span>
-          <kbd>Shift</kbd><span>Nitro (or N)</span>
-          <kbd>Space</kbd><span>Handbrake: hold while steering to drift</span>
-          <kbd>E</kbd><span>Wheelie (motorbikes)</span>
-          <kbd>R</kbd><span>Restart any time</span>
-          <kbd>M</kbd><span>Sound on / off</span>
+    <div class="overlay front" id="startOv">
+      <div class="fe">
+        <div class="fe-left">
+          <h1 class="fe-logo">LANE<br><em>SPLITTER</em></h1>
+          <p class="fe-tag">Rush-hour traffic at full speed. Shave past cars to build a chain and bank it for big points; get hit and the chain is gone.</p>
+          <button class="btn fe-play" id="startBtn">DRIVE</button>
+          <button class="btn ghost fe-garage" id="garageBtn">GARAGE</button>
+          <div class="fe-wallet"><div><span>Vehicle</span><b id="carStart"></b></div><div><span>Cash</span><b class="cash" id="cashStart">$0</b></div><span hidden id="bestStart"></span></div>
+          <details class="fe-controls desk-only"><summary>Controls</summary>
+            <div class="keys">
+              <kbd>← →</kbd><span>Steer (or A / D)</span>
+              <kbd>↑ ↓</kbd><span>Throttle / brake (planes: climb / dive)</span>
+              <kbd>Shift</kbd><span>Nitro (or N)</span>
+              <kbd>Space</kbd><span>Handbrake drift (planes: air brake)</span>
+              <kbd>E</kbd><span>Wheelie / tuck / nose up</span>
+              <kbd>R</kbd><span>Restart any time</span>
+              <kbd>M</kbd><span>Sound on / off</span>
+            </div>
+          </details>
+          <p class="touch-only fe-tag">Use the pads under the road to steer, brake, boost and accelerate.</p>
         </div>
-        <p class="touch-only">Use the pads under the road to steer, brake, boost and accelerate.</p>
-        <div class="modes" role="group" aria-label="Game mode"><button class="mode" id="modeEndless" aria-pressed="true">Endless</button><button class="mode" id="modeChase" aria-pressed="false">Chase</button><button class="mode" id="modeHeist" aria-pressed="false">Bank Heist</button></div>
-        <p class="modedesc" id="modeDesc"></p>
-        <div class="heistload" id="heistLoad" hidden></div>
-        <div class="modes maps" role="group" aria-label="Map"><button class="mode" data-m="highway">Highway</button><button class="mode" data-m="city">City Night</button><button class="mode" data-m="desert">Desert Night</button><button class="mode" data-m="ocean">Ocean Bridge</button><button class="mode" data-m="coast">Sunset Coast</button></div>
-        <p class="modedesc diffdesc" id="mapDesc"></p>
-        <div class="modes diffs" role="group" aria-label="Difficulty"><button class="mode" id="diffEasy" data-d="easy">Easy</button><button class="mode" id="diffNormal" data-d="normal">Normal</button><button class="mode" id="diffHard" data-d="hard">Hard</button></div>
-        <p class="modedesc diffdesc" id="diffDesc"></p>
-        <button class="linkbtn" id="chaseReset" hidden>Start over at level 1</button>
-        <div class="btnrow"><button class="btn" id="startBtn">Drive</button><button class="btn ghost" id="garageBtn">Garage</button></div>
-        <div class="hs"><span class="stat-label">High scores</span><ol id="hsStart"></ol></div>
-        <span class="stat-label">Car <b id="carStart"></b> · Cash <span class="cash" id="cashStart">$0</span><span hidden id="bestStart"></span></span>
+        <div class="fe-right">
+          <section class="fe-sec"><h2>Game mode</h2>
+            <div class="fe-modes" role="group" aria-label="Game mode">
+              <button class="mode" id="modeEndless" aria-pressed="true"><b>Endless</b><small>Weave, chain, outrun the cops</small></button>
+              <button class="mode" id="modeChase" aria-pressed="false"><b>Chase</b><small>You're the cop</small></button>
+              <button class="mode" id="modeHeist" aria-pressed="false"><b>Bank Heist</b><small>5 stages, 4 kinds of ride</small></button>
+            </div>
+            <p class="modedesc" id="modeDesc"></p>
+            <button class="linkbtn" id="chaseReset" hidden>Start over at level 1</button>
+          </section>
+          <section class="fe-sec" id="mapSection"><h2>Map</h2>
+            <div class="modes maps fe-maps" role="group" aria-label="Map"><button class="mode" data-m="coast"><span>Sunset Coast</span></button><button class="mode" data-m="highway"><span>Highway</span></button><button class="mode" data-m="city"><span>City Night</span></button><button class="mode" data-m="desert"><span>Desert Night</span></button><button class="mode" data-m="ocean"><span>Ocean Bridge</span></button></div>
+            <p class="modedesc diffdesc" id="mapDesc"></p>
+          </section>
+          <section class="fe-sec" id="heistSection" hidden><h2>Heist crew: pick a ride for each stage</h2>
+            <div class="heistload" id="heistLoad"></div>
+          </section>
+          <section class="fe-sec"><h2>Difficulty</h2>
+            <div class="modes diffs" role="group" aria-label="Difficulty"><button class="mode" id="diffEasy" data-d="easy">Easy</button><button class="mode" id="diffNormal" data-d="normal">Normal</button><button class="mode" id="diffHard" data-d="hard">Hard</button></div>
+            <p class="modedesc diffdesc" id="diffDesc"></p>
+          </section>
+          <section class="fe-sec hs"><h2>High scores</h2><ol id="hsStart"></ol></section>
+        </div>
       </div>
     </div>
     <div class="overlay" id="overOv" hidden>
@@ -319,6 +386,7 @@ body {
         <p class="unote" id="uNote" hidden>Buy this car to upgrade it.</p>
         <div id="uList"></div>
         <div class="paintrow"><span class="stat-label">Paint (free)</span><div class="swatches" id="swatches"></div></div>
+        <div class="paintrow"><span class="stat-label">Skins</span><div class="skins" id="skins"></div></div>
         <div class="btnrow"><button class="btn ghost" id="gBack">Back</button><button class="btn" id="gDrive">Drive</button></div>
       </div>
     </div>
@@ -900,6 +968,7 @@ body {
     interceptor: { pitch: 58, w: 1.95, l: 4.5, h: 0.52, cabL: 1.9, cabZ: 0.35, cabH: 0.46, taper: 0.8, shrink: 0.6, mass: 1.5, wedge: 0.25, police: true },
     truck: { w: 2.5, l: 12, mass: 5, truck: true },
     ramptruck: { w: 2.5, l: 12, mass: 5, truck: true, ramp: true },
+    undertruck: { w: 3.4, l: 10.4, mass: 5, truck: true, under: true },
     sprite: { pitch: 128, w: 0.8, l: 2.0, mass: 0.55, bike: true },
     viper: { pitch: 112, w: 0.82, l: 2.1, mass: 0.6, bike: true, fairing: true },
     comet: { pitch: 96, w: 0.85, l: 2.2, mass: 0.65, bike: true, fairing: true },
@@ -976,6 +1045,7 @@ body {
     if (CAR_SPECS[id].boat || (onWater && !CAR_SPECS[id].ramp)) return makeBoat(id, color, isPlayer);
     if (CAR_SPECS[id].bike) return makeBike(id, color, isPlayer);
     if (CAR_SPECS[id].ramp) return makeRampTruck(color);
+    if (CAR_SPECS[id].under) return makeUnderTruck(color);
     const G = carGeo(id, isPlayer);
     const g = new THREE.Group();
     g.rotation.order = 'YXZ';
@@ -1631,7 +1701,7 @@ gl_Position = projectionMatrix * mvPosition;`;
   function bendMaterial(m) {
     if (!m || m.userData.bent || m.isShaderMaterial) return;
     m.userData.bent = true;
-    m.onBeforeCompile = sh => { sh.uniforms.uBend = bendU; sh.vertexShader = 'uniform vec3 uBend;\n' + sh.vertexShader.replace('#include <project_vertex>', BEND_VERTEX); };
+    m.onBeforeCompile = sh => { sh.uniforms.uBend = bendU; sh.vertexShader = 'uniform vec3 uBend;\n' + sh.vertexShader.replace('#include <project_vertex>', BEND_VERTEX); if (m.userData.skinHook) m.userData.skinHook(sh); };
     m.needsUpdate = true;
   }
   function bendScene() { scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(bendMaterial); }); }
@@ -1743,6 +1813,98 @@ gl_Position = projectionMatrix * mvPosition;`;
       }
     }
     hoops = hoops.filter(h => { if (h.z > DESPAWN_Z) { scene.remove(h.mesh); return false; } return true; });
+  }
+
+  // ---------- skins: paint jobs drawn onto the body (projected from three sides, so no UVs needed) ----------
+  const SKINS = [
+    { id: 'gloss', name: 'Gloss', price: 0 }, { id: 'camo', name: 'Woodland Camo', price: 2500 }, { id: 'desertcamo', name: 'Desert Camo', price: 2500 },
+    { id: 'digital', name: 'Digital Camo', price: 3500 }, { id: 'tiger', name: 'Tiger', price: 3000 }, { id: 'zebra', name: 'Zebra', price: 3000 },
+    { id: 'flames', name: 'Flames', price: 4000 }, { id: 'checker', name: 'Checker Flag', price: 3000 }, { id: 'galaxy', name: 'Galaxy', price: 6000 },
+    { id: 'rainbow', name: 'Rainbow', price: 5000 }, { id: 'ttt', name: 'TTT', price: 4500 }, { id: 'lol', name: 'LOL', price: 4500 },
+    { id: 'stonks', name: 'Stonks', price: 5500 }, { id: 'carbon', name: 'Carbon Fibre', price: 4000 },
+  ];
+  const hex = c => '#' + c.toString(16).padStart(6, '0');
+  function paintSkin(g, S, id, col) {
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const blobs = (cols, n, r0, r1) => { for (let i = 0; i < n; i++) { g.fillStyle = cols[i % cols.length]; g.beginPath(); const x = Math.random() * S, y = Math.random() * S; for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2, r = rnd(r0, r1); g.lineTo(x + Math.cos(a) * r * 1.4, y + Math.sin(a) * r); } g.fill(); } };
+    const text = (t, size, fill, stroke, rot) => { g.save(); g.translate(S / 2, S / 2); g.rotate(rot); g.font = `900 ${size}px Impact, Arial Black, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; for (let y = -S; y <= S; y += size * 1.05) for (let x = -S; x <= S; x += size * 2.6) { const ox = (Math.round(y / size) % 2) * size * 1.3; if (stroke) { g.lineWidth = size / 9; g.strokeStyle = stroke; g.strokeText(t, x + ox, y); } g.fillStyle = fill; g.fillText(t, x + ox, y); } g.restore(); };
+    switch (id) {
+      case 'camo': g.fillStyle = '#5b6b3a'; g.fillRect(0, 0, S, S); blobs(['#3b4a26', '#7d7a4e', '#2a2a1e', '#4f5f2f'], 34, 14, 34); break;
+      case 'desertcamo': g.fillStyle = '#c9ad7a'; g.fillRect(0, 0, S, S); blobs(['#a88758', '#e0c99a', '#8a6b44'], 30, 14, 32); break;
+      case 'digital': g.fillStyle = '#6b7380'; g.fillRect(0, 0, S, S); for (let i = 0; i < 900; i++) { g.fillStyle = ['#3d434c', '#8f97a3', '#2b3036', '#59606b'][i % 4]; g.fillRect(Math.floor(Math.random() * 32) * 8, Math.floor(Math.random() * 32) * 8, 8 * (1 + (i % 3)), 8); } break;
+      case 'tiger': g.fillStyle = '#ff8a1c'; g.fillRect(0, 0, S, S); g.fillStyle = '#141414'; for (let i = 0; i < 14; i++) { const y = i * S / 14 + rnd(-6, 6); g.beginPath(); g.moveTo(0, y); g.quadraticCurveTo(S * 0.3, y + rnd(-14, 14), S * rnd(0.35, 0.6), y + rnd(-4, 10)); g.quadraticCurveTo(S * 0.3, y + 10, 0, y + rnd(6, 12)); g.fill(); g.beginPath(); g.moveTo(S, y + 8); g.quadraticCurveTo(S * 0.7, y + rnd(-10, 14), S * rnd(0.45, 0.7), y + 12); g.quadraticCurveTo(S * 0.75, y + 18, S, y + rnd(14, 20)); g.fill(); } break;
+      case 'zebra': g.fillStyle = '#f4f4f0'; g.fillRect(0, 0, S, S); g.fillStyle = '#111'; for (let i = 0; i < 10; i++) { const x = i * S / 10; g.beginPath(); g.moveTo(x, 0); for (let y = 0; y <= S; y += 16) g.lineTo(x + Math.sin(y / 30 + i) * 12 + rnd(0, 4), y); for (let y = S; y >= 0; y -= 16) g.lineTo(x + 10 + Math.sin(y / 30 + i) * 12, y); g.fill(); } break;
+      case 'flames': { g.fillStyle = hex(col); g.fillRect(0, 0, S, S); for (const [c, w] of [['#ff2a00', 1], ['#ff9a00', 0.75], ['#ffe14a', 0.45]]) { g.fillStyle = c; g.beginPath(); g.moveTo(0, S); for (let x = 0; x <= S; x += 16) g.lineTo(x, S - (S * 0.55 * w) * (0.6 + 0.4 * Math.abs(Math.sin(x / 23))) - rnd(0, 18) * w); g.lineTo(S, S); g.fill(); } break; }
+      case 'checker': for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { g.fillStyle = (x + y) % 2 ? '#111' : '#f4f4f4'; g.fillRect(x * S / 8, y * S / 8, S / 8, S / 8); } break;
+      case 'galaxy': { const gr = g.createLinearGradient(0, 0, S, S); gr.addColorStop(0, '#1a0638'); gr.addColorStop(0.5, '#3b0d6e'); gr.addColorStop(1, '#0b1d4a'); g.fillStyle = gr; g.fillRect(0, 0, S, S); for (let i = 0; i < 6; i++) { const x = rnd(0, S), y = rnd(0, S), r = rnd(30, 70), n = g.createRadialGradient(x, y, 0, x, y, r); n.addColorStop(0, ['rgba(255,80,200,0.5)', 'rgba(80,160,255,0.5)'][i % 2]); n.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = n; g.fillRect(0, 0, S, S); } for (let i = 0; i < 260; i++) { g.fillStyle = '#fff'; g.globalAlpha = rnd(0.3, 1); const s = rnd(0.5, 2); g.fillRect(rnd(0, S), rnd(0, S), s, s); } g.globalAlpha = 1; break; }
+      case 'rainbow': ['#ff2d2d', '#ff8a1c', '#ffd21c', '#3fd14a', '#2d8cff', '#7b3fe4'].forEach((c, i) => { g.fillStyle = c; g.fillRect(0, i * S / 6, S, S / 6 + 1); }); break;
+      case 'ttt': g.fillStyle = '#ffd400'; g.fillRect(0, 0, S, S); text('TTT', 54, '#111', '#fff', -0.35); break;
+      case 'lol': g.fillStyle = '#29d3ff'; g.fillRect(0, 0, S, S); text('LOL', 50, '#ff2d95', '#fff', 0.3); break;
+      case 'stonks': { g.fillStyle = '#0b2a6b'; g.fillRect(0, 0, S, S); g.strokeStyle = 'rgba(255,255,255,0.15)'; g.lineWidth = 1; for (let i = 0; i <= S; i += 32) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, S); g.moveTo(0, i); g.lineTo(S, i); g.stroke(); } g.strokeStyle = '#3cff5a'; g.lineWidth = 9; g.lineJoin = 'round'; g.beginPath(); g.moveTo(10, S - 30); [[60, S - 90], [100, S - 60], [150, S - 150], [190, S - 120], [240, 30]].forEach(([x, y]) => g.lineTo(x, y)); g.stroke(); g.fillStyle = '#3cff5a'; g.beginPath(); g.moveTo(248, 16); g.lineTo(214, 34); g.lineTo(242, 56); g.fill(); g.font = '900 30px Impact, Arial Black, sans-serif'; g.fillStyle = '#fff'; g.fillText('STONKS', 16, 40); break; }
+      case 'carbon': g.fillStyle = '#161719'; g.fillRect(0, 0, S, S); for (let y = 0; y < S; y += 8) for (let x = 0; x < S; x += 8) { g.fillStyle = (x / 8 + y / 8) % 2 ? '#26282c' : '#0f1012'; g.fillRect(x, y, 8, 4); g.fillStyle = (x / 8 + y / 8) % 2 ? '#0f1012' : '#26282c'; g.fillRect(x, y + 4, 8, 4); } break;
+    }
+  }
+  const skinCache = new Map();
+  function skinTex(id, col) {
+    const key = id + (id === 'flames' ? col : '');
+    if (!skinCache.has(key)) { const c = document.createElement('canvas'); c.width = c.height = 256; paintSkin(c.getContext('2d'), 256, id, col); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; skinCache.set(key, { t, url: c.toDataURL() }); }
+    return skinCache.get(key);
+  }
+  const SKIN_VERT = 'varying vec3 vSkinPos; varying vec3 vSkinNrm;\n', SKIN_FRAG = `#ifdef USE_MAP
+  vec3 skinW = abs( normalize( vSkinNrm ) ); skinW /= ( skinW.x + skinW.y + skinW.z );
+  vec4 texelColor = texture2D( map, vSkinPos.zy * 0.34 ) * skinW.x + texture2D( map, vSkinPos.xz * 0.34 ) * skinW.y + texture2D( map, vSkinPos.xy * 0.34 ) * skinW.z;
+  texelColor = mapTexelToLinear( texelColor );
+  diffuseColor *= texelColor;
+#endif`;
+  function skinHook(sh) {
+    sh.vertexShader = SKIN_VERT + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vSkinPos = position; vSkinNrm = normal;');
+    sh.fragmentShader = SKIN_VERT + sh.fragmentShader.replace('#include <map_fragment>', SKIN_FRAG);
+  }
+  function applySkin(m, id, col) {
+    if (!m) return;
+    if (!id || id === 'gloss') { if (m.map) { m.map = null; m.needsUpdate = true; } m.color.copy(lin(col)); return; }
+    m.userData.skinHook = skinHook; bendMaterial(m);
+    m.customProgramCacheKey = () => 'skinned';
+    m.map = skinTex(id, col).t; m.color.setRGB(1, 1, 1); m.needsUpdate = true;
+  }
+
+  // ---------- the garage: a lit workshop with your ride on a turntable ----------
+  const garageRoom = new THREE.Group(); scene.add(garageRoom); garageRoom.visible = false;
+  {
+    const floorTex = canvasTex(256, (g, S) => { g.fillStyle = '#4a4e55'; g.fillRect(0, 0, S, S); speckle(g, 3000, S, ['#555a62', '#3f4349'], 0.5, 2); g.strokeStyle = '#2e3136'; g.lineWidth = 3; g.strokeRect(0, 0, S, S); }, 6, 6);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 22).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.25, metalness: 0.15 })); floor.position.set(0, 0.004, -2); floor.receiveShadow = true; garageRoom.add(floor);
+    const wallTex = canvasTex(256, (g, S) => { g.fillStyle = '#c9ccd2'; g.fillRect(0, 0, S, S); g.fillStyle = '#2f3a4a'; g.fillRect(0, S * 0.72, S, S * 0.28); g.fillStyle = '#ffb627'; g.fillRect(0, S * 0.7, S, 6); speckle(g, 1500, S, ['#bfc2c8', '#d6d9de'], 0.4, 2); }, 4, 1);
+    const walls = new THREE.Mesh(new THREE.BoxGeometry(20, 7.5, 22), new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.8, side: THREE.BackSide })); walls.position.set(0, 3.74, -2); walls.receiveShadow = true; garageRoom.add(walls);
+    const tt = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 0.1, 56), new THREE.MeshStandardMaterial({ color: lin(0x1d1f23), metalness: 0.7, roughness: 0.3 })); tt.position.y = -0.04; garageRoom.add(tt);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.42, 0.05, 6, 64).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x29d3ff })); ring.position.y = 0.02; garageRoom.add(ring);
+    for (const z of [-7, -2, 3]) for (const x of [-3.5, 3.5]) { const strip = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 3.2), new THREE.MeshBasicMaterial({ color: 0xfff6e4 })); strip.position.set(x, 7.4, z); garageRoom.add(strip); }
+    // pegboard with tools on the back wall
+    const pegTex = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#a5794a'; g.fillRect(0, 0, 512, 256); g.fillStyle = '#6e4e2c'; for (let y = 8; y < 256; y += 16) for (let x = 8; x < 512; x += 16) g.fillRect(x, y, 3, 3); g.fillStyle = '#2b2f36';
+      const tool = (x, y, w, h, r) => { g.save(); g.translate(x, y); g.rotate(r); g.fillRect(-w / 2, -h / 2, w, h); g.restore(); };
+      for (let i = 0; i < 9; i++) { tool(40 + i * 52, 70, 10, 90, 0); g.beginPath(); g.arc(40 + i * 52, 26, 12, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = '#d62828'; for (let i = 0; i < 6; i++) tool(60 + i * 75, 190, 20, 70, 0.4); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; })();
+    const peg = new THREE.Mesh(new THREE.PlaneGeometry(9, 4.5), new THREE.MeshLambertMaterial({ map: pegTex })); peg.position.set(-3, 3.3, -12.95); garageRoom.add(peg);
+    const signTex = (() => { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#0b0d14'; g.fillRect(0, 0, 512, 128); g.font = '900 64px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = '#ff2d95'; g.shadowBlur = 24; g.fillStyle = '#ff6ac0'; g.fillText('SPLITTER GARAGE', 256, 66); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; })();
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.75), new THREE.MeshBasicMaterial({ map: signTex })); sign.position.set(4.5, 5.6, -12.95); garageRoom.add(sign);
+    // shelves, tyre stacks, a toolbox and a roller door
+    const shelf = mat(0x5b6168, { metalness: 0.6 }), tyre = new THREE.TorusGeometry(0.42, 0.17, 10, 20).rotateX(Math.PI / 2);
+    for (const y of [0.9, 2.2, 3.5]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 6), shelf); s.position.set(9.4, y, -6); garageRoom.add(s); for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.8), mat([0xd62828, 0x1f4fb8, 0xf2c200, 0x2a2d33][(k + y * 3 | 0) % 4])); b.position.set(9.4, y + 0.34, -8.3 + k * 1.5); garageRoom.add(b); } }
+    for (const [x, z, n] of [[-8.6, -9, 5], [-7.4, -9.2, 3], [-8.6, -6.8, 4]]) for (let k = 0; k < n; k++) { const t = new THREE.Mesh(tyre, wheelMat); t.position.set(x, 0.18 + k * 0.34, z); garageRoom.add(t); }
+    const box = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.8), mat(0xd62828, { roughness: 0.4 })); box.position.set(2.5, 0.55, -12.4); garageRoom.add(box);
+    const doorTex = canvasTex(64, (g, S) => { g.fillStyle = '#9aa1ab'; g.fillRect(0, 0, S, S); g.fillStyle = '#7d848e'; for (let y = 0; y < S; y += 8) g.fillRect(0, y, S, 2); }, 1, 6);
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(8, 5.5), new THREE.MeshLambertMaterial({ map: doorTex })); door.rotation.y = -Math.PI / 2; door.position.set(9.95, 2.75, 3.5); garageRoom.add(door);
+    for (const [x, z] of [[-4, -4], [4, -4], [0, 4]]) { const l = new THREE.PointLight(0xfff0dc, 1.1, 22, 2); l.position.set(x, 6.4, z); garageRoom.add(l); }
+  }
+  let garageAng = 0.6;
+  function enterGarageScene() { garageRoom.visible = true; cars.forEach(c => c.mesh.visible = false); scene.fog.near = 200; scene.fog.far = 400; sun.intensity = 0.25; hemi.intensity = 0.35; renderer.toneMappingExposure = 1.1; }
+  function leaveGarageScene() { if (!garageRoom.visible) return; garageRoom.visible = false; cars.forEach(c => c.mesh.visible = true); applyMap(save.map); }
+  function garageCamera(dt) {
+    garageAng += dt * 0.22;
+    const r = 7.2, wide = innerWidth > 760;
+    camera.position.set(Math.sin(garageAng) * r, 2.3, Math.cos(garageAng) * r);
+    camera.lookAt(0, 0.7, 0);
+    if (wide) camera.translateX(-2.1);   // keep the car clear of the garage panel on the left
+    const ud = playerMesh.userData; if (ud.boat) playerMesh.position.y = 0.35;
   }
 
   // ---------- blood: splatter and stains where the bodies hit the road ----------
@@ -1919,6 +2081,28 @@ gl_Position = projectionMatrix * mvPosition;`;
     return new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide });
   })();
   const rampBeacon = mat(0xff9a00, { emissive: 0xff8a00, emissiveIntensity: 2.5 });
+  // a tall straddle rig: legs on the outside, the load carried high, a gap in the middle you can drive through
+  const RIG_GAP = 1.38;   // half-width of the clear space between the legs
+  function makeUnderTruck(color) {
+    const g = new THREE.Group(); g.rotation.order = 'YXZ';
+    const b = new THREE.Group(); g.add(b);
+    const body = paintFor(color), steelM = mat(0xd8a21b, { metalness: 0.4, roughness: 0.5 });
+    const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; b.add(o); return o; };
+    for (const x of [-1.6, 1.6]) {
+      for (const z of [-4.6, 4.6]) { add(new THREE.BoxGeometry(0.34, 3.6, 0.5), steelM, x, 2.0, z); const t = new THREE.Mesh(tireGeo, wheelMat); t.position.set(x, 0.36, z); g.add(t); }
+      add(new THREE.BoxGeometry(0.4, 0.45, 10), steelM, x, 3.95, 0);            // side rails
+    }
+    for (const z of [-4.6, 4.6]) add(new THREE.BoxGeometry(3.6, 0.4, 0.45), steelM, 0, 4.0, z);   // cross beams
+    add(new THREE.BoxGeometry(3.0, 2.5, 9.2), body, 0, 5.45, 0);                // the container up top
+    add(new THREE.BoxGeometry(1.1, 1.1, 1.2), glassMat, -1.2, 3.1, -4.9);       // driver's cab hanging off the front leg
+    const lamp = new THREE.BoxGeometry(0.3, 0.15, 0.05);
+    for (const x of [-1.2, 1.2]) add(lamp, headMat, x, 3.9, -5.05);
+    const tails = [-1.6, 1.6].map(x => add(lamp, tailMat, x, 3.5, 5.0));
+    const blinkers = [-1, 1].map(x => add(blinkGeo, blinkOff, x * 1.85, 3.6, 4.6));
+    add(new THREE.BoxGeometry(0.25, 0.2, 0.25), rampBeacon, 0, 6.8, -3.5);
+    g.userData = { id: 'undertruck', w: 3.4, l: 10.4, mass: 5, top: 6.7, tails, blinkers, body: b, wheels: [], front: [], paint: body, under: true };
+    return g;
+  }
   function makeRampTruck(color) {
     const g = new THREE.Group(); g.rotation.order = 'YXZ';
     const b = new THREE.Group(); g.add(b);
@@ -2037,6 +2221,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     for (const x of spec.bike ? [0.19] : spec.plane ? [0] : [-0.45, 0.45]) { const f = new THREE.Mesh(flameGeo, flameMat); f.position.set(x, spec.plane ? 1.15 : 0.45, spec.l / 2 + 0.25); flame.add(f); }
     flame.visible = false; ud.body.add(flame);
     scene.add(playerMesh);
+    try { applySkin(ud.paint, save.skin, color); } catch (e) {}
   }
 
   // sparks
@@ -2160,6 +2345,8 @@ gl_Position = projectionMatrix * mvPosition;`;
       save.chaseLevel = Math.max(1, Math.floor(+s.chaseLevel || 1));
       if (['easy', 'normal', 'hard'].includes(s.diff)) save.diff = s.diff;
       if (typeof s.map === 'string') save.map = s.map;
+      if (typeof s.skin === 'string') save.skin = s.skin;
+      if (Array.isArray(s.skins)) save.skins = s.skins;
       if (s.heist && typeof s.heist === 'object') save.heist = s.heist;
       if (s.unlimited) save.unlimited = true;
     }
@@ -2196,7 +2383,7 @@ gl_Position = projectionMatrix * mvPosition;`;
   function applyLoadout() {
     Object.assign(S, statsFor(save.cars[save.car].levels, carById(save.car)));
     S.wreck += DIF().wreck;
-    playerMesh.userData.paint.color = lin(save.color);
+    applySkin(playerMesh.userData.paint, save.skin, save.color);
     $('cashStart').textContent = money(save.cash);
     $('carStart').textContent = carById(save.car).name;
     renderScores($('hsStart'));
@@ -2226,6 +2413,7 @@ gl_Position = projectionMatrix * mvPosition;`;
         <div class="pips" aria-label="Level ${lv} of ${COSTS.length}">${COSTS.map((_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</div></div>
         <button class="ubtn" id="up-${u.id}" data-u="${u.id}" ${!owned || maxed || save.cash < cost ? 'disabled' : ''}>${maxed ? 'MAX' : money(cost)}</button></div>`;
     }).join('');
+    renderSkins();
     $('swatches').innerHTML = PAINTS.map(([n, col]) => `<button class="swatch${col === save.color ? ' sel' : ''}" id="paint-${col}" data-c="${col}" title="${n}" aria-label="${n}" style="background:#${col.toString(16).padStart(6, '0')}"></button>`).join('');
   }
   function viewCar(i) {
@@ -2249,6 +2437,18 @@ gl_Position = projectionMatrix * mvPosition;`;
     const cost = costOf(c, lv); if (save.cash < cost) return;
     save.cash -= cost; own.levels[id] = lv + 1; persist(); applyLoadout(); renderGarage();
   });
+  function renderSkins() {
+    const owned = save.skins || ['gloss'];
+    $('skins').innerHTML = SKINS.map(k => { const has = k.id === 'gloss' || owned.includes(k.id), on = (save.skin || 'gloss') === k.id;
+      const bg = k.id === 'gloss' ? `background:${hex(save.color)}` : `background-image:url(${skinTex(k.id, save.color).url})`;
+      return `<button class="skin${on ? ' sel' : ''}" data-s="${k.id}" ${!has && save.cash < k.price ? 'disabled' : ''} aria-label="${k.name}"><i style="${bg}"></i><span>${k.name}</span><small>${on ? 'Equipped' : has ? 'Owned' : money(k.price)}</small></button>`; }).join('');
+  }
+  $('skins').addEventListener('click', e => {
+    const id = e.target.closest('.skin')?.dataset.s; if (!id) return;
+    const k = SKINS.find(k => k.id === id), owned = save.skins || (save.skins = ['gloss']);
+    if (id !== 'gloss' && !owned.includes(id)) { if (save.cash < k.price) return; save.cash -= k.price; owned.push(id); }
+    save.skin = id; persist(); applyLoadout(); renderGarage();
+  });
   $('swatches').addEventListener('click', e => {
     const col = e.target.closest('.swatch')?.dataset.c; if (!col) return;
     save.color = +col; persist(); applyLoadout(); renderGarage();
@@ -2256,12 +2456,12 @@ gl_Position = projectionMatrix * mvPosition;`;
   function openGarage() {
     Sound.init();
     if (state !== 'menu') reset();
-    state = 'garage';
+    state = 'garage'; enterGarageScene();
     $('startOv').hidden = true; $('overOv').hidden = true; $('garageOv').hidden = false;
     gView = Math.max(0, CARS.findIndex(c => c.id === save.car));
     renderGarage();
   }
-  function closeGarage() { state = 'menu'; ensurePlayerCar(); applyLoadout(); refreshModeDesc(); $('garageOv').hidden = true; $('startOv').hidden = false; }
+  function closeGarage() { state = 'menu'; leaveGarageScene(); ensurePlayerCar(); applyLoadout(); refreshModeDesc(); $('garageOv').hidden = true; $('startOv').hidden = false; }
   let mode = save.mode === 'chase' || save.mode === 'heist' ? save.mode : 'endless';
   ensurePlayerCar();
   applyLoadout();
@@ -2415,7 +2615,7 @@ gl_Position = projectionMatrix * mvPosition;`;
 
   function start() {
     Sound.init();
-    ensurePlayerCar(); applyLoadout();
+    leaveGarageScene(); ensurePlayerCar(); applyLoadout();
     if (mode === 'heist') startHeist();
     reset();
     if (mode === 'heist') heistAfterReset();
@@ -2428,7 +2628,8 @@ gl_Position = projectionMatrix * mvPosition;`;
     if (onAir) return true;   // the sky stage is a hoop course, not traffic
     const r = Math.random();
     const type = r < 0.15 ? 'truck' : r < 0.45 ? 'street' : r < 0.65 ? 'hatch' : r < 0.82 ? 'suv' : r < 0.92 ? 'muscle' : 'coupe';
-    const rampT = type === 'truck' && !onAir && Math.random() < 0.45;
+    const roll = Math.random(), rampT = type === 'truck' && !onAir && roll < 0.22;
+    const underT = type === 'truck' && !rampT && !onAir && !onWater && !onSnow && roll < 0.55;
     const truck = type === 'truck';
     const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     const len = CAR_SPECS[type].l;
@@ -2438,12 +2639,12 @@ gl_Position = projectionMatrix * mvPosition;`;
     for (let i = 0; i < LANES; i++) if (!cars.some(c => (c.lane === i || c.target === i) && Math.abs(c.z - z) < (c.l + len) / 2 + 10)) free.push(i);
     if (!free.length) return false;
     const lane = free[Math.floor(Math.random() * free.length)];
-    const mesh = makeCar(rampT ? 'ramptruck' : type, color, false);
+    const mesh = makeCar(rampT ? 'ramptruck' : underT ? 'undertruck' : type, color, false);
     scene.add(mesh);
     const base = (rampT ? 38 + Math.random() * 8 : truck ? 42 + Math.random() * 14 : 52 + Math.random() * 26) * MPS;
     const v = (truck ? base : laneSpeed(lane, base)) * (onSnow ? 1.15 : 1);   // skiers flow quicker, so you close on them gently
     cars.push({ mesh, color, lane, laneWas: lane, base: truck ? 0 : base, truckish: truck, target: lane, x: laneX(lane), z, vx: 0, v, cruise: v, yaw: 0, yawRate: 0,
-      w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: z > 0, spin: 0, ramp: rampT });
+      w: mesh.userData.w, l: mesh.userData.l, mass: mesh.userData.mass, loose: false, blink: 0, passed: z > 0, spin: 0, ramp: rampT, under: underT, seed: Math.random() * 6, oblivious: Math.random() < 0.4 });
     return true;
   }
 
@@ -2580,14 +2781,14 @@ gl_Position = projectionMatrix * mvPosition;`;
   }
   const MODE_DESC = {
     endless: 'Weave through traffic for points. Drive fast enough and the police come after you.',
-    heist: 'Rob the bank and escape with the loot: through the city, across the harbour, over the mountains, through the sky and across the desert to the border. You get 3 lives. Pick your vehicle for each kind of ground below. Every hit costs you loot.',
+    heist: 'Rob the bank and escape with the loot: out of the city, across the harbour, down the mountain, through the sky and along the coast highway to the border. 3 lives; every hit costs you loot.',
     chase: "You're the cop. Hitting traffic damages your cruiser; ramming the getaway car doesn't. Stay right on the getaway car for 5 seconds to arrest it, or ram it until it's wrecked. Don't let it get away.",
   };
   function refreshModeDesc() {
     const lv = save.chaseLevel || 1;
     $('modeDesc').textContent = MODE_DESC[mode] + (mode === 'chase' ? ` You're on level ${lv}.` : '');
     $('chaseReset').hidden = !(mode === 'chase' && lv > 1);
-    $('heistLoad').hidden = mode !== 'heist'; if (mode === 'heist') renderHeistLoad();
+    $('heistSection').hidden = mode !== 'heist'; $('mapSection').hidden = mode === 'heist'; if (mode === 'heist') renderHeistLoad();
   }
   function setMode(m) {
     mode = m; save.mode = m; persist();
@@ -2612,13 +2813,23 @@ gl_Position = projectionMatrix * mvPosition;`;
   const HEIST_DEFAULT = { road: 'muscle', water: 'speedboat', snow: 'skis', air: 'propplane' };
   const heistUsable = (id, t) => CAR_SPECS[id] && terrainOf(id) === t && (id === HEIST_DEFAULT[t] || !!save.cars[id]);
   const heistPick = t => heistUsable((save.heist || {})[t], t) ? save.heist[t] : HEIST_DEFAULT[t];
+  const heistOptions = t => CARS.filter(c => terrainOf(c.id) === t && heistUsable(c.id, t));
+  const TERRAIN_PLACES = { road: 'City · Coast Hwy', water: 'Harbour', snow: 'Mountains', air: 'Sky' };
   function renderHeistLoad() {
-    $('heistLoad').innerHTML = HEIST_TERRAINS.map(([t, name]) => `<label><span>${name}</span><select data-t="${t}">${CARS.filter(c => terrainOf(c.id) === t).map(c => {
-      const ok = heistUsable(c.id, t);
-      return `<option value="${c.id}"${c.id === heistPick(t) ? ' selected' : ''}${ok ? '' : ' disabled'}>${c.name}${c.id === HEIST_DEFAULT[t] && !save.cars[c.id] ? ' (crew)' : ok ? '' : ' (locked)'}</option>`;
-    }).join('')}</select></label>`).join('');
+    $('heistLoad').innerHTML = HEIST_TERRAINS.map(([t, name]) => {
+      const opts = heistOptions(t), id = heistPick(t), c = carById(id), all = CARS.filter(k => terrainOf(k.id) === t).length;
+      const bars = statBars(c, save.cars[id] ? save.cars[id].levels : freshLevels()).map(([n, v]) => `<div class="bar"><span>${n}</span><i><b style="width:${Math.round(v * 100)}%"></b></i></div>`).join('');
+      return `<div class="hcard"><div class="hhead"><span>${name}</span><small>${TERRAIN_PLACES[t]} · ${opts.length}/${all} unlocked</small></div>
+        <div class="hpick"><button class="harrow" data-t="${t}" data-d="-1" ${opts.length < 2 ? 'disabled' : ''} aria-label="Previous ${name} ride">‹</button><b>${c.name}</b><button class="harrow" data-t="${t}" data-d="1" ${opts.length < 2 ? 'disabled' : ''} aria-label="Next ${name} ride">›</button></div>
+        <small class="htag">${save.cars[id] ? 'Yours' + (save.cars[id].levels && Object.values(save.cars[id].levels).some(v => v) ? ' · upgraded' : '') : 'Crew ride (free)'}</small>
+        <div class="bars hbars">${bars}</div></div>`;
+    }).join('');
   }
-  $('heistLoad').addEventListener('change', e => { const t = e.target.dataset.t; if (!t) return; save.heist = { ...(save.heist || {}), [t]: e.target.value }; persist(); });
+  $('heistLoad').addEventListener('click', e => {
+    const b = e.target.closest('.harrow'); if (!b) return;
+    const t = b.dataset.t, opts = heistOptions(t), i = opts.findIndex(c => c.id === heistPick(t));
+    save.heist = { ...(save.heist || {}), [t]: opts[(i + +b.dataset.d + opts.length) % opts.length].id }; persist(); renderHeistLoad();
+  });
   const LOOT = 120000;
   let heistStage = 0, heistStartD = 0, loot = 0, heistWon = false, heistLives = 3;
   function heistVehicle(i) {
@@ -3280,7 +3491,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     const r = rampUnder(p), fly = flyoverAt(p);
     if (r) {
       const rel = Math.max(0, p.v - r.c.v);
-      p.y = rampH(r.u); p.vy = rampSlope(r.u) * rel; p.onRamp = r.c;
+      p.y = rampH(r.u); p.vy = Math.min(12, rampSlope(r.u) * rel); p.onRamp = r.c;
     } else if (fly && (fly.h > 0.02 || p.y < 0.3)) {
       p.y = fly.h; p.vy = -fly.dh * p.v; p.onRamp = null;
     } else if (p.onRamp || p.y > 0.05) {
@@ -3373,7 +3584,11 @@ gl_Position = projectionMatrix * mvPosition;`;
     }
     if (c.lane !== c.laneWas) { c.laneWas = c.lane; if (c.base) c.cruise = laneSpeed(c.lane, c.base); }
     // a slow, smooth drift across: about two and a half seconds per lane
-    const want_vx = c.blink > 0 ? 0 : clamp((laneX(c.lane) - c.x) * 1.2, -2.2, 2.2);
+    let wob = c.blink > 0 || c.truckish ? 0 : Math.sin(time * 0.45 + (c.seed || 0)) * 0.32;
+    const pl = player;
+    if (pl && pl.bike && !pl.ski && !onWater && !c.truckish && c.z > -16 && c.z < 4 && Math.abs(pl.x - c.x) < 2.9)
+      wob += Math.sign(pl.x - c.x) * (c.oblivious ? 0.6 : -0.25);   // some drift toward a bike they haven't seen, some make room
+    const want_vx = c.blink > 0 ? 0 : clamp((laneX(c.lane) + wob - c.x) * 1.2, -2.2, 2.2);
     c.vx += (want_vx - c.vx) * Math.min(1, dt * 2.5);
     c.x += c.vx * dt;
     c.yaw = -Math.atan2(c.vx, Math.max(c.v, 3));
@@ -3438,7 +3653,12 @@ gl_Position = projectionMatrix * mvPosition;`;
       if (p.onRamp === c || heistMorph || (onAir && Math.abs(p.alt || 0) > 2.2)) continue;   // nothing can hit you mid-transition
       if (c.ramp && !p.air && Math.abs(p.x - c.x) <= 1.45) { const u = c.z + c.l / 2 + p.l * 0.4; if (u > -0.6 && u <= RAMP_LEN + 0.15) continue; }   // driving onto the ramp, not into the truck
       if (p.air || p.y > 0.05) { const top = c.ramp ? (Math.abs(c.z + c.l / 2 - RAMP_LEN / 2) < RAMP_LEN / 2 + 0.3 ? rampH(c.z + c.l / 2) : 2.5) : c.l > 8 ? 3.6 : 1.45; if (p.y > top - 0.25) continue; }
-      const hit = collide(p, c);
+      if (c.under && Math.abs(p.x - c.x) < RIG_GAP - p.w / 2 && Math.abs(Math.sin(c.yaw)) < 0.2) {   // threading between the legs
+        if (Math.abs(c.z) < c.l / 2) c.underT = (c.underT || 0) + dt;
+        continue;
+      }
+      const mirrors = p.bike && !p.ski && !onWater && !c.truckish ? 0.22 : 0;   // on a bike the car's mirrors count
+      c.w += mirrors; const hit = collide(p, c); c.w -= mirrors;
       if (!hit) continue;
       if (c.suspect) { ramSuspect(c, hit); continue; }
       if (c.wasSuspect) continue;   // bumping the wreck you just took down is free
@@ -3462,6 +3682,7 @@ gl_Position = projectionMatrix * mvPosition;`;
         } else if (hit.impact > 5) { shake = Math.max(shake, 0.3); throwDebris(hit.cx, hit.cz, 3, c.color, 4); }
       } else if (Math.random() < 0.4) burst(hit.cx, 0.6, hit.cz, 2, 4);
     }
+    for (const c of cars) if (c.under && !c.underDone && c.underT > 0.05 && c.z > c.l / 2) { c.underDone = true; if (!p.wrecked) addChainStep('UNDER THE RIG', 600 * (p.v / MPS / 100 + 0.5)); }
     // loose cars knock into the rest of the traffic
     for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
       const a = cars[i], b = cars[j];
@@ -3719,7 +3940,9 @@ gl_Position = projectionMatrix * mvPosition;`;
         if (spareLife() && wreckTimer > 1.3) heistRespawn();
         else if (wreckTimer > 2.6 && ((sp < 4 && (player.y < 0.05 || onAir) && ragDone) || wreckTimer > (ragdoll ? 4.2 : 2.8))) { if (mode === 'heist' && heistLives > 1 && !heistWon) heistRespawn(); else gameOver(); }
       }
-    } else if (state === 'menu' || state === 'garage') {
+    } else if (state === 'garage') {
+      cars.forEach(c => c.mesh.visible = false);   // the workshop: nothing drives through it
+    } else if (state === 'menu') {
       scroll(27 * dt);
       for (const c of cars) { c.z += (27 - c.v) * dt; c.spin += c.v * dt / 0.36; }
       cars = cars.filter(c => { const keep = c.z < DESPAWN_Z; if (!keep) scene.remove(c.mesh); return keep; });
@@ -3731,6 +3954,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     updateDebris(dt);
     if (shake > 0) shake = Math.max(0, shake - 1.2 * realDt);
     sync(dt);
+    if (state === 'garage') garageCamera(realDt);
     syncRagdoll();
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
