@@ -270,6 +270,7 @@ body {
 .skin small { font-size: 10px; color: #7be08a; }
 .skin.sel { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
 .skin:disabled { opacity: .45; cursor: not-allowed; }
+.skin.upload i { display: grid; place-items: center; font-style: normal; font-size: 22px; color: var(--amber); background: #ffffff10; border: 1px dashed #ffffff40; }
 .skin:not(:disabled):hover { border-color: #ffffff60; }
 .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #ffffff30; cursor: pointer; padding: 0; }
 .swatch.sel { border-color: var(--paint); box-shadow: 0 0 0 2px var(--night), 0 0 0 4px var(--amber); }
@@ -1846,6 +1847,16 @@ gl_Position = projectionMatrix * mvPosition;`;
   }
   const skinCache = new Map();
   function skinTex(id, col) {
+    if (id === 'custom') {   // your own picture, saved with your progress
+      const src = (typeof save !== 'undefined' && save.customSkin) || '';
+      if (!skinCache.has('custom') || skinCache.get('custom').src !== src) {
+        const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#888'; g.fillRect(0, 0, 256, 256);
+        const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+        const entry = { t, url: src, src }; skinCache.set('custom', entry);
+        if (src) { const img = new Image(); img.onload = () => { g.drawImage(img, 0, 0, 256, 256); t.needsUpdate = true; }; img.src = src; }
+      }
+      return skinCache.get('custom');
+    }
     const key = id + (id === 'flames' ? col : '');
     if (!skinCache.has(key)) { const c = document.createElement('canvas'); c.width = c.height = 256; paintSkin(c.getContext('2d'), 256, id, col); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; skinCache.set(key, { t, url: c.toDataURL() }); }
     return skinCache.get(key);
@@ -2346,6 +2357,7 @@ gl_Position = projectionMatrix * mvPosition;`;
       if (['easy', 'normal', 'hard'].includes(s.diff)) save.diff = s.diff;
       if (typeof s.map === 'string') save.map = s.map;
       if (typeof s.skin === 'string') save.skin = s.skin;
+      if (typeof s.customSkin === 'string' && s.customSkin.startsWith('data:image/')) save.customSkin = s.customSkin;
       if (Array.isArray(s.skins)) save.skins = s.skins;
       if (s.heist && typeof s.heist === 'object') save.heist = s.heist;
       if (s.unlimited) save.unlimited = true;
@@ -2441,13 +2453,26 @@ gl_Position = projectionMatrix * mvPosition;`;
     const owned = save.skins || ['gloss'];
     $('skins').innerHTML = SKINS.map(k => { const has = k.id === 'gloss' || owned.includes(k.id), on = (save.skin || 'gloss') === k.id;
       const bg = k.id === 'gloss' ? `background:${hex(save.color)}` : `background-image:url(${skinTex(k.id, save.color).url})`;
-      return `<button class="skin${on ? ' sel' : ''}" data-s="${k.id}" ${!has && save.cash < k.price ? 'disabled' : ''} aria-label="${k.name}"><i style="${bg}"></i><span>${k.name}</span><small>${on ? 'Equipped' : has ? 'Owned' : money(k.price)}</small></button>`; }).join('');
+      return `<button class="skin${on ? ' sel' : ''}" data-s="${k.id}" ${!has && save.cash < k.price ? 'disabled' : ''} aria-label="${k.name}"><i style="${bg}"></i><span>${k.name}</span><small>${on ? 'Equipped' : has ? 'Owned' : money(k.price)}</small></button>`; }).join('')
+      + (save.customSkin ? `<button class="skin${save.skin === 'custom' ? ' sel' : ''}" data-s="custom" aria-label="Your image"><i style="background-image:url(${save.customSkin})"></i><span>Your image</span><small>${save.skin === 'custom' ? 'Equipped' : 'Owned'}</small></button>` : '')
+      + `<label class="skin upload" title="Use a picture of your own"><i>＋</i><span>${save.customSkin ? 'Change image' : 'Upload image'}</span><small>Free · JPG / PNG</small><input type="file" accept="image/*" id="skinFile" hidden></label>`;
   }
   $('skins').addEventListener('click', e => {
     const id = e.target.closest('.skin')?.dataset.s; if (!id) return;
     const k = SKINS.find(k => k.id === id), owned = save.skins || (save.skins = ['gloss']);
-    if (id !== 'gloss' && !owned.includes(id)) { if (save.cash < k.price) return; save.cash -= k.price; owned.push(id); }
+    if (id !== 'gloss' && id !== 'custom' && !owned.includes(id)) { if (save.cash < k.price) return; save.cash -= k.price; owned.push(id); }
     save.skin = id; persist(); applyLoadout(); renderGarage();
+  });
+  // upload your own picture: cropped to a square, shrunk to 256 px and saved with your progress
+  $('skins').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f || !f.type.startsWith('image/')) return;
+    const rd = new FileReader();
+    rd.onload = () => { const img = new Image(); img.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), m = Math.min(img.width, img.height);
+      g.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 256, 256);
+      save.customSkin = c.toDataURL('image/jpeg', 0.85); save.skin = 'custom'; persist(); applyLoadout(); renderGarage();
+    }; img.src = rd.result; };
+    rd.readAsDataURL(f);
   });
   $('swatches').addEventListener('click', e => {
     const col = e.target.closest('.swatch')?.dataset.c; if (!col) return;
