@@ -142,6 +142,9 @@ body {
 .bustbar.arrest i { background: #29d3ff33; }
 .bustbar.arrest b { background: var(--cyan); }
 @media (max-width: 520px) { .suspect { top: 70px; width: 150px; } }
+.menubtn { position: absolute; top: 12px; left: 12px; height: 38px; padding: 0 12px; border-radius: 4px; border: 1px solid #ffffff2a; background: #0b0d14cc; color: var(--paint); font-family: var(--display); font-size: 13px; letter-spacing: .12em; cursor: pointer; z-index: 2; }
+.menubtn:hover { border-color: var(--amber); }
+.stage:not([data-state="play"]):not([data-state="wreck"]) .menubtn { display: none; }
 .mute { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; border-radius: 4px; border: 1px solid #ffffff2a; background: #0b0d14cc; color: var(--paint); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
 .mute:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .mute .cross { display: none; }
@@ -315,6 +318,7 @@ body {
     <div class="suspect" id="suspectHud"><div class="sh-top"><b>SUSPECT</b><span id="sLvl">LV 1</span></div><i><em id="sHealth"></em></i><div class="sh-row"><span id="sDist"></span><span id="sTime"></span></div></div>
     <div class="heisthud" id="heistHud"><b id="heistStage"></b><span id="heistGoal"></span><i><em id="heistBar"></em></i><span>LOOT <strong id="heistLoot"></strong></span><span>LIVES <strong id="heistLives" class="lives"></strong></span></div>
     <div class="feed" id="feed" aria-live="polite"></div>
+    <button class="menubtn" id="menuBtn" aria-label="Back to the menu" title="Menu (Esc)">MENU</button>
     <button class="mute" id="muteBtn" aria-label="Sound" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="cross" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="flash" id="flash"></div>
     <div class="pop" id="pop"></div>
@@ -345,6 +349,7 @@ body {
               <kbd>Space</kbd><span>Handbrake drift (planes: air brake)</span>
               <kbd>E</kbd><span>Wheelie / tuck / nose up</span>
               <kbd>R</kbd><span>Restart any time</span>
+              <kbd>Esc</kbd><span>Back to the menu</span>
               <kbd>M</kbd><span>Sound on / off</span>
             </div>
           </details>
@@ -384,7 +389,7 @@ body {
         <p id="finalStats"></p>
         <div class="hs"><ol id="hsOver"></ol></div>
         <p class="earned">Earned <span class="cash" id="earned">$0</span> · Total <span class="cash" id="cashOver">$0</span></p>
-        <div class="btnrow"><button class="btn" id="againBtn">Retry</button><button class="btn ghost" id="garageBtn2">Garage</button></div>
+        <div class="btnrow"><button class="btn" id="againBtn">Retry</button><button class="btn ghost" id="garageBtn2">Garage</button><button class="btn ghost" id="menuBtn2">Menu</button></div>
         <span class="stat-label desk-only">or press R</span>
       </div>
     </div>
@@ -2298,6 +2303,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     if (e.code === 'KeyM' && !e.repeat) { Sound.toggle(); updateMuteBtn(); return; }
     if (state === 'garage' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { e.preventDefault(); viewCar(gView + (e.code === 'ArrowLeft' ? -1 : 1)); return; }
     if (e.code === 'KeyR' && !e.repeat) { e.preventDefault(); start(); return; }
+    if (e.code === 'Escape' && !e.repeat && state !== 'menu' && state !== 'garage') { e.preventDefault(); goMenu(); return; }
     if ((e.code === 'Space' || e.code === 'Enter') && state !== 'play') { e.preventDefault(); start(); return; }
     if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); }
   });
@@ -2314,6 +2320,16 @@ gl_Position = projectionMatrix * mvPosition;`;
   });
   $('startBtn').onclick = start;
   $('againBtn').onclick = start;
+  // straight back to the main menu, from a run or the results screen
+  function goMenu() {
+    if (state === 'menu') return;
+    leaveGarageScene(); reset(); state = 'menu';
+    $('overOv').hidden = true; $('garageOv').hidden = true; $('startOv').hidden = false; $('heistHud').classList.remove('on');
+    keys.up = keys.down = keys.left = keys.right = keys.nitro = keys.handbrake = keys.wheelie = false;
+    ensurePlayerCar(); applyLoadout(); refreshModeDesc();
+  }
+  $('menuBtn').onclick = e => { goMenu(); e.currentTarget.blur(); };
+  $('menuBtn2').onclick = goMenu;
   $('garageBtn').onclick = openGarage;
   $('garageBtn2').onclick = openGarage;
   $('gBack').onclick = closeGarage;
