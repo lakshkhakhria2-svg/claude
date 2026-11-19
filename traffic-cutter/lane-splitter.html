@@ -144,6 +144,7 @@ body {
 @media (max-width: 520px) { .suspect { top: 70px; width: 150px; } }
 .menubtn { position: absolute; top: 12px; left: 12px; height: 38px; padding: 0 12px; border-radius: 4px; border: 1px solid #ffffff2a; background: #0b0d14cc; color: var(--paint); font-family: var(--display); font-size: 13px; letter-spacing: .12em; cursor: pointer; z-index: 2; }
 .menubtn:hover { border-color: var(--amber); }
+.viewbtn { left: 92px; min-width: 52px; }
 .stage:not([data-state="play"]):not([data-state="wreck"]) .menubtn { display: none; }
 .mute { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; border-radius: 4px; border: 1px solid #ffffff2a; background: #0b0d14cc; color: var(--paint); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
 .mute:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
@@ -318,6 +319,7 @@ body {
     <div class="suspect" id="suspectHud"><div class="sh-top"><b>SUSPECT</b><span id="sLvl">LV 1</span></div><i><em id="sHealth"></em></i><div class="sh-row"><span id="sDist"></span><span id="sTime"></span></div></div>
     <div class="heisthud" id="heistHud"><b id="heistStage"></b><span id="heistGoal"></span><i><em id="heistBar"></em></i><span>LOOT <strong id="heistLoot"></strong></span><span>LIVES <strong id="heistLives" class="lives"></strong></span></div>
     <div class="feed" id="feed" aria-live="polite"></div>
+    <button class="menubtn viewbtn" id="viewBtn" aria-label="Switch camera (C)" title="Camera (C)">3RD</button>
     <button class="menubtn" id="menuBtn" aria-label="Back to the menu" title="Menu (Esc)">MENU</button>
     <button class="mute" id="muteBtn" aria-label="Sound" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="cross" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div class="flash" id="flash"></div>
@@ -350,6 +352,7 @@ body {
               <kbd>E</kbd><span>Wheelie / tuck / nose up</span>
               <kbd>R</kbd><span>Restart any time</span>
               <kbd>Esc</kbd><span>Back to the menu</span>
+              <kbd>C</kbd><span>First person / chase camera</span>
               <kbd>M</kbd><span>Sound on / off</span>
             </div>
           </details>
@@ -443,6 +446,7 @@ body {
   const LANES = 5, LANE_W = 3.6, ROAD_W = LANES * LANE_W;
   let onWater = false, onSnow = false, onAir = false;
   let mapOverride = null;
+  let firstPerson = false;   // C toggles the driver's-eye view
   let morphY = 0, heistMorph = null;   // the heist stage change: sink out of one world, rise into the next   // the bank heist picks the scenery for each stage   // on the sea in a boat / on a snowy pass on skis
   const laneX = i => (i - (LANES - 1) / 2) * LANE_W;
   const MPS = 0.447;           // mph -> m/s
@@ -2304,6 +2308,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     if (state === 'garage' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { e.preventDefault(); viewCar(gView + (e.code === 'ArrowLeft' ? -1 : 1)); return; }
     if (e.code === 'KeyR' && !e.repeat) { e.preventDefault(); start(); return; }
     if (e.code === 'Escape' && !e.repeat && state !== 'menu' && state !== 'garage') { e.preventDefault(); goMenu(); return; }
+    if (e.code === 'KeyC' && !e.repeat) { e.preventDefault(); toggleView(); return; }
     if ((e.code === 'Space' || e.code === 'Enter') && state !== 'play') { e.preventDefault(); start(); return; }
     if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); }
   });
@@ -2329,6 +2334,8 @@ gl_Position = projectionMatrix * mvPosition;`;
     ensurePlayerCar(); applyLoadout(); refreshModeDesc();
   }
   $('menuBtn').onclick = e => { goMenu(); e.currentTarget.blur(); };
+  function toggleView() { firstPerson = !firstPerson; save.fp = firstPerson; persist(); $('viewBtn').textContent = firstPerson ? '1ST' : '3RD'; showPop(firstPerson ? 'FIRST PERSON' : 'CHASE CAM', false); }
+  $('viewBtn').onclick = e => { toggleView(); e.currentTarget.blur(); };
   $('menuBtn2').onclick = goMenu;
   $('garageBtn').onclick = openGarage;
   $('garageBtn2').onclick = openGarage;
@@ -2396,6 +2403,7 @@ gl_Position = projectionMatrix * mvPosition;`;
       if (['easy', 'normal', 'hard'].includes(s.diff)) save.diff = s.diff;
       if (typeof s.map === 'string') save.map = s.map;
       if (typeof s.skin === 'string') save.skin = s.skin;
+      if (s.fp) save.fp = true;
       if (typeof s.customSkin === 'string' && s.customSkin.startsWith('data:image/')) save.customSkin = s.customSkin;
       if (Array.isArray(s.skins)) save.skins = s.skins;
       if (s.heist && typeof s.heist === 'object') save.heist = s.heist;
@@ -2694,7 +2702,7 @@ gl_Position = projectionMatrix * mvPosition;`;
     const r = Math.random();
     const type = r < 0.15 ? 'truck' : r < 0.45 ? 'street' : r < 0.65 ? 'hatch' : r < 0.82 ? 'suv' : r < 0.92 ? 'muscle' : 'coupe';
     const roll = Math.random(), rampT = type === 'truck' && !onAir && roll < 0.22;
-    const underT = type === 'truck' && !rampT && !onAir && !onWater && !onSnow && roll < 0.55;
+    const underT = false;   // drive-under rigs retired
     const truck = type === 'truck';
     const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     const len = CAR_SPECS[type].l;
@@ -3940,6 +3948,21 @@ gl_Position = projectionMatrix * mvPosition;`;
     camera.position.x += (Math.random() - 0.5) * shake;
     camera.position.y += (Math.random() - 0.5) * shake;
     camera.lookAt(camLook);
+    const fp = firstPerson && !wrecked && state === 'play' && !heistMorph;
+    if (ud.occ && !wrecked) ud.occ.visible = !fp;
+    if (ud.rider && !wrecked) ud.rider.visible = !fp;
+    if (!ud.glassList) { ud.glassList = []; playerMesh.traverse(o => { if (o.isMesh && (o.material === glassMat || o.material === playerGlass)) ud.glassList.push(o); }); }
+    ud.glassList.forEach(o => o.visible = !fp);   // no windscreen or canopy in your face
+    if (fp) {   // driver's eye: in the seat, looking where the vehicle points
+      const yaw = p.yaw + (p.landSpin || 0), fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+      const eye = ud.plane ? 2.15 : ud.ski ? 1.55 : ud.bike ? 1.5 : ud.boat ? 1.45 : CAR_SPECS[ud.id] && CAR_SPECS[ud.id].h ? 0.31 + CAR_SPECS[ud.id].h + 0.32 : 1.15;
+      const cs = CAR_SPECS[ud.id] || {};
+      const seat = ud.plane ? -0.4 : ud.ski ? 0.1 : ud.bike ? -0.75 : ud.boat ? 0.6 : cs.cabL ? -(cs.cabL / 2 - cs.cabZ + 0.2) : -1;   // cars: a bonnet cam just ahead of the windscreen
+      const ey = p.y + morphY + (onAir ? p.alt || 0 : 0) + eye;
+      camera.position.set(p.x + fx * -seat, ey + (Math.random() - 0.5) * shake * 0.4, fz * -seat);
+      camera.lookAt(p.x + fx * 30, ey - 0.6 + (onAir ? (p.vAlt || 0) * 0.6 : 0) - (onSnow ? 5 : 0), fz * 30);
+      camera.rotateZ(clamp(-p.vx * (ud.bike || ud.plane || ud.ski ? 0.05 : 0.012), -0.45, 0.45));   // lean with the turn
+    }
     if (wastedT >= 0) { const k = Math.min(1, wastedT / 2.5); camera.rotateZ(0.13 * k * k); camera.fov += (baseFov - 14 * k - camera.fov) * 0.1; camera.updateProjectionMatrix(); }
     if (state === 'garage') {
       const t = time * 0.35, wide = camera.aspect > 1.2;
@@ -4034,6 +4057,7 @@ gl_Position = projectionMatrix * mvPosition;`;
   setMode(mode);
   setDiff(save.diff || 'normal');
   setMap(save.map || 'highway');
+  firstPerson = !!save.fp; $('viewBtn').textContent = firstPerson ? '1ST' : '3RD';
   // ---------- title screen ----------
   let titleOn = true, titleMapI = 0, titleTimer = null;
   const TITLE_MAPS = ['coast', 'highway', 'city', 'ocean', 'desert'];
