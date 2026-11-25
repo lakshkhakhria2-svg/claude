@@ -158,6 +158,15 @@ button:active { transform: scale(.97); }
 .squad li .kg { font: 700 15px var(--mono); font-variant-numeric: tabular-nums; }
 .squad li i { grid-column: 1 / -1; display: block; height: 6px; border-radius: 3px; background: var(--plate); }
 .squad li.empty { display: block; color: var(--muted); }
+.board.wide { grid-column: 1 / -1; }
+.squad li.p1, .squad li.p2, .squad li.p3 { padding: 8px 10px; border-radius: 8px; }
+.squad li.p1 { background: rgba(212,160,23,.16); }
+.squad li.p2 { background: rgba(154,163,173,.16); }
+.squad li.p3 { background: rgba(184,115,51,.16); }
+.squad li.p1 b .rank { color: #b8860b; font-size: 15px; }
+.squad li.p2 b .rank { color: #6b7480; font-size: 15px; }
+.squad li.p3 b .rank { color: #9a5b22; font-size: 15px; }
+.squad li.p1 .kg { font-size: 18px; }
 
 /* Drive log */
 .drive { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
@@ -238,6 +247,10 @@ footer p { margin: 0 0 6px; }
   <section id="squadSec" aria-labelledby="squad-h" hidden>
     <h2 id="squad-h">Leaderboard</h2>
     <div class="boards">
+      <div class="board wide">
+        <h3>Last 3 hours</h3>
+        <ol class="squad" id="squad3h"></ol>
+      </div>
       <div class="board">
         <h3>Most kg today</h3>
         <ol class="squad" id="squadToday"></ol>
@@ -527,7 +540,8 @@ footer p { margin: 0 0 6px; }
       const li = document.createElement("li");
       if (key === mk) li.className = "me";
       const name = document.createElement("b");
-      const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = (i + 1) + ".";
+      if (i < 3) li.classList.add("p" + (i + 1));
+      const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = i < 3 ? ordinal(i + 1) : (i + 1) + ".";
       name.append(rank, label || who(id));
       const val = document.createElement("span"); val.className = "kg"; val.textContent = fmt(kg) + " kg";
       const bar = document.createElement("i"); bar.style.width = Math.max(2, (kg / top) * 100) + "%";
@@ -547,6 +561,8 @@ footer p { margin: 0 0 6px; }
     const tk = dayKey(Date.now());
     drawBoard(ol, rows, "Nobody's on the board yet. The first lift logged puts its lifter at the top.");
     drawBoard($("squadToday"), board(lifts.filter((l) => dayKey(l.at) === tk)), "No lifts yet today. Log one to take the top spot.");
+    const since = Date.now() - 3 * 3600000;
+    drawBoard($("squad3h"), board(lifts.filter((l) => l.at >= since)), "No lifts in the last 3 hours. Log one and take 1st.");
     if (shared) resolveNames(rows.filter((r) => !r.label && r.id).map((r) => r.id));
   }
 
