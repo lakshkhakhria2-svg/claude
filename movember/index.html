@@ -559,8 +559,8 @@ footer p { margin: 0 0 6px; }
     const dl = $("names"); dl.textContent = "";
     for (const r of rows) if (r.label) { const o = document.createElement("option"); o.value = r.label; dl.append(o); }
     const tk = dayKey(Date.now());
-    drawBoard(ol, rows, "Nobody's on the board yet. The first lift logged puts its lifter at the top.");
-    drawBoard($("squadToday"), board(lifts.filter((l) => dayKey(l.at) === tk)), "No lifts yet today. Log one to take the top spot.");
+    drawBoard(ol, rows.slice(0, 3), "Nobody's on the board yet. The first lift logged puts its lifter at the top.");
+    drawBoard($("squadToday"), board(lifts.filter((l) => dayKey(l.at) === tk)).slice(0, 3), "No lifts yet today. Log one to take the top spot.");
     const since = Date.now() - 3 * 3600000;
     drawBoard($("squad3h"), board(lifts.filter((l) => l.at >= since)).slice(0, 3), "No lifts in the last 3 hours. Log one and take 1st.");
     if (shared) resolveNames(rows.filter((r) => !r.label && r.id).map((r) => r.id));
