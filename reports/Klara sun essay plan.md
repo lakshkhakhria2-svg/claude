@@ -50,6 +50,7 @@ Ishiguro presents the Sun as Klara's god: a faith held by a machine in a world t
 - **"nourishment".** The word joins the mechanical (fuel) to the spiritual (feeding, communion, "daily bread").
 - **"silently understood by us all".** It reads like an unspoken creed shared by a congregation. The faith lives *beneath* the "official" specifications, filling a gap the science leaves.
 - **Naive narrator and dramatic irony.** "obvious" is Klara's certainty. The reader suspects the Beggar Man was only asleep or ill. Klara turns coincidence into a miracle, the way a religion is born.
+- **Optional: secular speech.** The humans only say "God" as an empty exclamation: "Oh God" (Part Two, p.54), "For God's sake" (Part Three, p.119), "goddam" (Part Four, p.162). Klara's "Sun" is always reverent. A secular world has emptied its religious words, and the machine fills hers with reverence.
 
 **Context**
 - Sun-worship: Ra in Egypt, and Apollo in Greece, god of light *and healing*. The Bible (KJV): "the Sun of righteousness [shall] arise with healing in his wings" (Malachi 4:2), with a capital S, "his", and healing, just like Klara's Sun.
@@ -72,6 +73,7 @@ Ishiguro presents the Sun as Klara's god: a faith held by a machine in a world t
 - The Father: "A kind of superstition we kept going while we didn't know better." (Part Four, p.187)
 - The Father: "'Hope,' he said. 'Damn thing never leaves you alone.'" (Part Four, p.185). Klara says he "saw my hope and placed his faith in it" (Part Five, p.225).
 - Optional: Klara's bargain with the Sun, "Supposing I could do something special to please you." (Part Three, p.140)
+- Optional: the Mother on lifting Josie: "Josie took the gamble. Okay, I shook the dice for her" (Part Five, p.231). Lifting is itself a leap of faith, a bet on technology, and the novel implies (never states) that it made Josie ill.
 
 **Techniques and analysis**
 - **Irony and contradiction.** The scientist preaches "keep faith" and then says faith isn't needed. His "rationality" is exposed as a rival creed, and he even says "I do believe it. With everything I'm worth" (p.173).
@@ -127,8 +129,9 @@ Ishiguro presents the Sun as Klara's god: a faith held by a machine in a world t
 2. **The big reversal.** In an age of AI and gene editing, the machine believes in something beyond data, while the humans try to reduce a person to data.
 3. **Meaning.** The Sun stands for what science cannot measure (faith, hope, love), the "something very special" that Capaldi missed by "searching in the wrong place".
 4. **Final image.** Human and machine "looked at the Sun together". Ishiguro does not make us choose between faith and science. He suggests we still need something to look up to.
+5. **Optional echo.** In "Dover Beach", Arnold's only answer to the retreating "Sea of Faith" is "Ah, love, let us be true / To one another!" Klara's ending reaches the same answer: what makes Josie special is "inside those who loved her".
 
-**Model closing:** *If Arnold heard the "Sea of Faith" retreating in 1867, Ishiguro imagines faith returning in the least expected place, a machine that sits in a junkyard and still believes "The Sun was very kind to me."*
+**Model closing:** *Where Arnold, hearing the "Sea of Faith" retreat in 1867, could only answer "Ah, love, let us be true / To one another!", Ishiguro reaches the same answer by a stranger route: a machine whose faith in the Sun leads her to see that what makes Josie irreplaceable lies "inside those who loved her".*
 
 ---
 
@@ -151,6 +154,7 @@ P1 FAITH IS BORN (Pt 1)
  "silently understood by us all ... Sun and his nourishment" p11
  "officially ... specifications" p11 vs feeling "lethargic"
  Beggar Man "obvious they had died" -> "saved them" p36-37
+ (opt) humans say "God" only as swearing p54, p119, p162
  TECH: capital S + "he"; "nourishment" = fuel + sacrament;
        naive narrator, dramatic irony
  CTX: Ra / Apollo (light + healing); Malachi 4:2 "Sun of
@@ -163,6 +167,7 @@ P2 FAITH vs SCIENCE (Pt 3-4)
  Father "A kind of superstition we kept going ..." p187
  "Hope ... Damn thing never leaves you alone" p185;
    "placed his faith in it" p225
+ (opt) Mother: lifting = "the gamble", "shook the dice" p231
  TECH: irony - science needs faith too; personified hope
  CTX: CRISPR 2012 / gene-edited twins 2018 -> "lifted";
       Nobel Lecture 2017 "savage meritocracies"; Frankenstein;
@@ -179,7 +184,8 @@ P3 UNDECIDABLE MIRACLE (Pt 5-6)
       "nature cult" / Griffis "dubious"
 
 CONCL: Sun = what science can't measure; machine believes,
-humans doubt; "looked at the Sun together" p251
+humans doubt; "looked at the Sun together" p251;
+Dover Beach "Ah, love, let us be true / To one another!"
 ```
 
 ---
@@ -190,3 +196,5 @@ humans doubt; "looked at the Sun together" p251
 - **Ishiguro's NPR line** ("I don't think I was trying to be critical of religion") is reported the same way by several sources, but the transcript couldn't be opened from here. The Nobel Lecture and Guardian headline wordings were confirmed through secondary sources.
 - **Critics' words** come from search previews, so paraphrase them and name the critic rather than quoting at length.
 - **COVID.** The novel came out mid-pandemic, but there is no evidence Ishiguro wrote it *about* COVID. If you mention lockdown, frame it as how readers met the book, not why he wrote it.
+- **Lifting and Josie's illness.** The link is implied, never stated. The best evidence is the Mother's "gamble" speech (Part Five, p.231).
+- **"God is not mentioned once".** This line from Catherine Pickford (*Church Times*), quoted in the research report, isn't literally true, because "God" appears in exclamations. If you use it, say God is never mentioned as someone anyone believes in.
