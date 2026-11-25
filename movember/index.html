@@ -184,7 +184,7 @@ footer p { margin: 0 0 6px; }
 <body>
 <main class="wrap">
   <section class="alert" id="behind" role="alert" aria-live="assertive">
-    <strong>We are behind!</strong>
+    <strong>BEHIND.</strong>
     <span id="behindText"></span>
     <span class="push" id="behindPush"></span>
   </section>
@@ -369,11 +369,11 @@ footer p { margin: 0 0 6px; }
     el.hidden = false;
     const alert = $("behind");
     alert.classList.toggle("on", diff < 0);
-    $("behindText").innerHTML = "<b>" + fmt(-diff) + " kg</b> short and falling further behind. All 50 of you need to get in the gym now and close the gap.";
+    $("behindText").innerHTML = "<b>" + fmt(-diff) + " kg</b> short. ALL 50 OF YOU. GET IN THE GYM NOW.";
     $("behindPush").textContent = PUSHES[now.getDate() % PUSHES.length];
     el.innerHTML = diff >= 0
-      ? "<b>" + fmt(diff) + " kg ahead</b> of where we need to be. Keep it going."
-      : "<b>" + fmt(-diff) + " kg behind</b> where we need to be. All 50 of you, get in the gym.";
+      ? "<b>" + fmt(diff) + " kg ahead.</b> Don't stop."
+      : "<b>" + fmt(-diff) + " kg behind.</b> GO.";
   }
 
   function renderYou(rows) {
