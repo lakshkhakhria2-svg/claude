@@ -369,11 +369,11 @@ footer p { margin: 0 0 6px; }
     el.hidden = false;
     const alert = $("behind");
     alert.classList.toggle("on", diff < 0);
-    $("behindText").innerHTML = "<b>" + fmt(-diff) + " kg</b> short of an even pace through November. Get in the gym and close the gap.";
+    $("behindText").innerHTML = "<b>" + fmt(-diff) + " kg</b> short and falling further behind. All 50 of you need to get in the gym now and close the gap.";
     $("behindPush").textContent = PUSHES[now.getDate() % PUSHES.length];
     el.innerHTML = diff >= 0
-      ? "<b>" + fmt(diff) + " kg ahead</b> of an even pace through November."
-      : "<b>" + fmt(-diff) + " kg behind</b> an even pace through November. Every set closes the gap.";
+      ? "<b>" + fmt(diff) + " kg ahead</b> of where we need to be. Keep it going."
+      : "<b>" + fmt(-diff) + " kg behind</b> where we need to be. All 50 of you, get in the gym.";
   }
 
   function renderYou(rows) {
