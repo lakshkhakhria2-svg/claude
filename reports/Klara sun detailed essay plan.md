@@ -3,7 +3,7 @@
 **How to use it**
 - Each numbered line is one sentence. Join them in order.
 - The word in [brackets] is a suggested connective. Swap it for any from the bank at the bottom.
-- Lines marked *(optional)* can be skipped if you're short of time.
+- Lines marked *(optional)* can be skipped if you're short of time. Everything written out is about 1,250 words. The core lines alone are about 1,000 words, roughly 20 words a minute, so do one timed practice run first.
 - Page numbers are from your PDF. Write your own copy's page number next to each quote.
 
 **Timing:** Intro 5 min · each paragraph 11–12 min · conclusion 5 min · final check 3 min
@@ -17,7 +17,7 @@
 3. [Against this background,] Ishiguro imagines a world where children are genetically "lifted" and where a scientist, Mr Capaldi, believes a machine can "continue" a dying girl. *(context)*
 4. [In this world,] Ishiguro presents the Sun as Klara's god, giving religious faith to the least likely believer: a solar-powered robot. *(thesis)*
 5. [By doing so,] he invites the reader to ask whether faith is just "superstition", or whether it can see something that science cannot measure. *(thesis)*
-6. [Firstly,] he presents the birth of Klara's faith; [secondly,] its clash with the science around her; [and finally,] a "miracle" that he refuses to explain. *(road map)*
+6. *(optional)* [Firstly,] he presents the birth of Klara's faith; [secondly,] its clash with the science around her; [and finally,] a "miracle" that he refuses to explain. *(road map)*
 
 ---
 
@@ -28,7 +28,7 @@
 3. Giving the Sun a proper noun and a male pronoun echoes the way believers write "God" and "He", suggesting that, to Klara, the Sun is a person rather than a star. *(analysis)*
 4. [Furthermore,] the AFs in the store share this belief, as Klara explains that "the big thing, silently understood by us all, was the Sun and his nourishment" (Part One, p.11). *(quote)*
 5. The noun "nourishment" blends the mechanical with the spiritual: it is literally the solar energy that powers Klara, yet it carries connotations of food, care and even holy communion. *(analysis)*
-6. [Moreover,] the phrase "silently understood by us all" sounds like an unspoken creed shared by a congregation. *(analysis)*
+6. *(optional)* [Moreover,] the phrase "silently understood by us all" sounds like an unspoken creed shared by a congregation. *(analysis)*
 7. *(optional)* [Interestingly,] although "officially" the AFs' "specifications" mean they cannot be affected by being away from the Sun, they still feel "lethargic" without it, implying that faith grows in the gaps that science leaves. *(analysis)*
 8. [Later,] Klara's faith seems to be confirmed when she sees the Beggar Man and his dog lying still: "it was obvious they had died", yet the next morning "a special kind of nourishment from the Sun had saved them" (Part One, pp.36–37). *(quote)*
 9. [However,] the word "obvious" is ironic, since the reader suspects the man was only asleep or ill, so Klara's naive narration reveals how easily a coincidence can be read as a miracle. *(analysis)*
@@ -59,7 +59,7 @@
 1. [Finally,] Ishiguro presents the Sun's "miracle" ambiguously, so that it can be read either as divine help or as coincidence. *(point)*
 2. [When Josie is close to death,] "the Sun had broken through the dark clouds" and lit her bed "in a ferocious half-disc of orange" (Part Five, p.234). *(quote)*
 3. The image of light breaking through darkness feels almost biblical, while the adjective "ferocious" makes the Sun's power awe-inspiring, even frightening. *(analysis)*
-4. [Moreover,] Ishiguro juxtaposes the housekeeper's curse, "Damn Sun!", with Klara's prayer-like cry, "We must let the Sun do his best!" (Part Five, p.234), so that doubt and faith literally share the same room. *(analysis)*
+4. *(optional)* [Moreover,] Ishiguro juxtaposes the housekeeper's curse, "Damn Sun!", with Klara's prayer-like cry, "We must let the Sun do his best!" (Part Five, p.234), so that doubt and faith literally share the same room. *(analysis)*
 5. [Years later,] Rick admits: "At the time, I thought it was all, well, AF superstition… But these days, I keep wondering if there was more to it." (Part Six, p.238). *(quote)*
 6. Rick's movement from "superstition" to "wondering" mirrors the reader's own uncertainty, especially as Ishiguro places it beside a medical explanation: "the doctors always say once you get through the stage she did, you're safe" (Part Six, pp.238–239). *(analysis)*
 7. [Significantly,] Ishiguro has said, "I don't think I was trying to be critical of religion", and critics remain divided: David Hoekema sees Klara's faith as "finally, rewarded", whereas Rachel Griffis finds it "dubious" that the Sun answers her prayers. *(context)*
@@ -74,7 +74,7 @@
 1. [In conclusion,] Ishiguro presents the Sun as a god, a source of hope, and a question that he refuses to answer.
 2. [In an age of AI and gene editing,] he reverses our expectations: the machine believes in something beyond data, while the humans try to reduce a person to data.
 3. [As a result,] the Sun stands for everything that science cannot measure: faith, hope and love.
-4. [Just as] Matthew Arnold answered the loss of faith in "Dover Beach" with "Ah, love, let us be true / To one another!", Ishiguro ends with love.
+4. *(optional)* [Just as] Matthew Arnold answered the loss of faith in "Dover Beach" with "Ah, love, let us be true / To one another!", Ishiguro ends with love.
 5. [Ultimately,] in the final scene, the human and the machine simply "looked at the Sun together" (Part Six, p.251), suggesting that, whatever science achieves, people still need something to look up to.
 
 ---
